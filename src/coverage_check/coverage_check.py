@@ -19,14 +19,13 @@ import csv
 import time
 
 from PIL import Image
-from solve_captcha import solve_captcha
-from anticaptchaofficial.imagecaptcha import *
+from operations.solve_captcha import solve_captcha
 
 from .return_points_for_row import return_points_for_row
 from .go_back_to_search_page import go_back_to_coverage_search_page
 from .check_coverage_and_notify import check_coverage_and_notify
 from .input_speed_requested import input_speed_requested
-from current_input_row_singleton import CurrentInputRow
+from singleton.current_input_row_singleton import CurrentInputRow
 
 
 def finding_coverage(driver, a):

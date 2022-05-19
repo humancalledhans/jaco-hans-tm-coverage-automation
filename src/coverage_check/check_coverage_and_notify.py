@@ -12,10 +12,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver import ActionChains
 
-from current_input_row_singleton import CurrentInputRow
+from singleton.current_input_row_singleton import CurrentInputRow
 
-from telegram_msg import send_message
-from email_msg import send_email
+from notifications.telegram_msg import send_message
+from notifications.email_msg import send_email
 from .go_back_to_search_page import go_back_to_coverage_search_page
 
 
@@ -27,14 +27,12 @@ def check_coverage_and_notify(table_row_num, driver, a):
 				time.sleep(0.5)
 			WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "/html/body/div/div/div[4]/center/div[2]/div[2]/div/table/tbody/tr[2]/td/div[2]/div/form/div[3]/div[1]/table/tbody/tr[2]/td[1]/img[contains(@src, 'tick_checkcoverage')]")))
 			# coverage available.
-			print("COVERAGE_AVAILABLE!!")
 			send_message(address_string + "\nhas coverage!")
 			send_email(address_string + "\nhas coverage!")
 			### TODO: call telegram and email functions - and send notifications.
 			go_back_to_coverage_search_page(driver)
 
 		except TimeoutException:
-			print("COVERAGE NOT AVAILABLE")
 			send_message(address_string + " does not have coverage.")
 			send_email(address_string + " does not have coverage.")
 			go_back_to_coverage_search_page(driver)
