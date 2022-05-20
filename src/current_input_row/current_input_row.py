@@ -19,6 +19,15 @@ class ICurrentInputRow(metaclass=ABCMeta):
 		""" to implement in child class """
 
 	@abstractstaticmethod
+	def set_accepted_states_list():
+		""" to implement in child class """
+
+	@abstractstaticmethod
+	def set_accepted_street_types_list():
+		""" to implement in child class """
+
+
+	@abstractstaticmethod
 	def get_input_house_unit_lotno():
 		""" to implement in child class """
 
@@ -95,15 +104,17 @@ class CurrentInputRow(ICurrentInputRow):
 	@staticmethod
 	def get_instance():
 		if CurrentInputRow.__instance is None:
-			CurrentInputRow(input_header_data=None, input_row_data=None)
+			CurrentInputRow(input_header_data=None, input_row_data=None, accepted_states_list=None, accepted_street_types_list=None)
 		return CurrentInputRow.__instance
 	
-	def __init__(self, input_header_data=None, input_row_data=None):
+	def __init__(self, input_header_data=None, input_row_data=None, accepted_states_list=None, accepted_street_types_list=None):
 		if CurrentInputRow.__instance is not None:
 			raise Exception("CurrentInputRow instance cannot be instantiated more than once!")
 		else:
 			self.input_header_data = input_header_data
 			self.input_row_data = input_row_data
+			self.accepted_states_list = accpeted_states_list
+			self.accepted_street_types_list = accepted_street_types_list
 			CurrentInputRow.__instance = self
 
 	@staticmethod
@@ -117,6 +128,14 @@ class CurrentInputRow(ICurrentInputRow):
 	@staticmethod
 	def set_input_row_data(self, input_row_data):
 		self.input_row_data = input_row_data
+
+	@staticmethod
+	def set_accepted_states_list(self, accepted_states_list):
+		self.accepted_states_list = accpeted_states_list
+
+	@staticmethod
+	def set_accepted_street_types_list(self, accepted_street_types_list):
+		self.accepted_street_types_list = accepted_street_types_list
 
 
 	@staticmethod

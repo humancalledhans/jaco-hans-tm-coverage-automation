@@ -20,6 +20,7 @@ import time
 
 from PIL import Image
 from operations.solve_captcha import solve_captcha
+from operations.set_accepted_params import set_accepted_params
 
 from .return_points_for_row import return_points_for_row
 from .go_back_to_search_page import go_back_to_coverage_search_page
@@ -73,23 +74,7 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 		current_input_row = CurrentInputRow.get_instance()
 		current_input_row.set_csv_file_path(self=current_input_row, csv_file_path=full_path)
 		current_input_row.set_input_header_data(self=current_input_row, input_header_data=input_header_data)
-
-		accpeted_states_list = ['MELAKA', 'KELANTAN', 'KEDAH', 'JOHOR', 'NEGERI SEMBILAN', 'PAHANG', 'PERAK', 'PERLIS', 
-			'PULAU PINANG', 'SABAH', 'SARAWAK', 'SELANGOR', 'TERENGGANU', 'WILAYAH PERSEKUTUAN',
-			'WILAYAH PERSEKUTUAN LABUAN', 'WILAYAH PERSEKUTUAN PUTRAJAYA']
-
-		accepted_street_types_list = ['ALUR', 'OFF JALAN', 'AVENUE', 'BATU', 'BULATAN', 'CABANG', 'CERUMAN', 
-			'CERUNAN', 'CHANGKAT', 'CROSS', 'DALAMAN', 'DATARAN', 'DRIVE', 'GAT', 'GELUGOR', 'GERBANG', 
-			'GROVE', 'HALA', 'HALAMAN', 'HALUAN', 'HILIR', 'HUJUNG', 'JALAN', 'JAMBATAN', 'JETTY', 
-			'KAMPUNG', 'KELOK', 'LALUAN', 'LAMAN', 'LANE', 'LANGGAK', 'LEBOH', 'LEBUH', 'LEBUHRAYA', 
-			'LEMBAH', 'LENGKOK', 'LENGKONGAN', 'LIKU', 'LILITAN', 'LINGKARAN', 'LINGKONGAN', 
-			'LINGKUNGAN', 'LINTANG', 'LINTASAN', 'LORONG', 'LOSONG', 'LURAH', 'M G', 'MAIN STREET', 
-			'MEDAN', 'PARIT', 'PEKELILING', 'PERMATANG', 'PERSIARAN', 'PERSINT', 'PERSISIRAN', 'PESARA', 
-			'PESIARAN', 'PIASAU', 'PINGGIAN', 'PINGGIR', 'PINGGIRAN', 'PINTAS', 'PINTASAN', 'PUNCAK', 
-			'REGAT', 'ROAD', 'SEBERANG', 'SELASAR', 'SELEKOH', 'SILANG', 'SIMPANG', 'SIMPANGAN', 
-			'SISIRAN', 'SLOPE', 'SOLOK', 'STREET', 'SUSUR', 'SUSURAN', 'TAMAN', 'TANJUNG', 'TEPIAN', 
-			'TINGGIAN', 'TINGKAT', 'P.O.Box', 'PO Box']
-
+		set_accepted_params()
 		"""
 		input_header_data=
 		['House/Unit/Lot No.', 'Street Type', 'Street Name', 'Section', 
