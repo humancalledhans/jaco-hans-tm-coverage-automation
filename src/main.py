@@ -1,4 +1,5 @@
 from operations.login import login
+
 def main():
 	print("Hi! This is a Coverage Automation System. It will:\n1. Take in a CSV File of Addresses\n2. Check the coverage of the addresses\n3. Output a \'Y\' or \'N\' depending on the existence of coverage.")
 	path_to_csv = input("Please ensure you have a 'partners_coveragecheck.csv' file in the same directory. Type 'Y' to confirm.")

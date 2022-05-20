@@ -12,7 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver import ActionChains
 
-from singleton.current_input_row_singleton import CurrentInputRow
+from current_input_row.current_input_row import CurrentInputRow
 
 from notifications.telegram_msg import send_message
 from notifications.email_msg import send_email
@@ -39,29 +39,19 @@ def check_coverage_and_notify(table_row_num, driver, a):
 
 	def bridge_to_actual_op(driver,a):
 		address_string = ''
-		current_input_row_singleton = CurrentInputRow.get_instance()
-		input_header_data = current_input_row_singleton.get_input_header_data(self=current_input_row_singleton)
-		input_row_data = current_input_row_singleton.get_input_row_data(self=current_input_row_singleton)
+		current_input_row = CurrentInputRow.get_instance()
+		input_header_data = current_input_row.get_input_header_data(self=current_input_row)
+		input_row_data = current_input_row.get_input_row_data(self=current_input_row)
+		input_house_unit_lotno = current_input_row.get_input_house_unit_lotno(self=current_input_row)
+		input_street_type = current_input_row.get_street_type(self=current_input_row)
+		input_street_name = current_input_row.get_street_name(self=current_input_row)
+		input_section = current_input_row.get_section(self=current_input_row)
+		input_floor_no = current_input_row.get_floor_no(self=current_input_row)
+		input_building_name = current_input_row.get_building_name(self=current_input_row)
+		input_city = current_input_row.get_city(self=current_input_row)
+		input_state = current_input_row.get_state(self=current_input_row)
+		input_postcode = current_input_row.get_postcode(self=current_input_row)
 
-		input_house_unit_lotno_index = input_header_data.index('House/Unit/Lot No.')
-		input_street_type_index = input_header_data.index('Street Type')
-		input_street_name_index = input_header_data.index('Street Name')
-		input_section_index = input_header_data.index('Section')
-		input_floor_no_index = input_header_data.index('Floor No.')
-		input_building_name_index = input_header_data.index('Building Name')
-		input_city_index = input_header_data.index('City')
-		input_state_index = input_header_data.index('State')
-		input_postcode_index = input_header_data.index('Postcode')
-
-		input_house_unit_lotno = input_row_data[input_house_unit_lotno_index]
-		input_street_type = input_row_data[input_street_type_index]
-		input_street_name = input_row_data[input_street_name_index]
-		input_section = input_row_data[input_section_index]
-		input_floor_no = input_row_data[input_floor_no_index]
-		input_building_name = input_row_data[input_building_name_index]
-		input_city = input_row_data[input_city_index]
-		input_state = input_row_data[input_state_index]
-		input_postcode = input_row_data[input_postcode_index]
 
 		address_string = address_string + \
 			"House/Unit/Lot No." + input_house_unit_lotno + '\n' + \

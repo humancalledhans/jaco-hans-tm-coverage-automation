@@ -25,12 +25,12 @@ from .return_points_for_row import return_points_for_row
 from .go_back_to_search_page import go_back_to_coverage_search_page
 from .check_coverage_and_notify import check_coverage_and_notify
 from .input_speed_requested import input_speed_requested
-from singleton.current_input_row_singleton import CurrentInputRow
+from current_input_row.current_input_row import CurrentInputRow
 
 
 def finding_coverage(driver, a):
 
-	def select_state(driver, a):
+	def select_state(driver, a, state):
 		if state in accpeted_states_list:
 			state_tab = Select(driver.find_element(By.XPATH, "//select[@id='actionForm_state']"))
 			state_tab.select_by_visible_text(f"{state}")
@@ -66,27 +66,13 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 
 		csvreader = csv.reader(f)
 
-		header = []
-		header = next(csvreader)
-		header[0] = header[0].replace('\ufeff', '')
+		input_header_data = []
+		input_header_data = next(csvreader)
+		input_header_data[0] = input_header_data[0].replace('\ufeff', '')
 
-		house_unit_lotno_index = header.index('House/Unit/Lot No.')
-		street_type_index = header.index('Street Type')
-		street_name_index = header.index('Street Name')
-		section_index = header.index('Section')
-		floor_no_index = header.index('Floor No.')
-		building_name_index = header.index('Building Name')
-		city_index = header.index('City')
-		state_index = header.index('State')
-		postcode_index = header.index('Postcode')
-		tid_option_index = header.index('tid (option)')
-		source_option_index = header.index('source (option)')
-		uid_index = header.index('Uid')
-		result_type_index = header.index('Result type')
-		result_string_index = header.index('result string')
-		salesman_index = header.index('Salesman')
-		email_notification_index = header.index('Email Notification')
-		telegram_index = header.index('telegram')
+		current_input_row = CurrentInputRow.get_instance()
+		current_input_row.set_csv_file_path(self=current_input_row, csv_file_path=full_path)
+		current_input_row.set_input_header_data(self=current_input_row, input_header_data=input_header_data)
 
 		accpeted_states_list = ['MELAKA', 'KELANTAN', 'KEDAH', 'JOHOR', 'NEGERI SEMBILAN', 'PAHANG', 'PERAK', 'PERLIS', 
 			'PULAU PINANG', 'SABAH', 'SARAWAK', 'SELANGOR', 'TERENGGANU', 'WILAYAH PERSEKUTUAN',
@@ -105,7 +91,7 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 			'TINGGIAN', 'TINGKAT', 'P.O.Box', 'PO Box']
 
 		"""
-		header=
+		input_header_data=
 		['House/Unit/Lot No.', 'Street Type', 'Street Name', 'Section', 
 		'Floor No.', 'Building Name', 'City', 'State', 'Postcode', 'tid (option)', 
 		'source (option)', 'Uid', 'Result type', 'result string', 'Salesman', 
@@ -125,28 +111,26 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 
 		for input_row_data in data: # goes through every row of the csv file.
 
-			current_input_row_singleton = CurrentInputRow.get_instance()
-			current_input_row_singleton.set_input_header_data(self=current_input_row_singleton, input_header_data=header)
-			current_input_row_singleton.set_input_row_data(self=current_input_row_singleton, input_row_data=input_row_data)
+			current_input_row.set_input_row_data(self=current_input_row, input_row_data=input_row_data)
 
 			row_counter = row_counter + 1
 
 			### STEP ONE: select state.
-			state = input_row_data[state_index].upper().strip()
+			state = current_input_row.get_state(self=current_input_row).upper().strip()
 
 			try:
-				select_state(driver, a)
+				select_state(driver, a, state)
 
 			except NoSuchElementException:
 				try:
 					go_back_to_coverage_search_page(driver)
-					select_state(driver, a)
+					select_state(driver, a, state)
 				except NoSuchElementException:
 					# the weird bug that only has wp as state came. skipping this address operation...
 					continue
 
 			### STEP TWO: select street type.
-			street_type = input_row_data[street_type_index].upper().strip()
+			street_type = current_input_row.get_street_type(self=current_input_row).upper().strip()
 
 			if street_type in accepted_street_types_list:
 				try:
@@ -175,8 +159,8 @@ Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'
 
 
 			### STEP THREE: select street name.
-			street_name = input_row_data[street_name_index].upper()
-			building_name = input_row_data[building_name_index].upper()
+			street_name = current_input_row.get_street_name(self=current_input_row).upper()
+			building_name = current_input_row.get_building_name(self=current_input_row).upper()
 
 			space_between_word_and_num_verifier = re.search(r'([A-Z])+(\d)+', street_name)
 
@@ -272,8 +256,8 @@ Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'
 				# actually comparing the data of each row.
 				table_row_data = driver.find_elements(By.XPATH, f"(//table[@id='resultAddressGrid' and @class='datagrid']//tbody//tr[@class='odd' or @class='even'])[{table_row_num+1}]//td[@class='datagrid']")
 				points = return_points_for_row(table_row_data_list=table_row_data, table_header_data=table_header_data, 
-					input_row_data=input_row_data, input_header_data=header, driver=driver)
-				print("POINTS_ACCUMULATED: ", points)
+					input_row_data=input_row_data, input_header_data=input_header_data, driver=driver)
+				# print("POINTS_ACCUMULATED: ", points)
 				if points == 'BEST MATCH':
 					points_list = []
 					check_coverage_and_notify(table_row_num=table_row_num, driver=driver, a=a)
@@ -286,7 +270,7 @@ Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'
 				# this would mean there's not a best match.
 				points_list = sorted(points_list, key=lambda x: x[1])
 
-				print("POINTS_LISTT:", points_list)
+				# print("POINTS_LISTT:", points_list)
 
 				max_point_tuple = points_list[0]
 
