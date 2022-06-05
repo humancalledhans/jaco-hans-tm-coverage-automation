@@ -31,8 +31,8 @@ from current_input_row.current_input_row import CurrentInputRow
 
 def finding_coverage(driver, a):
 
-	def select_state(driver, a, state):
-		if state in accpeted_states_list:
+	def select_state(driver, a, state, accepted_states_list):
+		if state in accepted_states_list:
 			state_tab = Select(driver.find_element(By.XPATH, "//select[@id='actionForm_state']"))
 			state_tab.select_by_visible_text(f"{state}")
 		elif state == 'LABUAN':
@@ -52,6 +52,176 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 \'WILAYAH PERSEKUTUAN\', \'WILAYAH PERSEKUTUAN LABUAN\', \
 \'WILAYAH PERSEKUTUAN PUTRAJAYA\'\n*****\n")
 
+		to_proceed = False
+		while to_proceed == False:
+			try:
+				captcha_to_solve = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+				captcha_code = solve_captcha(captcha_elem_to_solve=captcha_to_solve, driver=driver)
+
+				captcha_field = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+				captcha_field.clear()
+				captcha_field.send_keys(captcha_code)
+				submit_captcha_button = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+				a.move_to_element(submit_captcha_button).click().perform()
+
+				try:
+					WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+				except TimeoutException:
+					to_proceed = True
+			
+			except TimeoutException:
+				# no captcha to solve.
+				to_proceed = True
+
+
+
+	def iterate_through_all_and_notify(driver, a):
+		points_list = []
+		table_header_data = []
+		for table_row_num in range(len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))):
+			# getting to the correct page to compare data of each row.
+			retry_times = 0
+			on_page = False
+			if driver.find_element(By.XPATH, "//table[@id='resultAddressGrid']"):
+				# if the results table actually exists, then on_page = True
+				on_page = True
+
+			while not on_page: # to get to the actual table results page.
+				driver.get(driver.current_url)
+				while driver.execute_script("return document.readyState;") != "complete":
+					time.sleep(0.5)
+				try:
+					WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
+					on_page = True
+				except TimeoutException:
+					to_proceed = False
+					while to_proceed == False:
+						try:
+							captcha_to_solve = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+							captcha_code = solve_captcha(captcha_elem_to_solve=captcha_to_solve, driver=driver)
+
+							captcha_field = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+							captcha_field.clear()
+							captcha_field.send_keys(captcha_code)
+							submit_captcha_button = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+							a.move_to_element(submit_captcha_button).click().perform()
+
+							try:
+								WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+							except TimeoutException:
+								to_proceed = True
+
+						except TimeoutException:
+							print("Retrying step FIVE - going back and comparing each address...")
+							retry_times = retry_times + 1
+							if retry_times > 5:
+								raise Exception("Error in step FIVE of coverage_check.py - table did not pop up after going back. Captcha did not pop up too.")
+
+			if len(table_header_data) == 0:
+				datagrid_header = driver.find_elements(By.XPATH, "//tr[@class='datagrid-header']//th[@class='datagrid']")
+				for tab in datagrid_header:
+					if tab.text != '':
+						table_header_data.append(tab.text)
+
+			# actually comparing the data of each row.
+			table_row_data = driver.find_elements(By.XPATH, f"(//table[@id='resultAddressGrid' and @class='datagrid']//tbody//tr[@class='odd' or @class='even'])[{table_row_num+1}]//td[@class='datagrid']")
+			points = return_points_for_row(table_row_data_list=table_row_data, table_header_data=table_header_data, 
+				input_row_data=input_row_data, input_header_data=input_header_data, driver=driver)
+			# print("POINTS_ACCUMULATED: ", points)
+			if points == 'BEST MATCH':
+				points_list = []
+				check_coverage_and_notify(table_row_num=table_row_num, driver=driver, a=a)
+				break # it's the best that we can get, so we can just break out of the loop.
+			else:
+				points_list.append((table_row_num, points))
+
+		# now, there's no best match. so we take the row with the highest points.
+		if len(points_list) != 0:
+			# this would mean there's not a best match.
+			points_list = sorted(points_list, key=lambda x: x[1])
+
+			# print("POINTS_LISTT:", points_list)
+
+			max_point_tuple = points_list[0]
+
+			check_coverage_and_notify(table_row_num=max_point_tuple[0], driver=driver, a=a)
+
+
+	def search_using_street_type_and_name(driver, a):
+		print("ENTERING SEARCH_USING STREET TYPE AND NAME")
+		time.sleep(10)
+		unit_lotno = current_input_row.get_house_unit_lotno(self=current_input_row).strip()
+		street_type = current_input_row.get_street_type(self=current_input_row).strip()
+		street_name = current_input_row.get_street_name(self=current_input_row).strip()
+
+		keyword_search_string = ''
+		if len(unit_lotno) > 0:
+			keyword_search_string = keyword_search_string + unit_lotno + ' '
+		keyword_search_string = keyword_search_string + street_type + ' ' + street_name + ' ' + building_name
+
+		keyword_field = driver.find_element(By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+		keyword_field.clear()
+		keyword_field.send_keys(keyword_search_string)
+
+		search_btn_third_col = driver.find_element(By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+		a.move_to_element(search_btn_third_col).click().perform()
+
+		print("STREET SHOULD BE ENTERED IN THE KEYWORD FIELD. IS IT?")
+		time.sleep(10)
+		# solve captcha
+
+		try:
+			WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
+
+		except TimeoutException:
+			to_proceed = False
+			while to_proceed == False:
+				print("ENTERING PROBLEMATIC BLOCK!")
+				time.sleep(10)
+				try:
+					captcha_to_solve = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+					captcha_code = solve_captcha(captcha_elem_to_solve=captcha_to_solve, driver=driver)
+
+					captcha_field = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")))
+					captcha_field.clear()
+					captcha_field.send_keys(captcha_code)
+					submit_captcha_button = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+					a.move_to_element(submit_captcha_button).click().perform()
+
+					try:
+						WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+					except TimeoutException:
+						to_proceed = True
+						# break
+
+				except TimeoutException:
+					print("TO_PROCEED: ", to_proceed)
+					raise Exception("Error in the SEARCHING step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
+
+			WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
+
+		iterate_through_all_and_notify(driver, a)
+
+	def get_street_type_and_search(driver,a, accepted_street_types_list):
+		if current_input_row.get_street_type(self=current_input_row).upper().strip() not in accepted_street_types_list:
+			raise Exception(f"\n*****\n\nERROR IN ROW {row_counter} OF YOUR CSV SHEET - \n\n*****\n\
+The Street Type in ROW {row_counter} is {current_input_row.get_street_type(self=current_input_row)}. \n\
+Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'BULATAN\', \'CABANG\', \'CERUMAN\', \
+\'CERUNAN\', \'CHANGKAT\', \'CROSS\', \'DALAMAN\', \'DATARAN\', \'DRIVE\', \'GAT\', \'GELUGOR\', \'GERBANG\', \
+\'GROVE\', \'HALA\', \'HALAMAN\', \'HALUAN\', \'HILIR\', \'HUJUNG\', \'JALAN\', \'JAMBATAN\', \'JETTY\', \
+\'KAMPUNG\', \'KELOK\', \'LALUAN\', \'LAMAN\', \'LANE\', \'LANGGAK\', \'LEBOH\', \'LEBUH\', \'LEBUHRAYA\', \
+\'LEMBAH\', \'LENGKOK\', \'LENGKONGAN\', \'LIKU\', \'LILITAN\', \'LINGKARAN\', \'LINGKONGAN\', \
+\'LINGKUNGAN\', \'LINTANG\', \'LINTASAN\', \'LORONG\', \'LOSONG\', \'LURAH\', \'M G\', \'MAIN STREET\', \
+\'MEDAN\', \'PARIT\', \'PEKELILING\', \'PERMATANG\', \'PERSIARAN\', \'PERSINT\', \'PERSISIRAN\', \'PESARA\', \
+\'PESIARAN\', \'PIASAU\', \'PINGGIAN\', \'PINGGIR\', \'PINGGIRAN\', \'PINTAS\', \'PINTASAN\', \'PUNCAK\', \
+\'REGAT\', \'ROAD\', \'SEBERANG\', \'SELASAR\', \'SELEKOH\', \'SILANG\', \'SIMPANG\', \'SIMPANGAN\', \
+\'SISIRAN\', \'SLOPE\', \'SOLOK\', \'STREET\', \'SUSUR\', \'SUSURAN\', \'TAMAN\', \'TANJUNG\', \'TEPIAN\', \
+\'TINGGIAN\', \'TINGKAT\', \'P.O.Box\', \'PO Box\'\n*****\n")
+		else:
+			search_using_street_type_and_name(driver, a)
 #####
 
 	input_speed_requested(driver, a)
@@ -75,6 +245,9 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 		current_input_row.set_csv_file_path(self=current_input_row, csv_file_path=full_path)
 		current_input_row.set_input_header_data(self=current_input_row, input_header_data=input_header_data)
 		set_accepted_params()
+
+		accepted_states_list = current_input_row.get_accepted_states_list(self=current_input_row)
+		accepted_street_types_list = current_input_row.get_accepted_street_types_list(self=current_input_row)
 		"""
 		input_header_data=
 		['House/Unit/Lot No.', 'Street Type', 'Street Name', 'Section', 
@@ -104,126 +277,43 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 			state = current_input_row.get_state(self=current_input_row).upper().strip()
 
 			try:
-				select_state(driver, a, state)
+				select_state(driver, a, state, accepted_states_list)
 
-			except NoSuchElementException:
+			except NoSuchElementException: 
+				# THIS EXCEPTION is what we mean:
+					# selenium.common.exceptions.NoSuchElementException: Message: Could not locate element with visible text: SELANGOR
 				try:
 					go_back_to_coverage_search_page(driver)
-					select_state(driver, a, state)
+					select_state(driver, a, state, accepted_states_list)
 				except NoSuchElementException:
+					# THIS EXCEPTION is what we mean:
+						# selenium.common.exceptions.NoSuchElementException: Message: Could not locate element with visible text: SELANGOR
 					# the weird bug that only has wp as state came. skipping this address operation...
 					continue
 
-			### STEP TWO: select street type.
-			street_type = current_input_row.get_street_type(self=current_input_row).upper().strip()
+			### STEP TWO: set up the search string.
+			keyword_search_string = ''
 
-			if street_type in accepted_street_types_list:
-				try:
-					street_types_tab = Select(driver.find_element(By.XPATH, "//form[@name='Netui_Form_1']//table//select"))
-					street_types_tab.select_by_visible_text(f"{street_type}")
-				except NoSuchElementException:
-					driver.refresh()
-					while driver.execute_script("return document.readyState;") != "complete":
-						time.sleep(0.5)
-					street_types_tab = Select(driver.find_element(By.XPATH, "//form[@name='Netui_Form_1']//table//select"))
-					street_types_tab.select_by_visible_text(f"{street_type}")
-			else:
-				raise Exception(f"\n*****\n\nERROR IN ROW {row_counter} OF YOUR CSV SHEET - \n\n*****\n\
-The Street Type in ROW {row_conuter} is {street_type}. \n\
-Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'BULATAN\', \'CABANG\', \'CERUMAN\', \
-\'CERUNAN\', \'CHANGKAT\', \'CROSS\', \'DALAMAN\', \'DATARAN\', \'DRIVE\', \'GAT\', \'GELUGOR\', \'GERBANG\', \
-\'GROVE\', \'HALA\', \'HALAMAN\', \'HALUAN\', \'HILIR\', \'HUJUNG\', \'JALAN\', \'JAMBATAN\', \'JETTY\', \
-\'KAMPUNG\', \'KELOK\', \'LALUAN\', \'LAMAN\', \'LANE\', \'LANGGAK\', \'LEBOH\', \'LEBUH\', \'LEBUHRAYA\', \
-\'LEMBAH\', \'LENGKOK\', \'LENGKONGAN\', \'LIKU\', \'LILITAN\', \'LINGKARAN\', \'LINGKONGAN\', \
-\'LINGKUNGAN\', \'LINTANG\', \'LINTASAN\', \'LORONG\', \'LOSONG\', \'LURAH\', \'M G\', \'MAIN STREET\', \
-\'MEDAN\', \'PARIT\', \'PEKELILING\', \'PERMATANG\', \'PERSIARAN\', \'PERSINT\', \'PERSISIRAN\', \'PESARA\', \
-\'PESIARAN\', \'PIASAU\', \'PINGGIAN\', \'PINGGIR\', \'PINGGIRAN\', \'PINTAS\', \'PINTASAN\', \'PUNCAK\', \
-\'REGAT\', \'ROAD\', \'SEBERANG\', \'SELASAR\', \'SELEKOH\', \'SILANG\', \'SIMPANG\', \'SIMPANGAN\', \
-\'SISIRAN\', \'SLOPE\', \'SOLOK\', \'STREET\', \'SUSUR\', \'SUSURAN\', \'TAMAN\', \'TANJUNG\', \'TEPIAN\', \
-\'TINGGIAN\', \'TINGKAT\', \'P.O.Box\', \'PO Box\'\n*****\n")
-
-
-			### STEP THREE: select street name.
-			street_name = current_input_row.get_street_name(self=current_input_row).upper()
-			building_name = current_input_row.get_building_name(self=current_input_row).upper()
-
-			space_between_word_and_num_verifier = re.search(r'([A-Z])+(\d)+', street_name)
-
-			if space_between_word_and_num_verifier is not None:
-				text_regex = re.compile(r'([A-Z])+')
-				text_res = text_regex.search(street_name)
-				text_in_street_name = text_res.group()
-
-				number_regex = re.compile(r'(\d)+')
-				number_res = number_regex.search(street_name)
-				number_in_street_name = number_res.group()
-
-				street_name = text_in_street_name + ' ' + number_in_street_name
-
-			street_name_input = driver.find_element(By.XPATH, "(//form[@name='Netui_Form_1']//table//tbody//tr//td//input[@type='text'])[1]")
-			street_name_input.clear()
-			street_name_input.send_keys(street_name)
-
+			### STEP TWO A: find if there's a building name.
+			building_name = current_input_row.get_building_name(self=current_input_row).strip()
 			if building_name != '':
-				building_name_input = driver.find_element(By.XPATH, "(//div[@class='subContent']//td[@valign='top']//form[@name='Netui_Form_2']//table//tbody//tr//td//input[@type='text'])[1]")
-				building_name_input.clear()
-				building_name_input.send_keys(building_name)
+				keyword_search_string = keyword_search_string + building_name
 
+				keyword_field = driver.find_element(By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+				keyword_field.clear()
+				keyword_field.send_keys(keyword_search_string)
 
-			### STEP FOUR: click 'search'.
-			search_button = driver.find_element(By.XPATH, "//form[@name='Netui_Form_1']//img[@alt='Search']")
-			a.move_to_element(search_button).click().perform()
+				search_btn_third_col = driver.find_element(By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+				a.move_to_element(search_btn_third_col).click().perform()
 
-			try:
-				WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
-
-			except TimeoutException:
+				# wait for the results table to pop up.
 				try:
-					captcha_to_solve = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
-					captcha_code = solve_captcha(captcha_elem_to_solve=captcha_to_solve, driver=driver)
-
-					captcha_field = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
-					captcha_field.clear()
-					captcha_field.send_keys(captcha_code)
-					submit_captcha_button = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
-					a.move_to_element(submit_captcha_button).click().perform()
-
+					WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
 				except TimeoutException:
-					raise Exception("Error in step FOUR of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
-
-			### STEP FIVE: find the row that has the building name of the input address - from the results table.
-
-			table_header_data = []
-			datagrid_header = driver.find_elements(By.XPATH, "//tr[@class='datagrid-header']//th[@class='datagrid']")
-			for tab in datagrid_header:
-				if tab.text != '':
-					table_header_data.append(tab.text)
-
-			index_for_even = 1
-			index_for_odd = 1
-
-			points_list = []
-
-			url_of_table = driver.current_url
-
-			# TODO: store all of the points in a list. choose the highest that's larger than or equals to (number of columns filled - 1). if none, send notification that there's no coverage.
-			### table_row_data is sometimes empty. find out why!
-			for table_row_num in range(len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))):
-				# getting to the correct page to compare data of each row.
-				retry_times = 0
-				on_page = False
-				if driver.find_element(By.XPATH, "//table[@id='resultAddressGrid']"):
-					on_page = True
-				while not on_page:
-					driver.get(url_of_table)
-					while driver.execute_script("return document.readyState;") != "complete":
-						time.sleep(0.5)
-					try:
-						WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
-						on_page = True
-					except TimeoutException:
+					to_proceed = False
+					while to_proceed == False:
 						try:
-							captcha_to_solve = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+							captcha_to_solve = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
 							captcha_code = solve_captcha(captcha_elem_to_solve=captcha_to_solve, driver=driver)
 
 							captcha_field = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
@@ -232,32 +322,93 @@ Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'
 							submit_captcha_button = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
 							a.move_to_element(submit_captcha_button).click().perform()
 
+							try:
+								WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+							except TimeoutException:
+								to_proceed = True
+
 						except TimeoutException:
-							print("Retrying step FIVE - going back and comparing each address...")
-							retry_times = retry_times + 1
-							if retry_times > 5:
-								raise Exception("Error in step FIVE of coverage_check.py - table did not pop up after going back. Captcha did not pop up too.")
+							raise Exception("Error in the enter BUILDING NAME step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
 
-				# actually comparing the data of each row.
-				table_row_data = driver.find_elements(By.XPATH, f"(//table[@id='resultAddressGrid' and @class='datagrid']//tbody//tr[@class='odd' or @class='even'])[{table_row_num+1}]//td[@class='datagrid']")
-				points = return_points_for_row(table_row_data_list=table_row_data, table_header_data=table_header_data, 
-					input_row_data=input_row_data, input_header_data=input_header_data, driver=driver)
-				# print("POINTS_ACCUMULATED: ", points)
-				if points == 'BEST MATCH':
-					points_list = []
-					check_coverage_and_notify(table_row_num=table_row_num, driver=driver, a=a)
-					break # it's the best that we can get, so we can just break out of the loop.
+				print("BUILDING_NAME iS NOT EMPTY, AND THE RESULTS TABLE SHOULD HAVE POPPED UP.")
+				time.sleep(10)
+				WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
+
+				number_of_results = len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+				print("KEYWORD_SEARCH_STRING: ", keyword_search_string)
+				print("NUMBER_OF_RESULTS: ", number_of_results)
+				if number_of_results == 0:
+					get_street_type_and_search(driver, a, accepted_street_types_list)
 				else:
-					points_list.append((table_row_num, points))
+					iterate_through_all_and_notify(driver, a)
 
-			# now, there's no best match. so we take the row with the highest points.
-			if len(points_list) != 0:
-				# this would mean there's not a best match.
-				points_list = sorted(points_list, key=lambda x: x[1])
+			else:
+				print("BUILDING NAME EMPTY.SO WE ENTER STREET STUFF INTO KEYWORD TAB.")
+				time.sleep(10)
+				get_street_type_and_search(driver, a, accepted_street_types_list)
 
-				# print("POINTS_LISTT:", points_list)
 
-				max_point_tuple = points_list[0]
+			# ### STEP THREE: select street name.
+			# street_name = current_input_row.get_street_name(self=current_input_row).upper()
+			# building_name = current_input_row.get_building_name(self=current_input_row).upper()
 
-				check_coverage_and_notify(table_row_num=max_point_tuple[0], driver=driver, a=a)
+			# space_between_word_and_num_verifier = re.search(r'([A-Z])+(\d)+', street_name)
+
+			# if space_between_word_and_num_verifier is not None:
+			# 	text_regex = re.compile(r'([A-Z])+')
+			# 	text_res = text_regex.search(street_name)
+			# 	text_in_street_name = text_res.group()
+
+			# 	number_regex = re.compile(r'(\d)+')
+			# 	number_res = number_regex.search(street_name)
+			# 	number_in_street_name = number_res.group()
+
+			# 	street_name = text_in_street_name + ' ' + number_in_street_name
+
+			# street_name_input = driver.find_element(By.XPATH, "(//form[@name='Netui_Form_1']//table//tbody//tr//td//input[@type='text'])[1]")
+			# street_name_input.clear()
+			# street_name_input.send_keys(street_name)
+
+			# if building_name != '':
+			# 	building_name_input = driver.find_element(By.XPATH, "(//div[@class='subContent']//td[@valign='top']//form[@name='Netui_Form_2']//table//tbody//tr//td//input[@type='text'])[1]")
+			# 	building_name_input.clear()
+			# 	building_name_input.send_keys(building_name)
+
+
+			# ### STEP FOUR: click 'search'.
+			# search_button = driver.find_element(By.XPATH, "//form[@name='Netui_Form_1']//img[@alt='Search']")
+			# a.move_to_element(search_button).click().perform()
+
+			# try:
+			# 	WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
+
+			# except TimeoutException:
+			# 	try:
+			# 		captcha_to_solve = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+			# 		captcha_code = solve_captcha(captcha_elem_to_solve=captcha_to_solve, driver=driver)
+
+			# 		captcha_field = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+			# 		captcha_field.clear()
+			# 		captcha_field.send_keys(captcha_code)
+			# 		submit_captcha_button = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+			# 		a.move_to_element(submit_captcha_button).click().perform()
+
+			# 	except TimeoutException:
+			# 		raise Exception("Error in step FOUR of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
+
+			# ### STEP FIVE: find the row that has the building name of the input address - from the results table.
+
+
+
+			# index_for_even = 1
+			# index_for_odd = 1
+
+			# points_list = []
+
+			# url_of_table = driver.current_url
+
+			# # TODO: store all of the points in a list. choose the highest that's larger than or equals to (number of columns filled - 1). if none, send notification that there's no coverage.
+			# ### table_row_data is sometimes empty. find out why!
+
 

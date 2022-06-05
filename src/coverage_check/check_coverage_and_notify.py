@@ -18,6 +18,8 @@ from notifications.telegram_msg import send_message
 from notifications.email_msg import send_email
 from .go_back_to_search_page import go_back_to_coverage_search_page
 
+import time
+
 
 def check_coverage_and_notify(table_row_num, driver, a):
 
@@ -42,7 +44,7 @@ def check_coverage_and_notify(table_row_num, driver, a):
 		current_input_row = CurrentInputRow.get_instance()
 		input_header_data = current_input_row.get_input_header_data(self=current_input_row)
 		input_row_data = current_input_row.get_input_row_data(self=current_input_row)
-		input_house_unit_lotno = current_input_row.get_input_house_unit_lotno(self=current_input_row)
+		input_house_unit_lotno = current_input_row.get_house_unit_lotno(self=current_input_row)
 		input_street_type = current_input_row.get_street_type(self=current_input_row)
 		input_street_name = current_input_row.get_street_name(self=current_input_row)
 		input_section = current_input_row.get_section(self=current_input_row)

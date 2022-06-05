@@ -28,7 +28,15 @@ class ICurrentInputRow(metaclass=ABCMeta):
 
 
 	@abstractstaticmethod
-	def get_input_house_unit_lotno():
+	def get_accepted_states_list():
+		""" to implement in child class """
+
+	@abstractstaticmethod
+	def get_accepted_street_types_list():
+		""" to implement in child class """
+
+	@abstractstaticmethod
+	def get_house_unit_lotno():
 		""" to implement in child class """
 
 	@abstractstaticmethod
@@ -113,7 +121,7 @@ class CurrentInputRow(ICurrentInputRow):
 		else:
 			self.input_header_data = input_header_data
 			self.input_row_data = input_row_data
-			self.accepted_states_list = accpeted_states_list
+			self.accepted_states_list = accepted_states_list
 			self.accepted_street_types_list = accepted_street_types_list
 			CurrentInputRow.__instance = self
 
@@ -131,12 +139,20 @@ class CurrentInputRow(ICurrentInputRow):
 
 	@staticmethod
 	def set_accepted_states_list(self, accepted_states_list):
-		self.accepted_states_list = accpeted_states_list
+		self.accepted_states_list = accepted_states_list
 
 	@staticmethod
 	def set_accepted_street_types_list(self, accepted_street_types_list):
 		self.accepted_street_types_list = accepted_street_types_list
 
+
+	@staticmethod
+	def get_accepted_states_list(self):
+		return self.accepted_states_list
+
+	@staticmethod
+	def get_accepted_street_types_list(self):
+		return self.accepted_street_types_list
 
 	@staticmethod
 	def get_input_header_data(self):
@@ -147,7 +163,7 @@ class CurrentInputRow(ICurrentInputRow):
 		return self.input_row_data
 
 	@staticmethod
-	def get_input_house_unit_lotno(self):
+	def get_house_unit_lotno(self):
 		input_header_data = self.get_input_header_data(self=self)
 		input_row_data = self.get_input_row_data(self=self)
 

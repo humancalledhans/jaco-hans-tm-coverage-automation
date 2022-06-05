@@ -22,8 +22,8 @@ def set_accepted_params():
 
 def set_accepted_states(accepted_states_list):
 	current_input_row = CurrentInputRow.get_instance()
-	current_input_row.set_accepted_states_list(accepted_states_list)
+	current_input_row.set_accepted_states_list(self=current_input_row, accepted_states_list=accepted_states_list)
 
 def set_accepted_street_types(accepted_street_types_list):
 	current_input_row = CurrentInputRow.get_instance()
-	current_input_row.set_accepted_street_types_list(accepted_states_list)
+	current_input_row.set_accepted_street_types_list(self=current_input_row, accepted_street_types_list=accepted_street_types_list)
