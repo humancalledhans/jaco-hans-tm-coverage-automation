@@ -14,9 +14,11 @@ from selenium.webdriver import ActionChains
 
 
 def input_speed_requested(driver, a):
-	#inputing the "speed requested"
-	speed_requested_tab = Select(driver.find_element(By.XPATH, "(//div[@class='partnerHomeContent'])[3]//select"))
-	speed_requested_tab.select_by_visible_text("50Mbps and above")
+    # inputing the "speed requested"
+    speed_requested_tab = Select(driver.find_element(
+        By.XPATH, "(//div[@class='partnerHomeContent'])[3]//select"))
+    speed_requested_tab.select_by_visible_text("50Mbps and above")
 
-	check_coverage_button = driver.find_element(By.XPATH, "//input[@type='image' and @value='Next' and @alt='submit']")
-	a.move_to_element(check_coverage_button).click().perform()
+    check_coverage_button = driver.find_element(
+        By.XPATH, "//input[@type='image' and @value='Next' and @alt='submit']")
+    a.move_to_element(check_coverage_button).click().perform()

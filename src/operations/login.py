@@ -23,65 +23,69 @@ from PIL import Image
 from coverage_check.coverage_check import finding_coverage
 from operations.solve_captcha import solve_captcha
 
-def login(username:str, password:str):
 
-	proceed = False
-	count = 0
-	while not proceed:
-		try:
-			s = Service(ChromeDriverManager().install())    
-			options = Options()
-			options.headless = False
-			options.add_argument('--disable-dev-shm-usage')
-			driver = webdriver.Chrome(service=s, options=options)
-			driver.get('https://partners.unifi.my/HSBBPartnerPortal/HSBBPartnerPortal.portal?_nfpb=true&_pageLabel=login_portal&_nfls=false#wlp_HSBBPartnerPortal_portal_HelpCustomer/')
-			while driver.execute_script("return document.readyState;") != "complete":
-				time.sleep(0.5)
+def login(username: str, password: str):
 
-			user_name_field = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@type='text' and @id='portal.actionForm_username']")))
-			user_name_field.clear()
-			user_name_field.send_keys(username)
+    proceed = False
+    count = 0
+    while not proceed:
+        try:
+            s = Service(ChromeDriverManager().install())
+            options = Options()
+            options.headless = False
+            options.add_argument('--disable-dev-shm-usage')
+            driver = webdriver.Chrome(service=s, options=options)
+            driver.get('https://partners.unifi.my/HSBBPartnerPortal/HSBBPartnerPortal.portal?_nfpb=true&_pageLabel=login_portal&_nfls=false#wlp_HSBBPartnerPortal_portal_HelpCustomer/')
+            while driver.execute_script("return document.readyState;") != "complete":
+                time.sleep(0.5)
 
-			password_field = driver.find_element(By.XPATH, "//input[@type='password' and @id='portal.actionForm_password']")
-			password_field.clear()
-			password_field.send_keys(password)
+            a = ActionChains(driver)
 
-			proceed = True
+            user_name_field = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+                (By.XPATH, "//input[@type='text' and @id='portal.actionForm_username']")))
+            user_name_field.clear()
+            user_name_field.send_keys(username)
 
-		except TimeoutException:
-			count += 1
-			print("Unable to access page. Trying again automatically in 10 seconds...")
-			driver.close()
-			time.sleep(15)
-			print("15 seconds has passed. Trying Again...")
+            password_field = driver.find_element(
+                By.XPATH, "//input[@type='password' and @id='portal.actionForm_password']")
+            password_field.clear()
+            password_field.send_keys(password)
 
-			if count == 5:
-				print("We tried for 5 times. Skipping...")
-				print("An hour has passed. Trying Again...")
-				count = 0
+            to_proceed = False
+            while to_proceed == False:
+                captcha_to_solve = driver.find_element(
+                    By.XPATH, "//img[@border='1' and @style='width: 220px;']")
+                captcha_code = solve_captcha(
+                    captcha_elem_to_solve=captcha_to_solve, driver=driver)
 
-	a = ActionChains(driver)
+                captcha_field = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+                    (By.XPATH, "//input[@type='text' and @id='portal.actionForm_captchaCode']")))
+                captcha_field.clear()
+                captcha_field.send_keys(captcha_code)
 
-	to_proceed = False
-	while to_proceed == False:
-		captcha_to_solve = driver.find_element(By.XPATH, "//img[@border='1' and @style='width: 220px;']")
-		captcha_code = solve_captcha(captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                login_button = driver.find_element(
+                    By.XPATH, "//input[@type='image' and @alt='Login']")
+                a.move_to_element(login_button).click().perform()
 
-		captcha_field = WebDriverWait(driver,10).until(EC.presence_of_element_located((By.XPATH, "//input[@type='text' and @id='portal.actionForm_captchaCode']")))
-		captcha_field.clear()
-		captcha_field.send_keys(captcha_code)
+                try:
+                    WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                        (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
 
-		login_button = driver.find_element(By.XPATH, "//input[@type='image' and @alt='Login']")
-		a.move_to_element(login_button).click().perform()
+                except TimeoutException:
+                    to_proceed = True
 
-		try:
-			WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+            proceed = True
 
-		except TimeoutException:
-			to_proceed = True
+        except TimeoutException:
+            count += 1
+            print("Unable to access page. Trying again automatically in 15 seconds...")
+            driver.close()
+            time.sleep(15)
+            print("15 seconds has passed. Trying Again...")
 
-	finding_coverage(driver=driver, a=a)
+            if count == 5:
+                print("We tried for 5 times. Skipping...")
+                print("An hour has passed. Trying Again...")
+                count = 0
 
-
-if __name__ == '__main__':
-	start_project()
+    finding_coverage(driver=driver, a=a)
