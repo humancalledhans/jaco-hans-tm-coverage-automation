@@ -45,7 +45,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
             if "within the serviceable area" in result_text.lower():
                 print("RESULT: is within servicable area")
                 send_message(address_string + "\nIs within serviceable area!")
-                send_email(address_string + "\nIs within serviceable area!")
+                # send_email(address_string + "\nIs within serviceable area!")
 
             else:
                 print("we're in the block where the green check mark is not available")
@@ -54,10 +54,10 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
                 if 'unable to process order. another progressing order created on the same address has been detected.' in result_text.lower():
                     print(
                         'RESULT: unable to process order. another progressing order created on the same address has been detected.')
-                    send_message(
-                        address_string + "\nAnother progressing order created on the same address has been detected!")
-                    send_email(
-                        address_string + "\nAnother progressing order created on the same address has been detected!")
+                    # send_message(
+                    #     address_string + "\nAnother progressing order created on the same address has been detected!")
+                    # send_email(
+                    # address_string + "\nAnother progressing order created on the same address has been detected!")
 
             go_back_to_coverage_search_page(driver)
 
@@ -69,16 +69,16 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
 
             if "cannot proceed with transfer request. service provider not the same with transfer request." in result_text.lower():
                 print('RESULT: service provider not the same with transfer request.')
-                send_message(
-                    address_string + "\nService provider not the same with Transfer Request!")
-                send_email(
-                    address_string + "\nService provider not the same with Transfer Request!")
+                # send_message(
+                #     address_string + "\nService provider not the same with Transfer Request!")
+                # send_email(
+                # address_string + "\nService provider not the same with Transfer Request!")
 
             elif "is not within the serviceable area" in result_text.lower():
                 print("RESULT: is not within the servicable area.")
-                send_message(address_string +
-                             "\nIs not within the servicable area!")
-                send_email(address_string + "\nIs not within servicable area!")
+                # send_message(address_string +
+                #              "\nIs not within the servicable area!")
+                # send_email(address_string + "\nIs not within servicable area!")
 
             go_back_to_coverage_search_page(driver)
 
@@ -163,6 +163,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
             bridge_to_actual_op(driver, a)
 
         except TimeoutException:
+            time.sleep(300)  # this actually needs to be 300.
             driver.refresh()
             try:
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located(
@@ -170,6 +171,5 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
                 bridge_to_actual_op(driver, a)
 
             except TimeoutException:
-                raise Exception(
-                    "Check failed. Code has refreshed and waited for 5 minutes - but the Coverage result never showed.")
                 driver.execute_script("window.history.go(-1)")
+                # TODO: figure out where this goes to.

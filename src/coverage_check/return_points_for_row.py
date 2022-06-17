@@ -7,9 +7,9 @@ def return_points_for_row(table_row_data_list, table_header_data, input_row_data
         table_row_data.append(table_data.text)
 
     input_unit_num_match_bool_index = input_header_data.index(
-        'unit_num_match (Y/N)')
+        'unit_num_match (0/1)')
     if input_row_data[input_unit_num_match_bool_index] == '':
-        input_unit_num_match_bool = 'N'
+        input_unit_num_match_bool = 0
     else:
         input_unit_num_match_bool = input_row_data[input_unit_num_match_bool_index]
 
@@ -21,7 +21,7 @@ def return_points_for_row(table_row_data_list, table_header_data, input_row_data
         'House/Unit/Lot No.')
     table_house_unit_lotno = table_row_data[table_house_unit_lotno_index]
 
-    if input_house_unit_lotno != table_house_unit_lotno and input_unit_num_match_bool == 'Y':
+    if input_house_unit_lotno != table_house_unit_lotno and input_unit_num_match_bool == 1:
         return 0
 
     else:

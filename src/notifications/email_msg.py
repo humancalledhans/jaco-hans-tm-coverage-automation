@@ -3,7 +3,7 @@ import smtplib
 
 def send_email(text):
     gmail_user = 'hansworktests@gmail.com'
-    gmail_password = 'A1b2c3d5e7'
+    gmail_password = 'hunerkowjuhdyvqm'
 
     sent_from = gmail_user
     to = 'hansmaildump@gmail.com'

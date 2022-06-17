@@ -1,3 +1,4 @@
+from ast import keyword
 from selenium.webdriver import Chrome
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -88,9 +89,9 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 
     def iterate_through_all_and_notify(driver, a, filtered):
         """
-        this function 
-        1. gets to the actual results page, 
-        2. iterates through all the results, and 
+        this function
+        1. gets to the actual results page,
+        2. iterates through all the results, and
         3. calculates the points of every results
         4. and calls "check_coverage_and_notify()" with the best result row.
 
@@ -199,7 +200,7 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
             self=current_input_row).strip()
 
         keyword_search_string = ''
-        if len(unit_lotno) > 0:
+        if len(unit_lotno) > 0:  # ie: if unit_lotno exists
             keyword_search_string = keyword_search_string + unit_lotno + ' '
         keyword_search_string = keyword_search_string + \
             street_type + ' ' + street_name + ' ' + building_name
@@ -213,7 +214,6 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
             By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
         a.move_to_element(search_btn_third_col).click().perform()
 
-        # yes it is.
         # solve captcha
 
         try:
@@ -282,7 +282,6 @@ Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'
     script_dir = os.path.dirname(__file__)  # Script directory
     full_path = os.path.join(script_dir, '../../second_jaco.csv')
 
-    # TODO: change this with the actual file that's input by the user.
     with open(full_path, 'rt') as f:
 
         csvreader = csv.reader(f)
@@ -304,17 +303,17 @@ Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'
             self=current_input_row)
         """
 		input_header_data=
-		['House/Unit/Lot No.', 'Street Type', 'Street Name', 'Section', 
-		'Floor No.', 'Building Name', 'City', 'State', 'Postcode', 'tid (option)', 
-		'source (option)', 'Uid', 'Result type', 'result string', 'Salesman', 
+		['House/Unit/Lot No.', 'Street Type', 'Street Name', 'Section',
+		'Floor No.', 'Building Name', 'City', 'State', 'Postcode', 'tid (option)',
+		'source (option)', 'Uid', 'Result type', 'result string', 'Salesman',
 		'Email Notification', 'telegram']
 		"""
 
         """
 		example row_data:
-		['A-1-1', 'JALAN', 'PS 11', 
-		'PRIMA SELAYANG', '1', 'DATARAN EMERALD', 
-		'BATU CAVES', 'SELANGOR', '68100', 
+		['A-1-1', 'JALAN', 'PS 11',
+		'PRIMA SELAYANG', '1', 'DATARAN EMERALD',
+		'BATU CAVES', 'SELANGOR', '68100',
 		'', '', '', '', '', '', '', '']
 		"""
 
@@ -351,13 +350,20 @@ Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'
             keyword_search_string = ''
 
             # STEP TWO A: find if there's a building name.
+
+            lot_no_detail_flag = current_input_row.get_lotno_match_bool(
+                self=current_input_row)
+
             building_name = current_input_row.get_building_name(
                 self=current_input_row).strip()
+
             if building_name != '':
+
                 keyword_search_string = keyword_search_string + building_name
 
                 keyword_field = driver.find_element(
                     By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+
                 keyword_field.clear()
                 keyword_field.send_keys(keyword_search_string)
 
@@ -398,91 +404,157 @@ Street Type needs to be one of \'ALUR\', \'OFF JALAN\', \'AVENUE\', \'BATU\', \'
                             raise Exception(
                                 "Error in the enter BUILDING NAME step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
 
+                # captcha should be solved now. getting the results...
                 WebDriverWait(driver, 5).until(EC.presence_of_element_located(
                     (By.XPATH, "//table[@id='resultAddressGrid']")))
 
                 number_of_results = len(driver.find_elements(
                     By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
 
-                if number_of_results == 0:
-                    get_street_type_and_search(
-                        driver, a, accepted_street_types_list)
+                if number_of_results > 50:
+                    if lot_no_detail_flag == 0:
+                        iterate_through_all_and_notify(
+                            driver, a, filtered=True)
 
-                elif number_of_results > 50:
-                    unit_no_filter_tab = driver.find_element(
-                        By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
-                    unit_no_filter_tab.clear()
-                    current_input_row = CurrentInputRow.get_instance()
-                    unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
-                        self=current_input_row).strip())  # entering the unit number so that we can reduce the num of results.
+                    else:
+                        unit_no_filter_tab = driver.find_element(
+                            By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                        unit_no_filter_tab.clear()
+                        current_input_row = CurrentInputRow.get_instance()
+                        unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
+                            self=current_input_row).strip())  # entering the unit number so that we can reduce the num of results.
 
-                    # assuming that the number of results have been significantly reduced.
-                    iterate_through_all_and_notify(driver, a, filtered=True)
-                    # TODO: implement this for filtered. the main difference is the xpath. bse it on iterate_through_all_and_notify
+                        # assuming that the number of results have been significantly reduced.
+                        print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
+                        iterate_through_all_and_notify(
+                            driver, a, filtered=True)
+
+                elif number_of_results == 0:
+                    print("END BLOCK! OUTPUT CASE 8 PLEASE!")
+                    # TODO: output case 5
 
                 else:
-                    iterate_through_all_and_notify(driver, a, filtered=False)
+                    # the block where 1 < num_of_results < 50
+                    if lot_no_detail_flag == 0:
+                        print("END BLOCK! OUTPUT CASE 2 PLEASE!")
+                    else:
+                        print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
+                        iterate_through_all_and_notify(
+                            driver, a, filtered=False)
 
             else:
-                print("BUILDING NAME EMPTY. SO WE ENTER STREET STUFF INTO KEYWORD TAB.")
-                get_street_type_and_search(
-                    driver, a, accepted_street_types_list)
+                # when building name is empty. do the same but for street.
 
-            # ### STEP THREE: select street name.
-            # street_name = current_input_row.get_street_name(self=current_input_row).upper()
-            # building_name = current_input_row.get_building_name(self=current_input_row).upper()
+                # get street_type_and_search() gets the lot no, street type, and street name - puts it tgt and seraches.
+                # the results table would then be there.
+                # then, it calls iterate_through_all_and_notify().
 
-            # space_between_word_and_num_verifier = re.search(r'([A-Z])+(\d)+', street_name)
+                current_row_street_name = current_input_row.get_street_name(
+                    self=current_input_row)
+                current_row_street_type = current_input_row.get_street_type(
+                    self=current_input_row)
 
-            # if space_between_word_and_num_verifier is not None:
-            # 	text_regex = re.compile(r'([A-Z])+')
-            # 	text_res = text_regex.search(street_name)
-            # 	text_in_street_name = text_res.group()
+                keyword_search_string = ''
+                keyword_search_string = keyword_search_string + \
+                    current_row_street_type + " " + current_row_street_name
 
-            # 	number_regex = re.compile(r'(\d)+')
-            # 	number_res = number_regex.search(street_name)
-            # 	number_in_street_name = number_res.group()
+                keyword_field = driver.find_element(
+                    By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+                keyword_field.clear()
+                keyword_field.send_keys(keyword_search_string)
 
-            # 	street_name = text_in_street_name + ' ' + number_in_street_name
+                search_btn_third_col = driver.find_element(
+                    By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                a.move_to_element(search_btn_third_col).click().perform()
 
-            # street_name_input = driver.find_element(By.XPATH, "(//form[@name='Netui_Form_1']//table//tbody//tr//td//input[@type='text'])[1]")
-            # street_name_input.clear()
-            # street_name_input.send_keys(street_name)
+                # solve captcha
 
-            # if building_name != '':
-            # 	building_name_input = driver.find_element(By.XPATH, "(//div[@class='subContent']//td[@valign='top']//form[@name='Netui_Form_2']//table//tbody//tr//td//input[@type='text'])[1]")
-            # 	building_name_input.clear()
-            # 	building_name_input.send_keys(building_name)
+                try:
+                    WebDriverWait(driver, 5).until(EC.presence_of_element_located(
+                        (By.XPATH, "//table[@id='resultAddressGrid']")))
 
-            # ### STEP FOUR: click 'search'.
-            # search_button = driver.find_element(By.XPATH, "//form[@name='Netui_Form_1']//img[@alt='Search']")
-            # a.move_to_element(search_button).click().perform()
+                except TimeoutException:
+                    to_proceed = False
+                    while to_proceed == False:
+                        try:
+                            captcha_to_solve = WebDriverWait(driver, 5).until(EC.presence_of_element_located(
+                                (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                            captcha_code = solve_captcha(
+                                captcha_elem_to_solve=captcha_to_solve, driver=driver)
 
-            # try:
-            # 	WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//table[@id='resultAddressGrid']")))
+                            captcha_field = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+                                (By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")))
+                            captcha_field.clear()
+                            captcha_field.send_keys(captcha_code)
+                            submit_captcha_button = driver.find_element(
+                                By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                            a.move_to_element(
+                                submit_captcha_button).click().perform()
 
-            # except TimeoutException:
-            # 	try:
-            # 		captcha_to_solve = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
-            # 		captcha_code = solve_captcha(captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                            try:
+                                WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
 
-            # 		captcha_field = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
-            # 		captcha_field.clear()
-            # 		captcha_field.send_keys(captcha_code)
-            # 		submit_captcha_button = driver.find_element(By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
-            # 		a.move_to_element(submit_captcha_button).click().perform()
+                            except TimeoutException:
+                                to_proceed = True
+                                # break
 
-            # 	except TimeoutException:
-            # 		raise Exception("Error in step FOUR of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
+                        except TimeoutException:
+                            raise Exception(
+                                "Error in the SEARCHING step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
 
-            # ### STEP FIVE: find the row that has the building name of the input address - from the results table.
+                    WebDriverWait(driver, 5).until(EC.presence_of_element_located(
+                        (By.XPATH, "//table[@id='resultAddressGrid']")))
 
-            # index_for_even = 1
-            # index_for_odd = 1
+                number_of_results = len(driver.find_elements(
+                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
 
-            # points_list = []
+                if number_of_results > 50:
+                    if lot_no_detail_flag == 0:
+                        get_street_type_and_search(
+                            driver=driver, a=a, accepted_street_types_list=accepted_street_types_list)
 
-            # url_of_table = driver.current_url
+                    else:
+                        # need to search using the lot number too, and look at the number of results.
+                        # iterate_through_and_notify() might not work for cases where we need a lot number match.
 
-            # # TODO: store all of the points in a list. choose the highest that's larger than or equals to (number of columns filled - 1). if none, send notification that there's no coverage.
-            # ### table_row_data is sometimes empty. find out why!
+                        current_row_lot_no = current_input_row.get_house_unit_lotno(
+                            self=current_input_row)
+                        if len(current_row_lot_no) > 0:
+                            keyword_search_string = current_row_lot_no + ' ' + keyword_search_string
+                        else:
+                            print("END BLOCK! OUTPUT CASE 3 PLEASE!")
+
+                        keyword_field = driver.find_element(
+                            By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+                        keyword_field.clear()
+                        keyword_field.send_keys(keyword_search_string)
+
+                        print("END BLOCK! OUTPUT CASE 3 OR 1 PLEASE!")
+                        iterate_through_all_and_notify(
+                            driver=driver, a=a, filtered=False)
+
+                elif number_of_results == 0:
+                    print("END BLOCK! OUTPUT CASE 8 PLEASE!")
+
+                else:
+                    # the block where 1 < num_of_results < 50
+                    if lot_no_detail_flag == 0:
+                        get_street_type_and_search(
+                            driver=driver, a=a, accepted_street_types_list=accepted_street_types_list)
+                    else:
+                        current_row_lot_no = current_input_row.get_house_unit_lotno(
+                            self=current_input_row)
+                        if len(current_row_lot_no) > 0:
+                            keyword_search_string = current_row_lot_no + ' ' + keyword_search_string
+                        else:
+                            print("END BLOCK! OUTPUT CASE 3 PLEASE!")
+
+                        keyword_field = driver.find_element(
+                            By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+                        keyword_field.clear()
+                        keyword_field.send_keys(keyword_search_string)
+
+                        print("END BLOCK! OUTPUT CASE 3 OR 1 PLEASE!")
+                        iterate_through_all_and_notify(
+                            driver=driver, a=a, filtered=False)

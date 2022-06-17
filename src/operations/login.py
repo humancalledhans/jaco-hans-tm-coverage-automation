@@ -34,6 +34,7 @@ def login(username: str, password: str):
             options = Options()
             options.headless = False
             options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--force-device-scale-factor=1')
             driver = webdriver.Chrome(service=s, options=options)
             driver.get('https://partners.unifi.my/HSBBPartnerPortal/HSBBPartnerPortal.portal?_nfpb=true&_pageLabel=login_portal&_nfls=false#wlp_HSBBPartnerPortal_portal_HelpCustomer/')
             while driver.execute_script("return document.readyState;") != "complete":
@@ -80,7 +81,8 @@ def login(username: str, password: str):
             count += 1
             print("Unable to access page. Trying again automatically in 15 seconds...")
             driver.close()
-            time.sleep(15)
+            print("GET THE XCODE PATH OF THE MAINTENANCE PAGE!")
+            time.sleep(1500)
             print("15 seconds has passed. Trying Again...")
 
             if count == 5:
