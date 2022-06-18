@@ -1,17 +1,14 @@
 import mysql.connector
-import pandas as pd
+from datetime import datetime
 import csv
 
 
-def upload_to_db():
+def write_from_csv_to_db():
     cnx = mysql.connector.connect(user="oursspc1_db_extuser", password="ExtInfo!@#",
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
 
-    # columns = ("id", "unit_no", "floor", "building", "street", "section",
-    #            "city", "state", "postcode", "created_at", "updated_at")
-
-    # 'street_name' and 'street_type' would be put together into 'street'.
+    # note that 'street_name' and 'street_type' would be put together into 'street'.
 
     # TODO: double check the create_table statement. result_type should have not null instead of default null. things like these.
     # there ARE 19 columns, however.
@@ -62,6 +59,29 @@ def upload_to_db():
 
             cnx.commit()
 
+            cursor.close()
+
+
+def write_or_edit_result(id, result_type):
+    cnx = mysql.connector.connect(user="oursspc1_db_extuser", password="ExtInfo!@#",
+                                  host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
+    cursor = cnx.cursor()
+
+    current_datetime = datetime.now()
+
+    edit_stmt = f"""
+    UPDATE cvg_db
+    SET result_type = {result_type}, updated_at = '{current_datetime}'
+    WHERE id = {id};
+    """
+
+    cursor.execute(edit_stmt)
+
+    cnx.commit()
+
+    cursor.close()
+    cnx.close()
+
 
 if __name__ == '__main__':
-    upload_to_db()
+    write_or_edit_result(id=5, result_type=1)

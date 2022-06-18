@@ -1,4 +1,4 @@
-from current_input_row.current_input_row import CurrentInputRow
+from singleton.current_input_row import CurrentInputRow
 
 def set_accepted_params():
 	accepted_states_list = ['MELAKA', 'KELANTAN', 'KEDAH', 'JOHOR', 'NEGERI SEMBILAN', 'PAHANG', 'PERAK', 'PERLIS', 

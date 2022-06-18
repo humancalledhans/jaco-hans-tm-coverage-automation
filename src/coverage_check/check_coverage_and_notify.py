@@ -13,7 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver import ActionChains
 
-from current_input_row.current_input_row import CurrentInputRow
+from singleton.current_input_row import CurrentInputRow
 
 from notifications.telegram_msg import send_message
 from notifications.email_msg import send_email
@@ -91,10 +91,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
             self=current_input_row)
         input_house_unit_lotno = current_input_row.get_house_unit_lotno(
             self=current_input_row)
-        input_street_type = current_input_row.get_street_type(
-            self=current_input_row)
-        input_street_name = current_input_row.get_street_name(
-            self=current_input_row)
+        input_street = current_input_row.get_street(self=current_input_row)
         input_section = current_input_row.get_section(self=current_input_row)
         input_floor_no = current_input_row.get_floor_no(self=current_input_row)
         input_building_name = current_input_row.get_building_name(
@@ -105,8 +102,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
 
         address_string = address_string + \
             "House/Unit/Lot No." + input_house_unit_lotno + '\n' + \
-            "Street Type: " + input_street_type + '\n' + \
-            "Street Name: " + input_street_name + '\n' + \
+            "Street: " + input_street + '\n' + \
             "Section: " + input_section + '\n' + \
             "Floor No: " + input_floor_no + '\n' + \
             "Building Name: " + input_building_name + '\n' + \

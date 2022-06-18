@@ -1,4 +1,5 @@
 from operations.login import login
+from singleton.data_id_range import DataIdRange
 
 
 def main():
@@ -12,6 +13,10 @@ def main():
         ids_to_start_from = 0
     if ids_to_end_at == '':
         ids_to_end_at = "all"
+
+    data_id_range = DataIdRange.get_instance()
+    data_id_range.set_start_id(ids_to_start_from)
+    data_id_range.set_end_id(ids_to_end_at)
 
     login('DPPJ1901', 'Dsync110!!')
 
@@ -53,8 +58,6 @@ def main():
     # when there's only one result (without the filter boxes), the xpath for the tr @class is "[@class='datagrid-even']"
     # when there's multiple results (with the filter boxes), the xpath for the tr @class is "[@class='odd' or @class='even']"
     # after you filter using the filter box, the xpath would be //tr[@class='odd' or @class='even'][not(@style)]
-
-    # login('DPSL9701', 'Djns513!!')
 
 
 if __name__ == '__main__':
