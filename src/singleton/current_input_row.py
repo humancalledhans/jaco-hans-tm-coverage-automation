@@ -4,22 +4,6 @@ from abc import ABCMeta, abstractstaticmethod
 class ICurrentInputRow(metaclass=ABCMeta):
 
     @abstractstaticmethod
-    def get_input_header_data():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def get_input_row_data():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def set_input_header_data():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def set_input_row_data():
-        """ to implement in child class """
-
-    @abstractstaticmethod
     def set_accepted_states_list():
         """ to implement in child class """
 
@@ -28,11 +12,79 @@ class ICurrentInputRow(metaclass=ABCMeta):
         """ to implement in child class """
 
     @abstractstaticmethod
-    def set_ids_to_start_from():
+    def set_id():
         """ to implement in child class """
 
     @abstractstaticmethod
-    def set_ids_to_end_at():
+    def set_unit_no():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_floor():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_building():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_street():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_section():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_city():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_state():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_postcode():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_search_level_flag():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_source():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_source_id():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_salesman():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_notify_email():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_notify_mobile():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_result_type():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_result_remark():
+        """to implement in child class """
+
+    @abstractstaticmethod
+    def set_created_at():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_updated_at():
         """ to implement in child class """
 
     @abstractstaticmethod
@@ -44,27 +96,35 @@ class ICurrentInputRow(metaclass=ABCMeta):
         """ to implement in child class """
 
     @abstractstaticmethod
+    def get_input_header_data():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_input_row_data():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_id():
+        """ to implement in child class """
+
+    @abstractstaticmethod
     def get_house_unit_lotno():
         """ to implement in child class """
 
     @abstractstaticmethod
-    def get_street_type():
+    def get_floor():
         """ to implement in child class """
 
     @abstractstaticmethod
-    def get_street_name():
+    def get_building():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_street():
         """ to implement in child class """
 
     @abstractstaticmethod
     def get_section():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def get_floor_no():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def get_building_name():
         """ to implement in child class """
 
     @abstractstaticmethod
@@ -80,27 +140,15 @@ class ICurrentInputRow(metaclass=ABCMeta):
         """ to implement in child class """
 
     @abstractstaticmethod
-    def get_tid_option():
+    def get_search_level_flag():
         """ to implement in child class """
 
     @abstractstaticmethod
-    def get_source_option():
+    def get_source():
         """ to implement in child class """
 
     @abstractstaticmethod
-    def get_uid():
-        """ to implement in child class """
-
-    @staticmethod
-    def get_lotno_match_bool():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def get_result_type():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def get_result_string():
+    def get_source_id():
         """ to implement in child class """
 
     @abstractstaticmethod
@@ -108,11 +156,23 @@ class ICurrentInputRow(metaclass=ABCMeta):
         """ to implement in child class """
 
     @abstractstaticmethod
-    def get_email_notification():
+    def get_notify_email():
         """ to implement in child class """
 
     @abstractstaticmethod
-    def get_telegram():
+    def get_notify_mobile():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_result_type():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_created_at():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_updated_at():
         """ to implement in child class """
 
 
@@ -137,24 +197,12 @@ class CurrentInputRow(ICurrentInputRow):
             CurrentInputRow.__instance = self
 
     @staticmethod
-    def set_csv_file_path(self, csv_file_path):
-        self.csv_file_path = csv_file_path
-
-    @staticmethod
     def set_accepted_states_list(self, accepted_states_list):
         self.accepted_states_list = accepted_states_list
 
     @staticmethod
     def set_accepted_street_types_list(self, accepted_street_types_list):
         self.accepted_street_types_list = accepted_street_types_list
-
-    @staticmethod
-    def set_ids_to_start_from(self, ids_to_start_from):
-        self.ids_to_start_from = ids_to_start_from
-
-    @staticmethod
-    def set_ids_to_end_at(self, ids_to_end_at):
-        self.ids_to_end_at = ids_to_end_at
 
     @staticmethod
     def set_id(self, current_row_id):
@@ -269,24 +317,6 @@ class CurrentInputRow(ICurrentInputRow):
         return self.current_row_street
 
     @staticmethod
-    def get_street_type(self):
-        accepted_street_types_list = ['ALUR', 'OFF JALAN', 'AVENUE', 'BATU', 'BULATAN', 'CABANG', 'CERUMAN',
-                                      'CERUNAN', 'CHANGKAT', 'CROSS', 'DALAMAN', 'DATARAN', 'DRIVE', 'GAT', 'GELUGOR', 'GERBANG',
-                                      'GROVE', 'HALA', 'HALAMAN', 'HALUAN', 'HILIR', 'HUJUNG', 'JALAN', 'JAMBATAN', 'JETTY',
-                                      'KAMPUNG', 'KELOK', 'LALUAN', 'LAMAN', 'LANE', 'LANGGAK', 'LEBOH', 'LEBUH', 'LEBUHRAYA',
-                                      'LEMBAH', 'LENGKOK', 'LENGKONGAN', 'LIKU', 'LILITAN', 'LINGKARAN', 'LINGKONGAN',
-                                      'LINGKUNGAN', 'LINTANG', 'LINTASAN', 'LORONG', 'LOSONG', 'LURAH', 'M G', 'MAIN STREET',
-                                      'MEDAN', 'PARIT', 'PEKELILING', 'PERMATANG', 'PERSIARAN', 'PERSINT', 'PERSISIRAN', 'PESARA',
-                                      'PESIARAN', 'PIASAU', 'PINGGIAN', 'PINGGIR', 'PINGGIRAN', 'PINTAS', 'PINTASAN', 'PUNCAK',
-                                      'REGAT', 'ROAD', 'SEBERANG', 'SELASAR', 'SELEKOH', 'SILANG', 'SIMPANG', 'SIMPANGAN',
-                                      'SISIRAN', 'SLOPE', 'SOLOK', 'STREET', 'SUSUR', 'SUSURAN', 'TAMAN', 'TANJUNG', 'TEPIAN',
-                                      'TINGGIAN', 'TINGKAT', 'P.O.Box', 'PO Box']
-
-        for street_type in accepted_street_types_list:
-            if street_type in self.get_street():
-                return street_type
-
-    @staticmethod
     def get_section(self):
         return self.current_row_section
 
@@ -296,7 +326,7 @@ class CurrentInputRow(ICurrentInputRow):
 
     @staticmethod
     def get_state(self):
-        return self.curent_row_state
+        return self.current_row_state
 
     @staticmethod
     def get_postcode(self):

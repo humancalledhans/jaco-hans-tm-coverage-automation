@@ -1,22 +1,14 @@
-from unittest import result
-from selenium.webdriver import Chrome
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.ui import Select
-from selenium.webdriver import ActionChains
+from db_read_write.db_write_address import write_or_edit_result
 
 from singleton.current_input_row import CurrentInputRow
 
 from notifications.telegram_msg import send_message
-from notifications.email_msg import send_email
 from .go_back_to_search_page import go_back_to_coverage_search_page
 
 import time
@@ -43,7 +35,13 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
                 By.XPATH, "//td[@align='justify']")
             result_text = coverage_result.text
             if "within the serviceable area" in result_text.lower():
+
                 print("RESULT: is within servicable area")
+                current_input_row = CurrentInputRow().get_instance()
+                current_row_id = current_input_row.get_id(
+                    self=current_input_row)
+                write_or_edit_result(
+                    id=current_row_id, result_type=1, result_text="Is within serviceable area!")
                 send_message(address_string + "\nIs within serviceable area!")
                 # send_email(address_string + "\nIs within serviceable area!")
 
@@ -85,20 +83,33 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
     def bridge_to_actual_op(driver, a):
         address_string = ''
         current_input_row = CurrentInputRow.get_instance()
-        input_header_data = current_input_row.get_input_header_data(
-            self=current_input_row)
-        input_row_data = current_input_row.get_input_row_data(
-            self=current_input_row)
         input_house_unit_lotno = current_input_row.get_house_unit_lotno(
             self=current_input_row)
         input_street = current_input_row.get_street(self=current_input_row)
         input_section = current_input_row.get_section(self=current_input_row)
-        input_floor_no = current_input_row.get_floor_no(self=current_input_row)
-        input_building_name = current_input_row.get_building_name(
+        input_floor_no = current_input_row.get_floor(self=current_input_row)
+        input_building_name = current_input_row.get_building(
             self=current_input_row)
         input_city = current_input_row.get_city(self=current_input_row)
         input_state = current_input_row.get_state(self=current_input_row)
         input_postcode = current_input_row.get_postcode(self=current_input_row)
+
+        if input_house_unit_lotno is None:
+            input_house_unit_lotno = ''
+        if input_street is None:
+            input_street = ''
+        if input_section is None:
+            input_section = ''
+        if input_floor_no is None:
+            input_floor_no = ''
+        if input_building_name is None:
+            input_building_name = ''
+        if input_city is None:
+            input_city = ''
+        if input_state is None:
+            input_state = ''
+        if input_postcode is None:
+            input_postcode = ''
 
         address_string = address_string + \
             "House/Unit/Lot No." + input_house_unit_lotno + '\n' + \
@@ -136,6 +147,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
         By.XPATH, f"({x_code_path})[{1+table_row_num}]//td//a//img")  # NOTE TO HANS: KNOW THAT THIS WAS 3+table_row_num before.
 
     a.move_to_element(select_button).click().perform()
+
     try:
         while driver.execute_script("return document.readyState;") != "complete":
             time.sleep(0.5)

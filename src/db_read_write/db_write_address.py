@@ -62,7 +62,7 @@ def write_from_csv_to_db():
             cursor.close()
 
 
-def write_or_edit_result(id, result_type):
+def write_or_edit_result(id, result_type, result_text):
     cnx = mysql.connector.connect(user="oursspc1_db_extuser", password="ExtInfo!@#",
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
@@ -71,9 +71,12 @@ def write_or_edit_result(id, result_type):
 
     edit_stmt = f"""
     UPDATE cvg_db
-    SET result_type = {result_type}, updated_at = '{current_datetime}'
+    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}'
     WHERE id = {id};
     """
+
+    print("RESULTS UPDATED!\n", "id: ", id, "\nresult_type: ",
+          result_type, "\nresult_text: ", result_text)
 
     cursor.execute(edit_stmt)
 
@@ -84,4 +87,5 @@ def write_or_edit_result(id, result_type):
 
 
 if __name__ == '__main__':
-    write_or_edit_result(id=5, result_type=1)
+    write_or_edit_result(id=5, result_type=0,
+                         result_text="Is within serviceable area!")

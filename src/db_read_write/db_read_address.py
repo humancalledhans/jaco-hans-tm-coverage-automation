@@ -56,7 +56,3 @@ def read_from_db(id):
         self=current_input_row, current_row_created_at=current_row[17])
     current_input_row.set_updated_at(
         self=current_input_row, current_row_updated_at=current_row[18])
-
-
-if __name__ == '__main__':
-    print(read_from_db(9))

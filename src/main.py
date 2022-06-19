@@ -5,18 +5,19 @@ from singleton.data_id_range import DataIdRange
 def main():
     print("Hi! This is a Coverage Automation System. It will:\n1. Read in a Database of Addresses\n2. Check the coverage of the addresses\n3. Send an email with a screenshot depending on the 4 coverage end results.")
     ids_to_start_from = input(
-        "What id-s would you like to start from? (Press ENTER to check all.")
+        "What id-s would you like to start from? (Press ENTER to check all.)")
     ids_to_end_at = input(
         "Now please enter the id to end at. (Press ENTER to check all.)")
 
     if ids_to_start_from == '':
-        ids_to_start_from = 0
+        ids_to_start_from = 1
     if ids_to_end_at == '':
-        ids_to_end_at = "all"
+        ids_to_end_at = -1
 
     data_id_range = DataIdRange.get_instance()
-    data_id_range.set_start_id(ids_to_start_from)
-    data_id_range.set_end_id(ids_to_end_at)
+    data_id_range.set_start_id(
+        self=data_id_range, start_id=int(ids_to_start_from))
+    data_id_range.set_end_id(self=data_id_range, end_id=int(ids_to_end_at))
 
     login('DPPJ1901', 'Dsync110!!')
 

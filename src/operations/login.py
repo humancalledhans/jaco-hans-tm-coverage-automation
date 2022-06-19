@@ -14,12 +14,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver import ActionChains
 
-import cv2
-import os
-import csv
 import time
 
-from PIL import Image
 from coverage_check.coverage_check import finding_coverage
 from operations.solve_captcha import solve_captcha
 
@@ -90,4 +86,10 @@ def login(username: str, password: str):
                 print("An hour has passed. Trying Again...")
                 count = 0
 
-    finding_coverage(driver=driver, a=a)
+    try:
+        driver.find_element(
+            By.XPATH, "//input[@type='image' and @alt='Login']")
+        a.move_to_element(login_button).click().perform()
+
+    except NoSuchElementException:
+        finding_coverage(driver=driver, a=a)
