@@ -1,32 +1,47 @@
-from operations.login import login
-from singleton.data_id_range import DataIdRange
+from src.operations.login import Login
+from src.singleton.data_id_range import DataIdRange
+from src.singleton.image_names import ImageName
+
+# TODO: make main an object. so that the singletons are all separate instances for each main object instance.
 
 
-def main():
-    print("Hi! This is a Coverage Automation System. It will:\n1. Read in a Database of Addresses\n2. Check the coverage of the addresses\n3. Send an email with a screenshot depending on the 4 coverage end results.")
-    ids_to_start_from = input(
-        "What id-s would you like to start from? (Press ENTER to check all.)")
-    ids_to_end_at = input(
-        "Now please enter the id to end at. (Press ENTER to check all.)")
+class Main:
+    def __init__(self, ids_to_start_from, ids_to_end_at, thread_name):
+        self.ids_to_start_from = ids_to_start_from
+        self.ids_to_end_at = ids_to_end_at
+        self.thread_name = thread_name
 
-    if ids_to_start_from == '':
-        ids_to_start_from = 1
-    if ids_to_end_at == '':
-        ids_to_end_at = -1
+        image_name = ImageName.get_instance()
+        image_name.set_full_page_image_name(
+            self=image_name, full_page_image_name=thread_name+"_full_page.png")
+        image_name.set_captcha_image_name(
+            self=image_name, captcha_image_name=thread_name+"_captcha.png")
 
-    data_id_range = DataIdRange.get_instance()
-    data_id_range.set_start_id(
-        self=data_id_range, start_id=int(ids_to_start_from))
-    data_id_range.set_end_id(self=data_id_range, end_id=int(ids_to_end_at))
+        data_id_range = DataIdRange.get_instance()
+        data_id_range.set_start_id(
+            self=data_id_range, start_id=int(ids_to_start_from))
+        data_id_range.set_end_id(self=data_id_range, end_id=int(ids_to_end_at))
 
-    login('DPPJ1901', 'Dsync110!!')
+        login = Login('DPPJ1901', 'Dsync110!!')
+        login.login()
+
+        # print("Hi! This is a Coverage Automation System. It will:\n1. Read in a Database of Addresses\n2. Check the coverage of the addresses\n3. Send an email with a screenshot depending on the 4 coverage end results.")
+        # ids_to_start_from = input(
+        #     "What id-s would you like to start from? (Press ENTER to check all.)")
+        # ids_to_end_at = input(
+        #     "Now please enter the id to end at. (Press ENTER to check all.)")
+
+        # if ids_to_start_from == '':
+        #     ids_to_start_from = 1
+        # if ids_to_end_at == '':
+        #     ids_to_end_at = -1
 
     # TODO: skip the database addresses that are already noted as covered.
     # TODO: when searching for 'condominium' in address, if no results, search for 'kondominium'
     # TODO: created_at, updated_at in the database
     # TODO: do 'no result' for when there are no results in the TABLE screen.
 
-    # six scenarios:
+    # eight scenarios:
     # id 1. within servicable areas (Available)
     # id 2. Building Name Found
     # id 3. Street Name Found
@@ -62,4 +77,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    Main.main()

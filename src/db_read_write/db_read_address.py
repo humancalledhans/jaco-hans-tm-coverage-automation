@@ -1,5 +1,5 @@
 import mysql.connector
-from singleton.current_input_row import CurrentInputRow
+from src.singleton.current_input_row import CurrentInputRow
 
 
 def read_from_db(id):

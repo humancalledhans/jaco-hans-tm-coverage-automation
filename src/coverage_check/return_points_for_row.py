@@ -1,4 +1,4 @@
-from singleton.current_input_row import CurrentInputRow
+from src.singleton.current_input_row import CurrentInputRow
 
 
 def return_points_for_row(table_row_data_list, table_header_data) -> bool:
@@ -54,25 +54,25 @@ def return_points_for_row(table_row_data_list, table_header_data) -> bool:
         table_state = table_row_data[table_state_index]
         table_postcode = table_row_data[table_postcode_index]
 
-        # print("\n\n\n************\n\n\n")
-        # print("INPUT_LOT_NO", input_house_unit_lotno)
-        # print("INPUT_STREET", input_street)
-        # print("INPUT_SECTION", input_section)
-        # print("INPUT_FLOOR_NO", input_floor_no)
-        # print("INPUT_BUILDING_NAME", input_building_name)
-        # print("INPUT_CITY", input_city)
-        # print("INPUT_STATE", input_state)
-        # print("INPUT_POSTCODE", input_postcode)
-
-        # print("TABLE_LOT_NO", table_house_unit_lotno)
-        # print("TABLE_STREET", table_street)
-        # print("TABLE_SECTION", table_section)
-        # print("TABLE_FLOOR_NO", table_floor_no)
-        # print("TABLE_BUILDING_NAME", table_building_name)
-        # print("TABLE_CITY", table_city)
-        # print("TABLE_STATE", table_state)
-        # print("TABLE_POSTCODE", table_postcode)
-        # print("\n\n\n************\n\n\n")
+        # print("\n\n\n************")
+        # print("INPUT_LOT_NO", input_house_unit_lotno, type(input_house_unit_lotno))
+        # print("INPUT_STREET", input_street, type(input_street))
+        # print("INPUT_SECTION", input_section, type(input_section))
+        # print("INPUT_FLOOR_NO", input_floor_no, type(input_floor_no))
+        # print("INPUT_BUILDING_NAME", input_building_name, type(input_building_name))
+        # print("INPUT_CITY", input_city, type(input_city))
+        # print("INPUT_STATE", input_state, type(input_state))
+        # print("INPUT_POSTCODE", input_postcode, type(input_postcode))
+        # print()
+        # print("TABLE_LOT_NO", table_house_unit_lotno, type(table_house_unit_lotno))
+        # print("TABLE_STREET", table_street, type(table_street))
+        # print("TABLE_SECTION", table_section, type(table_section))
+        # print("TABLE_FLOOR_NO", table_floor_no, type(table_floor_no))
+        # print("TABLE_BUILDING_NAME", table_building_name, type(table_building_name))
+        # print("TABLE_CITY", table_city, type(table_city))
+        # print("TABLE_STATE", table_state, type(table_state))
+        # print("TABLE_POSTCODE", table_postcode, type(table_postcode))
+        # print("************\n\n\n")
 
         accumulated_points = 0
         best_match_bool = False
@@ -82,7 +82,7 @@ def return_points_for_row(table_row_data_list, table_header_data) -> bool:
         # any other scenarios where we should get best match, but we don't?
 
         if input_building_name is None:
-            if input_house_unit_lotno == table_house_unit_lotno and input_street == table_street and input_section == table_section and input_city == table_city and input_state == table_state and input_postcode == table_postcode:
+            if input_house_unit_lotno == table_house_unit_lotno and input_street.strip() == table_street.strip() and input_section.strip() == table_section.strip() and input_city.strip() == table_city.strip() and input_state.strip() == table_state.strip() and input_postcode == table_postcode:
                 best_match_bool = True
                 return "BEST MATCH"
             else:

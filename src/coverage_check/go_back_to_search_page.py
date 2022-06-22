@@ -13,9 +13,9 @@ def go_back_to_coverage_search_page(driver):
         time.sleep(0.5)
 
     try:
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located(
+        WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
             (By.XPATH, "//select[@id='actionForm_state']")))
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located(
+        WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
             (By.XPATH, "//select[@id='actionForm_state']")))
         return
 

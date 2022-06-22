@@ -4,11 +4,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
-from db_read_write.db_write_address import write_or_edit_result
+from src.db_read_write.db_write_address import write_or_edit_result
 
-from singleton.current_input_row import CurrentInputRow
+from src.singleton.current_input_row import CurrentInputRow
 
-from notifications.telegram_msg import send_message
+from src.notifications.telegram_msg import send_message
 from .go_back_to_search_page import go_back_to_coverage_search_page
 
 import time
@@ -24,10 +24,13 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
     """
 
     def check_coverage_and_notify_actual(driver, a, address_string):
+        current_input_row = CurrentInputRow.get_instance()
+        current_row_id = current_input_row.get_id(
+            self=current_input_row)
         try:
             while driver.execute_script("return document.readyState;") != "complete":
                 time.sleep(0.5)
-            WebDriverWait(driver, 5).until(EC.presence_of_element_located(
+            WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                 (By.XPATH, "/html/body/div/div/div[4]/center/div[2]/div[2]/div/table/tbody/tr[2]/td/div[2]/div/form/div[3]/div[1]/table/tbody/tr[2]/td[1]/img[contains(@src, 'tick_checkcoverage')]")))
             # the green check mark is available.
             result_text = ""
@@ -36,22 +39,21 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
             result_text = coverage_result.text
             if "within the serviceable area" in result_text.lower():
 
-                print("RESULT: is within servicable area")
-                current_input_row = CurrentInputRow().get_instance()
-                current_row_id = current_input_row.get_id(
-                    self=current_input_row)
+                # print("RESULT: is within servicable area")
                 write_or_edit_result(
                     id=current_row_id, result_type=1, result_text="Is within serviceable area!")
                 send_message(address_string + "\nIs within serviceable area!")
                 # send_email(address_string + "\nIs within serviceable area!")
 
             else:
-                print("we're in the block where the green check mark is not available")
+                # print("we're in the block where the green check mark is not available")
                 result_text = driver.find_element(
                     By.XPATH, "//td//font[@color='red']").text
                 if 'unable to process order. another progressing order created on the same address has been detected.' in result_text.lower():
-                    print(
-                        'RESULT: unable to process order. another progressing order created on the same address has been detected.')
+                    # print(
+                    #     'RESULT: unable to process order. another progressing order created on the same address has been detected.')
+                    write_or_edit_result(
+                        id=current_row_id, result_type=6, result_text="Another progressing order is created on the same address.")
                     # send_message(
                     #     address_string + "\nAnother progressing order created on the same address has been detected!")
                     # send_email(
@@ -67,6 +69,8 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
 
             if "cannot proceed with transfer request. service provider not the same with transfer request." in result_text.lower():
                 print('RESULT: service provider not the same with transfer request.')
+                write_or_edit_result(
+                    id=current_row_id, result_type=5, result_text="Service provider not the same with Transfer Request.")
                 # send_message(
                 #     address_string + "\nService provider not the same with Transfer Request!")
                 # send_email(
@@ -74,6 +78,8 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
 
             elif "is not within the serviceable area" in result_text.lower():
                 print("RESULT: is not within the servicable area.")
+                write_or_edit_result(
+                    id=current_row_id, result_type=7, result_text="Not within serviceable area.")
                 # send_message(address_string +
                 #              "\nIs not within the servicable area!")
                 # send_email(address_string + "\nIs not within servicable area!")
@@ -132,9 +138,12 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
 
     # the implementation of the check_coverage_and_notify function starts here.
     if not filtered:
+        while driver.execute_script("return document.readyState;") != "complete":
+            time.sleep(0.5)
         try:
-            WebDriverWait(driver, 5).until(EC.presence_of_element_located(
+            WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                 (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']")))
+
             x_code_path = "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"
 
         except TimeoutException:
@@ -153,7 +162,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
             time.sleep(0.5)
 
         # for when there is the "kindly fill in the missing information" page.
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+        WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
             (By.XPATH, "//div[@id='incompleteAddress']")))
         for missing_information in driver.find_elements(By.XPATH, "//input[@type='text']"):
             missing_information.send_keys("-")
@@ -166,7 +175,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
             time.sleep(0.5)
 
         try:
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+            WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                 (By.XPATH, "//table[@align='center' and @class='Yellow']")))
             bridge_to_actual_op(driver, a)
 
@@ -174,7 +183,9 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
             time.sleep(300)  # this actually needs to be 300.
             driver.refresh()
             try:
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+                while driver.execute_script("return document.readyState;") != "complete":
+                    time.sleep(0.5)
+                WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                     (By.XPATH, "//table[@align='center' and @class='Yellow']")))
                 bridge_to_actual_op(driver, a)
 
