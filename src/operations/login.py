@@ -37,7 +37,7 @@ class Login:
             try:
                 s = Service(ChromeDriverManager().install())
                 options = Options()
-                options.headless = False
+                options.headless = True
                 options.add_argument('--disable-dev-shm-usage')
                 options.add_argument('--force-device-scale-factor=1')
                 options.add_argument("--no-sandbox")
