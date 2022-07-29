@@ -1,4 +1,5 @@
 from src.singleton.current_input_row import CurrentInputRow
+import time
 
 
 def return_points_for_row(table_row_data_list, table_header_data) -> bool:
@@ -54,26 +55,35 @@ def return_points_for_row(table_row_data_list, table_header_data) -> bool:
         table_state = table_row_data[table_state_index]
         table_postcode = table_row_data[table_postcode_index]
 
+        if len(table_postcode) > 0:
+            while table_postcode[0] == '0':
+                table_postcode = table_postcode[1:]
+
         # print("\n\n\n************")
-        # print("INPUT_LOT_NO", input_house_unit_lotno, type(input_house_unit_lotno))
+        # print("INPUT_LOT_NO", input_house_unit_lotno,
+        #       type(input_house_unit_lotno))
         # print("INPUT_STREET", input_street, type(input_street))
         # print("INPUT_SECTION", input_section, type(input_section))
         # print("INPUT_FLOOR_NO", input_floor_no, type(input_floor_no))
-        # print("INPUT_BUILDING_NAME", input_building_name, type(input_building_name))
+        # print("INPUT_BUILDING_NAME", input_building_name,
+        #       type(input_building_name))
         # print("INPUT_CITY", input_city, type(input_city))
         # print("INPUT_STATE", input_state, type(input_state))
         # print("INPUT_POSTCODE", input_postcode, type(input_postcode))
         # print()
-        # print("TABLE_LOT_NO", table_house_unit_lotno, type(table_house_unit_lotno))
+        # print("TABLE_LOT_NO", table_house_unit_lotno,
+        #       type(table_house_unit_lotno))
         # print("TABLE_STREET", table_street, type(table_street))
         # print("TABLE_SECTION", table_section, type(table_section))
         # print("TABLE_FLOOR_NO", table_floor_no, type(table_floor_no))
-        # print("TABLE_BUILDING_NAME", table_building_name, type(table_building_name))
+        # print("TABLE_BUILDING_NAME", table_building_name,
+        #       type(table_building_name))
         # print("TABLE_CITY", table_city, type(table_city))
         # print("TABLE_STATE", table_state, type(table_state))
         # print("TABLE_POSTCODE", table_postcode, type(table_postcode))
         # print("************\n\n\n")
 
+        # time.sleep(30)
         accumulated_points = 0
         best_match_bool = False
 
@@ -81,35 +91,67 @@ def return_points_for_row(table_row_data_list, table_header_data) -> bool:
         # if it's not best match, we calculate the points.
         # any other scenarios where we should get best match, but we don't?
 
-        if input_building_name is None:
-            if input_house_unit_lotno == table_house_unit_lotno and input_street.strip() == table_street.strip() and input_section.strip() == table_section.strip() and input_city.strip() == table_city.strip() and input_state.strip() == table_state.strip() and input_postcode == table_postcode:
-                best_match_bool = True
-                return "BEST MATCH"
-            else:
-                best_match_bool = False
-        elif input_building_name is not None and input_floor_no is None:
-            if input_house_unit_lotno == table_house_unit_lotno and input_street == table_street and input_section == table_section and input_floor_no == table_floor_no and input_building_name == table_building_name and input_city == table_city and input_state == table_state and input_postcode == table_postcode:
-                best_match_bool = True
-                return "BEST MATCH"
-            else:
-                best_match_bool = False
+        # need to count the max number of matches for each address.
+        max_points = 0
+        if input_house_unit_lotno is not None and input_house_unit_lotno != '' and input_house_unit_lotno != '-':
+            max_points += 1
+        if input_street is not None and input_street != '' and input_street != '-':
+            max_points += 1
+        if input_section is not None and input_section != '' and input_section != '-':
+            max_points += 1
+        if input_floor_no is not None and input_floor_no != '' and input_floor_no != '-':
+            max_points += 1
+        if input_building_name is not None and input_building_name != '' and input_building_name != '-':
+            max_points += 1
+        if input_city is not None and input_city != '' and input_city != '-':
+            max_points += 1
+        if input_state is not None and input_state != '' and input_state != '-':
+            max_points += 1
+        if input_postcode is not None and input_postcode != '' and input_postcode != '-':
+            max_points += 1
 
-        if best_match_bool == False:
+        # if input_building_name is None and input_house_unit_lotno is not None and input_street is not None and input_section is not None and input_floor_no is not None and input_city is not None and input_state is not None and input_postcode is not None:
+        #     if input_house_unit_lotno == table_house_unit_lotno and input_street.strip() == table_street.strip() and input_section.strip() == table_section.strip() and input_city.strip() == table_city.strip() and input_state.strip() == table_state.strip() and input_postcode == table_postcode:
+        #         best_match_bool = True
+        #         return "BEST MATCH"
+        #     else:
+        #         best_match_bool = False
+        # elif input_building_name is not None and input_floor_no is None and input_house_unit_lotno is not None and input_street is not None and input_section is not None and input_city is not None and input_state is not None and input_postcode is not None:
+        #     if input_house_unit_lotno == table_house_unit_lotno and input_street == table_street and input_section == table_section and input_floor_no == table_floor_no and input_building_name == table_building_name and input_city == table_city and input_state == table_state and input_postcode == table_postcode:
+        #         best_match_bool = True
+        #         return "BEST MATCH"
+        #     else:
+        #         best_match_bool = False
 
-            if input_house_unit_lotno == table_house_unit_lotno and input_house_unit_lotno != '':
+        # if best_match_bool == False:
+
+        if input_house_unit_lotno is not None and input_house_unit_lotno != '':
+            if input_house_unit_lotno == table_house_unit_lotno:
                 accumulated_points = accumulated_points + 1
-            if input_section.upper().strip().strip() == table_section.upper().strip().strip() and input_section != '':
+        if input_street is not None and input_street != '':
+            if input_street.strip() == table_street.strip():
                 accumulated_points = accumulated_points + 1
-            if input_floor_no == table_floor_no and input_floor_no != '':
+        if input_section is not None and input_section != '':
+            if input_section.upper().strip().strip() == table_section.upper().strip().strip():
                 accumulated_points = accumulated_points + 1
-            if input_building_name is not None:
-                if input_building_name.upper().strip().strip() == table_building_name.upper().strip().strip() and input_building_name != '':
-                    accumulated_points = accumulated_points + 1
-            if input_city.upper().strip().strip() == table_city.upper().strip().strip() and input_city != '':
+        if input_floor_no is not None and input_floor_no != '':
+            if input_floor_no == table_floor_no:
                 accumulated_points = accumulated_points + 1
-            if input_state.upper().strip().strip() == table_state.upper().strip().strip() and input_state != '':
+        if input_building_name is not None and input_building_name != '':
+            if input_building_name.upper().strip().strip() == table_building_name.upper().strip().strip():
                 accumulated_points = accumulated_points + 1
-            if input_postcode == table_postcode and input_postcode != '':
+        if input_city is not None and input_city != '':
+            if input_city.upper().strip().strip() == table_city.upper().strip().strip():
                 accumulated_points = accumulated_points + 1
+        if input_state is not None and input_state != '':
+            if input_state.upper().strip().strip() == table_state.upper().strip().strip():
+                accumulated_points = accumulated_points + 1
+        if input_postcode is not None and input_postcode != '':
+            if input_postcode == table_postcode:
+                accumulated_points = accumulated_points + 1
+
+        if accumulated_points == max_points:
+            best_match_bool = True
+            return "BEST MATCH"
 
         return accumulated_points

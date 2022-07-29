@@ -1,25 +1,7 @@
 FROM python:3.10.2-bullseye
+# FROM python:3.9.0-alpine
 
 COPY . .
-
-# RUN apt-get update -y
-# # We need wget to set up the PPA and xvfb to have a virtual screen and unzip to install the Chromedriver
-# RUN apt-get install -y wget xvfb unzip
-# # Set up the Chrome PPA
-# RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
-# RUN echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list
-# # Update the package list and install chrome
-# RUN apt-get update -y
-# RUN apt-get install -y google-chrome-stable
-# # Set up Chromedriver Environment variables
-# ENV CHROMEDRIVER_VERSION 97.0.4692.71
-# ENV CHROMEDRIVER_DIR /chromedriver
-# RUN mkdir $CHROMEDRIVER_DIR
-# # Download and install Chromedriver
-# RUN wget -q --continue -P $CHROMEDRIVER_DIR "http://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
-# RUN unzip $CHROMEDRIVER_DIR/chromedriver* -d $CHROMEDRIVER_DIR
-# # Put Chromedriver into the PATH
-# ENV PATH $CHROMEDRIVER_DIR:$PATH
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -44,6 +26,12 @@ RUN apt-get update && \
     apt-get install -y openjdk-11-jre-headless && \
     apt-get clean;
 
+# # for alpine:
+# RUN apk update && \
+#     apk add install -y openjdk-11-jre-headless && \
+#     apk add clean;
+
+# this is the previous block that worked. the following three lines.
 RUN apt-get install -y wget
 RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 RUN apt-get install -y ./google-chrome-stable_current_amd64.deb
@@ -54,11 +42,14 @@ RUN apt-get install -y ./google-chrome-stable_current_amd64.deb
 #     brew update --force --quiet \
 #     chmod -R go-w "$(brew --prefix)/share/zsh"
 
+# tried the solution from the website https://gerg.dev/2021/06/making-chromedriver-and-chrome-versions-match-in-a-docker-image/
+
 # RUN brew install google-chrome
 RUN pip3 install selenium
 RUN pip3 install webdriver_manager
 RUN pip3 install Pillow
 RUN pip3 install anticaptchaofficial
 RUN pip3 install mysql-connector
+RUN pip3 install pytz
 
 CMD ["python3", "thread_asgn.py"]

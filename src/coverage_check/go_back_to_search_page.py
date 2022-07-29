@@ -6,9 +6,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 import time
 
+from src.coverage_check.input_speed_requested import input_speed_requested
 
-def go_back_to_coverage_search_page(driver):
-    driver.execute_script("window.history.go(-1)")
+
+def go_back_to_coverage_search_page(driver, a):
+    a.move_to_element(driver.find_element(By.XPATH, "(//div[@class='wlp-bighorn-window-content']//table//td//a)[1]")).click().perform()
+    input_speed_requested(driver, a, 50)
     while driver.execute_script("return document.readyState;") != "complete":
         time.sleep(0.5)
 
@@ -20,4 +23,4 @@ def go_back_to_coverage_search_page(driver):
         return
 
     except TimeoutException:
-        go_back_to_coverage_search_page(driver)
+        go_back_to_coverage_search_page(driver,a)

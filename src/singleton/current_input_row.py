@@ -80,6 +80,10 @@ class ICurrentInputRow(metaclass=ABCMeta):
         """to implement in child class """
 
     @abstractstaticmethod
+    def set_is_active():
+        """ to implement in child class """
+
+    @abstractstaticmethod
     def set_created_at():
         """ to implement in child class """
 
@@ -164,6 +168,10 @@ class ICurrentInputRow(metaclass=ABCMeta):
         """ to implement in child class """
 
     @abstractstaticmethod
+    def get_is_active():
+        """ to implement in child class """
+
+    @abstractstaticmethod
     def get_result_type():
         """ to implement in child class """
 
@@ -210,39 +218,66 @@ class CurrentInputRow(ICurrentInputRow):
 
     @staticmethod
     def set_unit_no(self, current_row_unit_no):
-        self.current_row_unit_no = current_row_unit_no
+        if current_row_unit_no == 'None' or current_row_unit_no is None or len(current_row_unit_no) == 0:
+            self.current_row_unit_no = ''
+        else:
+            self.current_row_unit_no = current_row_unit_no
 
     @staticmethod
     def set_floor(self, current_row_floor):
-        self.current_row_floor = current_row_floor
+        if current_row_floor == 'None' or current_row_floor is None or len(current_row_floor) == 0:
+            self.current_row_floor = ''
+        else:
+            self.current_row_floor = current_row_floor
 
     @staticmethod
     def set_building(self, current_row_building):
-        self.current_row_building = current_row_building
+        if current_row_building == 'None' or current_row_building is None or len(current_row_building) == 0:
+            self.current_row_building = ''
+        else:
+            self.current_row_building = current_row_building
 
     @staticmethod
     def set_street(self, current_row_street):
-        self.current_row_street = current_row_street
+        if current_row_street == 'None' or current_row_street is None or len(current_row_street) == 0:
+            self.current_row_street = ''
+        else:
+            self.current_row_street = current_row_street
 
     @staticmethod
     def set_section(self, current_row_section):
-        self.current_row_section = current_row_section
+        if current_row_section == 'None' or current_row_section is None or len(current_row_section) == 0:
+            self.current_row_section = ''
+        else:
+            self.current_row_section = current_row_section
 
     @staticmethod
     def set_city(self, current_row_city):
-        self.current_row_city = current_row_city
+        if current_row_city == 'None' or current_row_city is None or len(current_row_city) == 0:
+            self.current_row_city = ''
+        else:
+            self.current_row_city = current_row_city
 
     @staticmethod
     def set_state(self, current_row_state):
-        self.current_row_state = current_row_state
+        if current_row_state == 'None' or current_row_state is None or len(current_row_state) == 0:
+            self.current_row_state = ''
+        else:
+            self.current_row_state = current_row_state
 
     @staticmethod
     def set_postcode(self, current_row_postcode):
-        self.current_row_postcode = current_row_postcode
+        if current_row_postcode == 'None' or current_row_postcode is None or len(current_row_postcode) == 0:
+            self.current_row_postcode = ''
+        else:
+            self.current_row_postcode = current_row_postcode
 
     @staticmethod
     def set_search_level_flag(self, current_row_search_level_flag):
-        self.current_row_search_level_flag = current_row_search_level_flag
+        if current_row_search_level_flag == 'None' or current_row_search_level_flag is None or len(current_row_search_level_flag) == 0:
+            self.current_row_search_level_flag = 0
+        else:
+            self.current_row_search_level_flag = current_row_search_level_flag
 
     @staticmethod
     def set_source(self, current_row_source):
@@ -271,6 +306,10 @@ class CurrentInputRow(ICurrentInputRow):
     @staticmethod
     def set_result_remark(self, current_row_result_remark):
         self.current_row_result_remark = current_row_result_remark
+
+    @staticmethod
+    def set_is_active(self, current_row_is_active):
+        self.is_active = current_row_is_active
 
     @staticmethod
     def set_created_at(self, current_row_created_at):
@@ -365,9 +404,57 @@ class CurrentInputRow(ICurrentInputRow):
         return self.current_row_result_remark
 
     @staticmethod
+    def get_is_active(self):
+        return self.is_active
+
+    @staticmethod
     def get_created_at(self):
         return self.current_row_created_at
 
     @staticmethod
     def get_updated_at(self):
         return self.current_row_updated_at
+
+    @staticmethod
+    def get_address(self):
+        address_string = ''
+        current_input_row = CurrentInputRow.get_instance()
+        input_house_unit_lotno = current_input_row.get_house_unit_lotno(
+            self=current_input_row)
+        input_street = current_input_row.get_street(self=current_input_row)
+        input_section = current_input_row.get_section(self=current_input_row)
+        input_floor_no = current_input_row.get_floor(self=current_input_row)
+        input_building_name = current_input_row.get_building(
+            self=current_input_row)
+        input_city = current_input_row.get_city(self=current_input_row)
+        input_state = current_input_row.get_state(self=current_input_row)
+        input_postcode = current_input_row.get_postcode(self=current_input_row)
+
+        if input_house_unit_lotno is None:
+            input_house_unit_lotno = ''
+        if input_street is None:
+            input_street = ''
+        if input_section is None:
+            input_section = ''
+        if input_floor_no is None:
+            input_floor_no = ''
+        if input_building_name is None:
+            input_building_name = ''
+        if input_city is None:
+            input_city = ''
+        if input_state is None:
+            input_state = ''
+        if input_postcode is None:
+            input_postcode = ''
+
+        address_string = address_string + \
+            "House/Unit/Lot No." + input_house_unit_lotno + '\n' + \
+            "Street: " + input_street + '\n' + \
+            "Section: " + input_section + '\n' + \
+            "Floor No: " + input_floor_no + '\n' + \
+            "Building Name: " + input_building_name + '\n' + \
+            "City: " + input_city + '\n' + \
+            "State: " + input_state + '\n' + \
+            "Postcode: " + input_postcode
+
+        return address_string

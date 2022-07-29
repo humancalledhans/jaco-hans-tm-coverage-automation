@@ -7,6 +7,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 
 import time
+from src.singleton.cvg_task import CVGTask
+from src.singleton.data_id_range import DataIdRange
+from src.notifications.email_msg import send_email
+from src.notifications.telegram_msg import send_message
 
 from src.operations.solve_captcha import solve_captcha
 from src.operations.set_accepted_params import set_accepted_params
@@ -16,13 +20,31 @@ from .go_back_to_search_page import go_back_to_coverage_search_page
 from .check_coverage_and_notify import check_coverage_and_notify
 from .input_speed_requested import input_speed_requested
 from src.singleton.current_input_row import CurrentInputRow
-from src.singleton.data_id_range import DataIdRange
 from src.db_read_write.db_write_address import write_or_edit_result
 from src.db_read_write.db_read_address import read_from_db
-from src.db_read_write.db_get_largest_id import get_max_id_from_db
+from src.db_read_write.db_get_chat_id import get_chat_id
 
 
 class FindingCoverage:
+
+    # __instance = None
+
+    # @staticmethod
+    # def get_instance():
+    #     if FindingCoverage.__instance == None:
+    #         FindingCoverage()
+    #     return FindingCoverage.__instance
+
+    # def __init__(self):
+    #     if FindingCoverage.__instance != None:
+    #         raise Exception(
+    #             "FindingCoverage instance cannot be instantiated more than once!")
+    #     else:
+    #         FindingCoverage.__instance = self
+
+    # def get_instance(self):
+    #     return self
+
     def __init__(self):
         pass
 
@@ -31,18 +53,14 @@ class FindingCoverage:
 
         unit_lotno = current_input_row.get_house_unit_lotno(
             self=current_input_row).strip()
-        street_type = current_input_row.get_street_type(
-            self=current_input_row).strip()
-        street_name = current_input_row.get_street_name(
-            self=current_input_row).strip()
-        building_name = current_input_row.get_building(
+        street = current_input_row.get_street(
             self=current_input_row).strip()
 
         keyword_search_string = ''
         if len(unit_lotno) > 0:  # ie: if unit_lotno exists
             keyword_search_string = keyword_search_string + unit_lotno + ' '
         keyword_search_string = keyword_search_string + \
-            street_type + ' ' + street_name + ' ' + building_name
+            street
 
         keyword_field = driver.find_element(
             By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
@@ -91,6 +109,14 @@ class FindingCoverage:
                         # break
 
                 except TimeoutException:
+                    # TODO: re run the search for this particular id.
+                    current_input_row = CurrentInputRow.get_instance()
+                    current_row_id = current_input_row.get_id(
+                        self=current_input_row)
+                    data_id_range = DataIdRange.get_instance()
+                    data_id_end = data_id_range.get_end_id(self=data_id_range)
+                    self.finding_coverage(
+                        driver, a, data_id_start=current_row_id, data_id_end=data_id_end)
                     raise Exception(
                         "Error in the SEARCHING step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
 
@@ -110,9 +136,9 @@ class FindingCoverage:
         3. calculates the points of every results
         4. and calls "check_coverage_and_notify()" with the best result row.
 
+        NOTE: 'building_name_found' means the building name is found in the results page.
         NOTE: the table_row_num starts from 0. that is, 0 is the first row of a result in the result table.
         """
-
         current_input_row = CurrentInputRow.get_instance()
         current_row_id = current_input_row.get_id(self=current_input_row)
 
@@ -123,15 +149,23 @@ class FindingCoverage:
 
         if filtered == False:
             # block for when there is only one result in the table.
+            # wait for the elements in the table to come out.
             if (len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))) == 1:
                 check_coverage_and_notify(
                     table_row_num=0, driver=driver, a=a, filtered=filtered)
                 checked = True
+                return
 
             x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"
 
         else:
             x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]"
+
+        if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
+            write_or_edit_result(
+                id=current_row_id, result_type=8, result_text="No results.")
+            go_back_to_coverage_search_page(driver, a)
+            return
 
         for table_row_num in range(len(driver.find_elements(By.XPATH, x_code_path))):
             # getting to the correct page to compare data of each row.
@@ -203,7 +237,7 @@ class FindingCoverage:
 
             # if the boolean value is 1, we NEED to return BEST MATCH.
             # else if the boolean value if 0, we just get the highest points.
-
+            # print("POINTS: ", points)
             if points == 'BEST MATCH':
                 points_list = []
                 check_coverage_and_notify(
@@ -228,21 +262,29 @@ class FindingCoverage:
                     check_coverage_and_notify(
                         table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=filtered)
                     checked = True
-            else:
+            elif lot_no_detail_flag == 1:
                 # lot_no_detail_flag == 1.
                 # print("WENT INTO LOT_NO_DETAIL_FLAG == 1")
                 # print("BUILDING_NAME_FOUND", building_name_found)
                 # print("STREET_NAME_FOUND", street_name_found)
+
                 if building_name_found == True and street_name_found == False:
                     write_or_edit_result(id=current_row_id, result_type=2,
                                          result_text="Building Name Found, Lot No Not Found.")
+                    go_back_to_coverage_search_page(driver, a)
+                    return
                 elif building_name_found == False and street_name_found == True:
                     write_or_edit_result(id=current_row_id, result_type=3,
                                          result_text="Street Name Found, Lot No Not Found.")
+                    go_back_to_coverage_search_page(driver, a)
+                    return
+
                 elif building_name_found == False and street_name_found == False:
                     # we need to match the lot no, but we couldn't. The building name was also not found. So we output "NO MATCH".
                     write_or_edit_result(
                         id=current_row_id, result_type=8, result_text="No results.")
+                    go_back_to_coverage_search_page(driver, a)
+                    return
 
     def select_state(self, driver, a, state):
         # TODO: add condition for when there is only 'Wilayah Persekutuan' in the list.
@@ -340,9 +382,9 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                 # no captcha to solve.
                 to_proceed = True
 
-    def finding_coverage(self, driver, a):
+    def finding_coverage(self, driver, a, data_id_start, data_id_end):
 
-        input_speed_requested(driver, a)
+        input_speed_requested(driver, a, 50)
 
         # we've arrived at the coverage page.
         while driver.execute_script("return document.readyState;") != "complete":
@@ -359,19 +401,11 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
             # input_header_data = next(csvreader)
             # input_header_data[0] = input_header_data[0].replace('\ufeff', '')
 
-        data_id_range = DataIdRange.get_instance()
-        data_id_start = data_id_range.get_start_id(self=data_id_range)
-        data_id_end = data_id_range.get_end_id(self=data_id_range)
-
-        if data_id_end == -1:
-            # get the final value of the database.
-            data_id_end = get_max_id_from_db()
-
-        set_accepted_params()  # TODO: do we need this?
+        set_accepted_params()
 
         # data = csv.reader(f)
 
-        # goes through every row of the csv file.
+        # goes through every row of the database address.
         for data_id in range(data_id_start, data_id_end+1):
 
             read_from_db(data_id)
@@ -379,6 +413,16 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
             # print("DATA_ID", data_id)
             current_input_row = CurrentInputRow.get_instance()
             current_row_id = current_input_row.get_id(self=current_input_row)
+
+            # if the 'is_active' column is 0, then we skip this row.
+            if current_input_row.get_is_active(self=current_input_row) == 0:
+                continue
+
+            # setting the cvg_task data for current address row id.
+            cvg_task = CVGTask.get_instance()
+            cvg_task.set_current_id_address_being_checked(
+                current_id=current_row_id)
+            cvg_task.increment_current_number_of_addresses_checked()
 
             # STEP ONE: select state.
             state = current_input_row.get_state(
@@ -388,44 +432,29 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
             retry_count = 0
             while state_selected == False:
                 try:
-                    driver.back()
-                    driver.forward()
                     while driver.execute_script("return document.readyState;") != "complete":
                         time.sleep(0.5)
                     self.select_state(driver, a, state)
                     state_selected = True
 
                 except NoSuchElementException:
-                    if retry_count == 5:
-                        break
-                    else:
-                        retry_count = retry_count + 1
+                    help_new_customer_link = driver.find_element(
+                        By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")
+                    a.move_to_element(help_new_customer_link).click().perform()
+                    self.finding_coverage(
+                        driver, a, data_id_start=data_id, data_id_end=data_id_end)
+                    continue
 
             if state_selected == False:
-                write_or_edit_result(
-                    id=current_row_id, result_type=4, result_text="Infra Error.")
+                help_new_customer_link = driver.find_element(
+                    By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")
+                a.move_to_element(help_new_customer_link).click().perform()
+                self.finding_coverage(
+                    driver, a, data_id_start=data_id, data_id_end=data_id_end)
                 continue
 
             # THIS EXCEPTION is what we mean:
             # selenium.common.exceptions.NoSuchElementException: Message: Could not locate element with visible text: SELANGOR
-
-            # try:
-            #     self.select_state(driver, a, state)
-            # except NoSuchElementException:
-            #     driver.back()
-            #     while driver.execute_script("return document.readyState;") != "complete":
-            #         time.sleep(0.5)
-            #     driver.forward()
-            #     while driver.execute_script("return document.readyState;") != "complete":
-            #         time.sleep(0.5)
-
-            #     self.select_state(driver, a, state)
-
-            #     # THIS EXCEPTION is what we mean:
-            #     # selenium.common.exceptions.NoSuchElementException: Message: Could not locate element with visible text: SELANGOR
-            #     # the weird bug that only has wp as state came. skipping this address operation...
-
-            #     continue
 
             # STEP TWO: set up the search string.
             keyword_search_string = ''
@@ -434,6 +463,9 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 
             lot_no_detail_flag = current_input_row.get_search_level_flag(
                 self=current_input_row)
+            # 0 means don't need to match lot number.
+            # 1 means need to match lot number. Allows for cases like 'Building/Street name found, lot number not found'
+            # refer to code in iterate_through_all_and_notify(). block where checked==False
 
             building_name = current_input_row.get_building(
                 self=current_input_row)
@@ -441,7 +473,7 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
             if building_name is not None:
                 building_name = building_name.strip()
 
-            if building_name != '' and building_name is not None:
+            if building_name != '' and building_name is not None and len(building_name) > 3:
 
                 # get the building name, and search the results using that query.
 
@@ -457,7 +489,7 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                     By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
                 a.move_to_element(search_btn_third_col).click().perform()
 
-                # building name is inputted.
+                # building name is input.
 
                 # wait for the results table to pop up.
                 try:
@@ -501,97 +533,197 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                 # captcha should be solved now. getting the results...
                 while driver.execute_script("return document.readyState;") != "complete":
                     time.sleep(0.5)
-                WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                    (By.XPATH, "//table[@id='resultAddressGrid']")))
+                try:
+                    WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                        (By.XPATH, "//table[@id='resultAddressGrid']")))
 
-                number_of_results = len(driver.find_elements(
-                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
-
-                if number_of_results == 0:
                     number_of_results = len(driver.find_elements(
-                        By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+                        By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
 
-                # print("NUMBER_OF_RESULTS FOR ID",
-                #       data_id, ": ", number_of_results)
-                if number_of_results > 50:
-                    if lot_no_detail_flag == 0:
-                        unit_no_filter_tab = driver.find_element(
-                            By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
-                        unit_no_filter_tab.clear()
-                        current_input_row = CurrentInputRow.get_instance()
-                        unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
-                            self=current_input_row).strip())
-                        self.iterate_through_all_and_notify(
-                            driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
-
-                    else:
-                        unit_no_filter_tab = driver.find_element(
-                            By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
-                        unit_no_filter_tab.clear()
-                        current_input_row = CurrentInputRow.get_instance()
-                        unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
-                            self=current_input_row).strip())
-
-                        # assuming that the number of results have been significantly reduced.
-                        # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
-                        self.iterate_through_all_and_notify(
-                            driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-
-                elif number_of_results == 0:
-                    # no results found. so we'll try with the "condominium" instead of the "kondominium" variation things.
-
-                    replace_bool = False
-                    if "KONDOMINIUM" in keyword_search_string.upper():
-                        keyword_search_string = keyword_search_string.replace(
-                            "KONDOMINIUM", "CONDOMINIUM")
-                        replace_bool = True
-                    elif "KONDO" in keyword_search_string.upper():
-                        keyword_search_string = keyword_search_string.replace(
-                            "KONDO", "CONDO")
-                        replace_bool = True
-                    elif "JLN" in keyword_search_string.upper():
-                        keyword_search_string = keyword_search_string.replace(
-                            "JLN", "JALAN")
-                        replace_bool = True
-
-                    if replace_bool == True:
-                        keyword_field = driver.find_element(
-                            By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
-
-                        keyword_field.clear()
-                        keyword_field.send_keys(keyword_search_string)
-
-                        search_btn_third_col = driver.find_element(
-                            By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
-                        a.move_to_element(
-                            search_btn_third_col).click().perform()
-
+                    if number_of_results == 0:
                         number_of_results = len(driver.find_elements(
-                            By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+                            By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
 
-                        if number_of_results == 0:
+                    if number_of_results > 50:
+                        if lot_no_detail_flag == 0:
+                            unit_no_filter_tab = driver.find_element(
+                                By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                            unit_no_filter_tab.clear()
+                            current_input_row = CurrentInputRow.get_instance()
+                            unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
+                                self=current_input_row).strip())
+                            # making sure the filtered resutls pop out, before we proceed.
+                            try:
+                                WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
+                            except TimeoutException:
+                                if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                                    replace_bool = False
+                                    if "KONDOMINIUM" in keyword_search_string.upper():
+                                        keyword_search_string = keyword_search_string.replace(
+                                            "KONDOMINIUM", "CONDOMINIUM")
+                                        replace_bool = True
+                                    elif "KONDO" in keyword_search_string.upper():
+                                        keyword_search_string = keyword_search_string.replace(
+                                            "KONDO", "CONDO")
+                                        replace_bool = True
+                                    elif "JLN" in keyword_search_string.upper():
+                                        keyword_search_string = keyword_search_string.replace(
+                                            "JLN", "JALAN")
+                                    if replace_bool:
+                                        keyword_field = driver.find_element(
+                                            By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+
+                                        keyword_field.clear()
+                                        keyword_field.send_keys(
+                                            keyword_search_string)
+
+                                        search_btn_third_col = driver.find_element(
+                                            By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                                        a.move_to_element(
+                                            search_btn_third_col).click().perform()
+
+                                    # this would be the correct xpath, as we have filtered using the lot number.
+                                    number_of_results = len(driver.find_elements(
+                                        By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+
+                                    if number_of_results == 0:
+                                        (driver, a) = self.search_using_street_type_and_name(
+                                            driver=driver, a=a)
+
+                                        number_of_results = len(driver.find_elements(
+                                            By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+
+                                        if number_of_results == 0:
+                                            number_of_results = len(driver.find_elements(
+                                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+
+                                        if number_of_results == 0:
+                                            write_or_edit_result(
+                                                id=current_row_id, result_type=8, result_text="No results.")
+                                            go_back_to_coverage_search_page(
+                                                driver, a)
+                                            continue
+
+                                        else:
+                                            self.iterate_through_all_and_notify(
+                                                driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                                            continue
+
+                                else:
+                                    self.iterate_through_all_and_notify(
+                                        driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                                    continue
+
+                            self.iterate_through_all_and_notify(
+                                driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                            continue
+
+                        elif lot_no_detail_flag == 1:
+                            unit_no_filter_tab = driver.find_element(
+                                By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                            unit_no_filter_tab.clear()
+                            current_input_row = CurrentInputRow.get_instance()
+                            unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
+                                self=current_input_row).strip())
+
+                            # making sure the filtered resutls pop out, before we proceed.
+                            try:
+                                WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
+                            except TimeoutException:
+                                if len(driver.fing_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                                    write_or_edit_result(
+                                        id=current_row_id, result_type=8, result_text="No results.")
+                                    go_back_to_coverage_search_page(driver, a)
+                                    continue
+                                else:
+                                    self.iterate_through_all_and_notify(
+                                        driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+
+                            # assuming that the number of results have been significantly reduced.
+                            # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
+                            self.iterate_through_all_and_notify(
+                                driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+                            continue
+
+                    elif number_of_results == 0:
+                        # no results found. so we'll try with the "condominium" instead of the "kondominium" variation things.
+
+                        replace_bool = False
+                        if "KONDOMINIUM" in keyword_search_string.upper():
+                            keyword_search_string = keyword_search_string.replace(
+                                "KONDOMINIUM", "CONDOMINIUM")
+                            replace_bool = True
+                        elif "KONDO" in keyword_search_string.upper():
+                            keyword_search_string = keyword_search_string.replace(
+                                "KONDO", "CONDO")
+                            replace_bool = True
+                        elif "JLN" in keyword_search_string.upper():
+                            keyword_search_string = keyword_search_string.replace(
+                                "JLN", "JALAN")
+                            replace_bool = True
+
+                        if replace_bool == True:
+                            keyword_field = driver.find_element(
+                                By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+
+                            keyword_field.clear()
+                            keyword_field.send_keys(keyword_search_string)
+
+                            search_btn_third_col = driver.find_element(
+                                By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                            a.move_to_element(
+                                search_btn_third_col).click().perform()
+
                             number_of_results = len(driver.find_elements(
-                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
 
-                        # print(
-                        #     "NUMBER_OF_RESULTS_AFTER_REPLACING JLN and KONDOMINIUM", number_of_results)
+                            if number_of_results == 0:
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
 
+                            # print(
+                            #     "NUMBER_OF_RESULTS_AFTER_REPLACING JLN and KONDOMINIUM", number_of_results)
+
+                        else:
+                            # betul betul takde results.
+                            # END BLOCK, OUTPUT CASE 8.
+
+                            (driver, a) = self.search_using_street_type_and_name(
+                                driver=driver, a=a)
+
+                            number_of_results = len(driver.find_elements(
+                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+
+                            if number_of_results == 0:
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+
+                            if number_of_results == 0:
+                                write_or_edit_result(
+                                    id=current_row_id, result_type=8, result_text="No results.")
+                                go_back_to_coverage_search_page(driver, a)
+                                continue
+
+                            else:
+                                self.iterate_through_all_and_notify(
+                                    driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                                continue
                     else:
-                        # END BLOCK, OUTPUT CASE 8.
-                        write_or_edit_result(
-                            id=current_row_id, result_type=8, result_text="No results.")
+                        # the block where 1 < num_of_results < 50
+                        if lot_no_detail_flag == 0:
+                            self.iterate_through_all_and_notify(
+                                driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                            continue
 
-                else:
-                    # the block where 1 < num_of_results < 50
-                    if lot_no_detail_flag == 0:
-                        self.iterate_through_all_and_notify(
-                            driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
-
-                    else:
-                        # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
-                        self.iterate_through_all_and_notify(
-                            driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-
+                        else:
+                            # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
+                            self.iterate_through_all_and_notify(
+                                driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+                            continue
+                except TimeoutException:
+                    raise Exception("Results table did not pop up.")
             else:
                 # when building name is empty. do the same but for street.
 
@@ -602,9 +734,15 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                 current_row_street = current_input_row.get_street(
                     self=current_input_row)
 
-                keyword_search_string = ''
-                keyword_search_string = keyword_search_string + \
-                    current_row_street
+                if len(current_row_street) > 3 and 'NA' not in current_row_street.upper() and 'N/A' not in current_row_street.upper():
+                    keyword_search_string = ''
+                    keyword_search_string = keyword_search_string + \
+                        current_row_street
+
+                else:
+                    keyword_search_string = ''
+                    keyword_search_string = keyword_search_string + \
+                        current_input_row.get_section(self=current_input_row)
 
                 keyword_field = driver.find_element(
                     By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
@@ -656,6 +794,14 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                                 # break
 
                         except TimeoutException:
+                            current_input_row = CurrentInputRow.get_instance()
+                            current_row_id = current_input_row.get_id(
+                                self=current_input_row)
+                            data_id_range = DataIdRange.get_instance()
+                            data_id_end = data_id_range.get_end_id(
+                                self=data_id_range)
+                            self.finding_coverage(
+                                driver, a, data_id_start=current_row_id, data_id_end=data_id_end)
                             raise Exception(
                                 "Error in the SEARCHING step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
                     while driver.execute_script("return document.readyState;") != "complete":
@@ -672,8 +818,15 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 
                 if number_of_results > 50:
                     if lot_no_detail_flag == 0:
+                        unit_no_filter_tab = driver.find_element(
+                            By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                        unit_no_filter_tab.clear()
+                        current_input_row = CurrentInputRow.get_instance()
+                        unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
+                            self=current_input_row).strip())
                         self.iterate_through_all_and_notify(
-                            filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                            driver=driver, a=a, filtered=True, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                        continue
 
                     else:
                         # need to search using the lot number too, and look at the number of results.
@@ -700,11 +853,14 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                             # print("END BLOCK! OUTPUT CASE 3 OR 1 PLEASE!")
                             self.iterate_through_all_and_notify(
                                 driver=driver, a=a, filtered=True, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
+                            continue
 
                 elif number_of_results == 0:
                     # no results on the table.
                     write_or_edit_result(
                         id=current_row_id, result_type=8, result_text="No results.")
+                    go_back_to_coverage_search_page(driver, a)
+                    continue
 
                 else:
                     # the block where 1 < num_of_results < 50
@@ -714,6 +870,8 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 
                         self.iterate_through_all_and_notify(
                             driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                        continue
+
                     else:
                         # when we need to match the lot number.
                         current_row_lot_no = current_input_row.get_house_unit_lotno(
@@ -734,3 +892,4 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                             # print("END BLOCK! OUTPUT CASE 3 OR 1 PLEASE!")
                             self.iterate_through_all_and_notify(
                                 driver=driver, a=a, filtered=False, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
+                            continue

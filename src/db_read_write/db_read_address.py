@@ -1,9 +1,12 @@
 import mysql.connector
+from src.db_read_write.db_secrets import get_db_password
+# from db_secrets import get_db_password
 from src.singleton.current_input_row import CurrentInputRow
 
 
 def read_from_db(id):
-    cnx = mysql.connector.connect(user="oursspc1_db_extuser", password="ExtInfo!@#",
+    password = get_db_password()
+    cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=password,
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
 
@@ -52,7 +55,13 @@ def read_from_db(id):
         self=current_input_row, current_row_result_type=current_row[15])
     current_input_row.set_result_remark(
         self=current_input_row, current_row_result_remark=current_row[16])
+    current_input_row.set_is_active(
+        self=current_input_row, current_row_is_active=current_row[17])
     current_input_row.set_created_at(
-        self=current_input_row, current_row_created_at=current_row[17])
+        self=current_input_row, current_row_created_at=current_row[18])
     current_input_row.set_updated_at(
-        self=current_input_row, current_row_updated_at=current_row[18])
+        self=current_input_row, current_row_updated_at=current_row[19])
+
+
+# if __name__ == '__main__':
+    # print(read_from_db(1))

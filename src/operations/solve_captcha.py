@@ -80,6 +80,7 @@ def detecting_captcha_and_solve(driver, a, error_message):
                     (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
                 retry_times += 1
                 if retry_times == 5:
+                    print("RETRY_TIMES > 5. WEBSITE IS REFRESHING")
                     # raise Exception("Unable to solve captcha after 5 attempts. Refreshing page...")
                     driver.refresh()
                     while driver.execute_script("return document.readyState;") != "complete":

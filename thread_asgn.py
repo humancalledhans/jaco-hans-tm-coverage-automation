@@ -44,7 +44,7 @@ class ThreadAsgn:
 
         # elif (full_ids_to_end - full_ids_to_start) % 2 == 0:
         #     threading.Thread(target=self.main_thread, args=(
-        #         full_ids_to_start, full_ids_to_start + int(full_ids_to_end / 2), "thread-1")).start()
+        #         full_ids_to_start, full_ids_to_start + int(full_ids_to_e`nd / 2), "thread-1")).start()
         #     threading.Thread(target=self.main_thread, args=(
         #         full_ids_to_start + int(full_ids_to_end / 2), full_ids_to_end, "thread-2")).start()
 

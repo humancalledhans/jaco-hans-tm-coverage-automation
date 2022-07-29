@@ -1,8 +1,12 @@
 import mysql.connector
 
+from src.db_read_write.db_secrets import get_db_password
+# from db_secrets import get_db_password
+
 
 def get_column_names():
-    cnx = mysql.connector.connect(user="oursspc1_db_extuser", password="ExtInfo!@#",
+    password = get_db_password()
+    cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=password,
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
 

@@ -22,7 +22,8 @@ class Main:
             self=data_id_range, start_id=int(ids_to_start_from))
         data_id_range.set_end_id(self=data_id_range, end_id=int(ids_to_end_at))
 
-        login = Login('DPPJ1901', 'Dsync110!!')
+        # login = Login('DPPJ1901', 'Dsync110!!')
+        login = Login('DPSL3601', 'Dptama201!')
         login.login()
 
         # print("Hi! This is a Coverage Automation System. It will:\n1. Read in a Database of Addresses\n2. Check the coverage of the addresses\n3. Send an email with a screenshot depending on the 4 coverage end results.")
@@ -41,14 +42,14 @@ class Main:
     # TODO: created_at, updated_at in the database
     # TODO: do 'no result' for when there are no results in the TABLE screen.
 
-    # eight scenarios:
+    # seven scenarios:
     # id 1. within servicable areas (Available)
     # id 2. Building Name Found
     # id 3. Street Name Found
-    # id 4: Infra Error
+    # id 4: Not within Serviceable Area
     # id 5: service provider not the same with Transfer Request,
     # id 6: Another progressing order created on the same address has been detected (Existing Order).
-    # id 7: Is not within the servicable area
+    # id 7: Port full.
     # id 8: No results in the results table.
 
     # 3. outside servicable areas,
@@ -71,8 +72,8 @@ class Main:
     # 4. Another progressing order created on the same address has been detected (No. 38, JALAN SS 26/7 Section TAMAN MAYANG JAYA, 47301 PETALING JAYA SELANGOR, MALAYSIA)
 
     # analysis on the xpath for the table results:
-    # when there's only one result (without the filter boxes), the xpath for the tr @class is "[@class='datagrid-even']"
-    # when there's multiple results (with the filter boxes), the xpath for the tr @class is "[@class='odd' or @class='even']"
+    # when there's only one result (without using the filter boxes to filter), the xpath for the tr @class is "[@class='datagrid-even']"
+    # when there's multiple results (without using the filter boxes to filter), the xpath for the tr @class is "[@class='odd' or @class='even']"
     # after you filter using the filter box, the xpath would be //tr[@class='odd' or @class='even'][not(@style)]
 
 

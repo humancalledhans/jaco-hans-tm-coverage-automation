@@ -1,6 +1,5 @@
 # login('DPSL9701', 'Djns513!!', driver)
 
-from selenium.webdriver import Chrome
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
@@ -11,13 +10,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support.ui import Select
 from selenium.webdriver import ActionChains
 
 import time
 
 from src.coverage_check.coverage_check import FindingCoverage
 from src.operations.solve_captcha import solve_captcha
+from src.singleton.data_id_range import DataIdRange
+from src.db_read_write.db_get_largest_id import get_max_id_from_db
 
 
 class Login:
@@ -82,7 +82,16 @@ class Login:
                             (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
 
                     except TimeoutException:
-                        to_proceed = True
+                        try:
+                            WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                (By.XPATH, "//input[@type='image' and @alt='Login']")))
+                            login_button = driver.find_element(
+                                By.XPATH, "//input[@type='image' and @alt='Login']")
+                            a.move_to_element(login_button).click().perform()
+                            while driver.execute_script("return document.readyState;") != "complete":
+                                time.sleep(0.5)
+                        except TimeoutException:
+                            to_proceed = True
 
                 proceed = True
 
@@ -99,11 +108,16 @@ class Login:
                     # print("We tried for 5 times. Skipping...")
                     count = 0
 
-        try:
-            driver.find_element(
-                By.XPATH, "//input[@type='image' and @alt='Login']")
-            a.move_to_element(login_button).click().perform()
-
-        except NoSuchElementException:
+        if proceed:
+            data_id_range = DataIdRange.get_instance()
+            data_id_start = data_id_range.get_start_id(self=data_id_range)
+            data_id_end = data_id_range.get_end_id(self=data_id_range)
+            if data_id_end == -1:
+                # get the final value of the database.
+                data_id_end = get_max_id_from_db()
             finding_coverage = FindingCoverage()
-            finding_coverage.finding_coverage(driver=driver, a=a)
+            finding_coverage.finding_coverage(
+                driver=driver, a=a, data_id_start=data_id_start, data_id_end=data_id_end)
+
+        else:
+            self.login()
