@@ -27,7 +27,7 @@ def write_to_cvg_task(remark, total, complete):
 
     enter_log = """
     INSERT INTO cvg_task (remark, total, complete, created_at, updated_at)
-    VALUES (%s, %s, %s)
+    VALUES (%s, %s, %s, %s, %s)
     """
 
     values = (remark, total, complete, current_time, current_time)
