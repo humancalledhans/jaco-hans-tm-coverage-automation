@@ -4,6 +4,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
+from src.operations.solve_captcha import solve_captcha
 # from src.coverage_check.coverage_check import FindingCoverage
 # from src.singleton.data_id_range import DataIdRange
 from src.db_read_write.db_write_address import write_or_edit_result
@@ -17,16 +18,17 @@ from .go_back_to_search_page import go_back_to_coverage_search_page
 import time
 
 
-def check_coverage_and_notify(table_row_num, driver, a, filtered):
+def check_coverage_and_notify(table_row_num, driver, a, filtered, address_remark=None):
     """
     this function accepts the best row's row number,
-    1. checks the coverage, and 
+    1. checks the coverage (by clicking on 'select'), and 
     2. notifies the user.
 
-    # NOTE: table_row_num starts at 0. that is, we assume that the first row is index 0 of the table, which is wrong.
+    # NOTE: table_rowal
+    #  _num starts at 0. that is, we assume that the first row is index 0 of the table, which is wrong.
     """
 
-    def check_coverage_and_notify_actual(driver, a, address_string):
+    def check_coverage_and_notify_actual(driver, a, address_remark=None):
         current_input_row = CurrentInputRow.get_instance()
         current_row_id = current_input_row.get_id(
             self=current_input_row)
@@ -47,7 +49,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
 
             # print("RESULT: is within servicable area")
             write_or_edit_result(
-                id=current_row_id, result_type=1, result_text="Is within serviceable area!")
+                id=current_row_id, result_type=1, result_text="Is within serviceable area!", address_remark=address_remark)
 
             # print("we're in the block where the green check mark is not available")
 
@@ -61,9 +63,9 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
                     By.XPATH, "//td//font[@color='red']").text
                 if 'unable to process order. another progressing order created on the same address has been detected.' in result_text.lower():
                     # print(
-                    #     'RESULT: unable to process order. another progressing order created on the same address has been detected.')
+                    # 'RESULT: unable to process order. another progressing order created on the same address has been detected.')
                     write_or_edit_result(
-                        id=current_row_id, result_type=6, result_text="Another progressing order is created on the same address.")
+                        id=current_row_id, result_type=6, result_text="Another progressing order is created on the same address.", address_remark=address_remark)
                     # send_message(
                     #     address_string + "\nAnother progressing order created on the same address has been detected!")
                     # send_email(
@@ -80,7 +82,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
                 if "cannot proceed with transfer request. service provider not the same with transfer request." in result_text.lower() or "due to create transfer request is required" in result_text.lower():
                     # print('RESULT: service provider not the same with transfer request.')
                     write_or_edit_result(
-                        id=current_row_id, result_type=5, result_text="Service provider not the same with Transfer Request.")
+                        id=current_row_id, result_type=5, result_text="Service provider not the same with Transfer Request.", address_remark=address_remark)
                     # send_message(
                     #     address_string + "\nService provider not the same with Transfer Request!")
                     # send_email(
@@ -91,7 +93,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
                 elif "is not within the serviceable area" in result_text.lower():
                     # print("RESULT: is not within the servicable area.")
                     write_or_edit_result(
-                        id=current_row_id, result_type=4, result_text="Not within serviceable area.")
+                        id=current_row_id, result_type=4, result_text="Not within serviceable area.", address_remark=address_remark)
                     # send_message(address_string +
                     #              "\nIs not within the servicable area!")
                     # send_email(address_string + "\nIs not within servicable area!")
@@ -100,7 +102,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
 
                 else:
                     write_or_edit_result(
-                        id=current_row_id, result_type=7, result_text="Port full.")
+                        id=current_row_id, result_type=7, result_text="Other Error.", address_remark=address_remark)
 
                     go_back_to_coverage_search_page(driver, a)
                     return
@@ -150,10 +152,43 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
             next_button = driver.find_element(
                 By.XPATH, "//input[@type='image' and contains(@src, 'btnNext')]")
             a.move_to_element(next_button).click().perform()
-            check_coverage_and_notify_actual(driver, a, address_string)
+            to_proceed = False
+            retry_times = 0
+            while to_proceed == False:
+                try:
+                    while driver.execute_script("return document.readyState;") != "complete":
+                        time.sleep(0.5)
+                    captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                    captcha_code = solve_captcha(
+                        captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                    # print("HERE2")
+                    captcha_field = driver.find_element(
+                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                    captcha_field.clear()
+                    captcha_field.send_keys(captcha_code)
+                    submit_captcha_button = driver.find_element(
+                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                    a.move_to_element(
+                        submit_captcha_button).click().perform()
+
+                    try:
+                        while driver.execute_script("return document.readyState;") != "complete":
+                            time.sleep(0.5)
+                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                            (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                    except TimeoutException:
+                        to_proceed = True
+
+                except TimeoutException:
+                    # print(
+                    #     "Retrying step FIVE - going back and comparing each address...")
+                    to_proceed = True
+            check_coverage_and_notify_actual(driver, a, address_remark)
         except NoSuchElementException:
             # it means we're not at the "Type in more details" page.
-            check_coverage_and_notify_actual(driver, a, address_string)
+            check_coverage_and_notify_actual(driver, a, address_remark)
 
     # the implementation of the check_coverage_and_notify function starts here.
     # it calls bridge_to_actual_op() next, if there are no exceptions and problems.
@@ -175,70 +210,183 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
     select_button = driver.find_element(
         By.XPATH, f"({x_code_path})[{1+table_row_num}]//td//a//img")
 
-    a.move_to_element(select_button).click().perform()
-    while driver.execute_script("return document.readyState;") != "complete":
-        time.sleep(0.5)
-
     try:
-        # The page with "Sorry, we are unable to proceed at the moment. This error could be due to loss of connection to the server. Please try again later."
-        driver.find_element(
-            By.XPATH, "(//div[@class='errorDisplay']//div//table//b//text())[1]")
-        link_to_click = driver.find_element(
-            By.XPATH, "(//div[@class='errorDisplay']//div//table//tr//td//b//a)[1]")
-        a.move_to_element(link_to_click).click().perform()
+        a.move_to_element(select_button).click().perform()
 
-    except NoSuchElementException:
+        to_proceed = False
+        retry_times = 0
+        while to_proceed == False:
+            try:
+                while driver.execute_script("return document.readyState;") != "complete":
+                    time.sleep(0.5)
+                captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                    (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                captcha_code = solve_captcha(
+                    captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                # print("HERE2")
+                captcha_field = driver.find_element(
+                    By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                captcha_field.clear()
+                captcha_field.send_keys(captcha_code)
+                submit_captcha_button = driver.find_element(
+                    By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                a.move_to_element(
+                    submit_captcha_button).click().perform()
+
+                try:
+                    while driver.execute_script("return document.readyState;") != "complete":
+                        time.sleep(0.5)
+                    WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                        (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                except TimeoutException:
+                    to_proceed = True
+
+            except TimeoutException:
+                # print(
+                #     "Retrying step FIVE - going back and comparing each address...")
+                to_proceed = True
+
+        while driver.execute_script("return document.readyState;") != "complete":
+            time.sleep(0.5)
 
         try:
-            while driver.execute_script("return document.readyState;") != "complete":
-                time.sleep(0.5)
+            # The page with "Sorry, we are unable to proceed at the moment. This error could be due to loss of connection to the server. Please try again later."
+            driver.find_element(
+                By.XPATH, "(//div[@class='errorDisplay']//div//table//b//text())[1]")
+            link_to_click = driver.find_element(
+                By.XPATH, "(//div[@class='errorDisplay']//div//table//tr//td//b//a)[1]")
+            a.move_to_element(link_to_click).click().perform()
 
-            # for when there is the "kindly fill in the missing information" page.
-            WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                (By.XPATH, "//div[@id='incompleteAddress']")))
-            for missing_information in driver.find_elements(By.XPATH, "//input[@type='text']"):
-                missing_information.send_keys("-")
+            to_proceed = False
+            while to_proceed == False:
+                try:
+                    while driver.execute_script("return document.readyState;") != "complete":
+                        time.sleep(0.5)
+                    captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                    captcha_code = solve_captcha(
+                        captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                    # print("HERE2")
+                    captcha_field = driver.find_element(
+                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                    captcha_field.clear()
+                    captcha_field.send_keys(captcha_code)
+                    submit_captcha_button = driver.find_element(
+                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                    a.move_to_element(
+                        submit_captcha_button).click().perform()
 
-            bridge_to_actual_op(driver, a)
+                    try:
+                        while driver.execute_script("return document.readyState;") != "complete":
+                            time.sleep(0.5)
+                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                            (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
 
-        except TimeoutException:
-            # for when there is NOT the "kindly fill in the missing information" page.
-            while driver.execute_script("return document.readyState;") != "complete":
-                time.sleep(0.5)
+                    except TimeoutException:
+                        to_proceed = True
+
+                except TimeoutException:
+                    # print(
+                    #     "Retrying step FIVE - going back and comparing each address...")
+                    to_proceed = True
+
+        except NoSuchElementException:
 
             try:
+                while driver.execute_script("return document.readyState;") != "complete":
+                    time.sleep(0.5)
+
+                # for when there is the "kindly fill in the missing information" page.
                 WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                    (By.XPATH, "//table[@align='center' and @class='Yellow']")))
+                    (By.XPATH, "//div[@id='incompleteAddress']")))
+                for missing_information in driver.find_elements(By.XPATH, "//input[@type='text']"):
+                    missing_information.send_keys("-")
+
                 bridge_to_actual_op(driver, a)
 
             except TimeoutException:
+                # for when there is NOT the "kindly fill in the missing information" page.
+                while driver.execute_script("return document.readyState;") != "complete":
+                    time.sleep(0.5)
+
                 try:
-                    a.move_to_element(driver.find_element(
-                        By.XPATH, "(//div[@class='wlp-bighorn-window-content']//div[@class='errorDisplay']//td//b)[1]")).click().perform()
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
+                    WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                        (By.XPATH, "//table[@align='center' and @class='Yellow']")))
+                    bridge_to_actual_op(driver, a)
 
-                except NoSuchElementException:
-                    print("HANS - FIND OUT WHAT YOU CAN DO! ITS A PROBLEM!")
-                    time.sleep(300)
+                except TimeoutException:
+                    try:
+                        a.move_to_element(driver.find_element(
+                            By.XPATH, "(//div[@class='wlp-bighorn-window-content']//div[@class='errorDisplay']//td//b)[1]")).click().perform()
+                        while driver.execute_script("return document.readyState;") != "complete":
+                            time.sleep(0.5)
 
-                # try:
-                #     while driver.execute_script("return document.readyState;") != "complete":
-                #         time.sleep(0.5)
-                #     WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                #         (By.XPATH, "//table[@align='center' and @class='Yellow']")))
-                #     bridge_to_actual_op(driver, a)
+                    except NoSuchElementException:
+                        current_input_row = CurrentInputRow.get_instance()
 
-                # except TimeoutException:
-                #     driver.execute_script("window.history.go(-1)")
-                #     # TODO: figure out where this goes to.
+                        try:
+                            WebDriverWait(driver, 0.5).until(EC.presence_of_element_located(
+                                (By.XPATH, "//div[@id='main']//div[@id='block_feature']//div[@id='support-enquiry']")))
+                            print(
+                                "website under maintenance. retrying in 5 minutes...")
+                            time.sleep(60)
+                            print(
+                                "website under maintenance. retrying in 4 minutes...")
+                            time.sleep(60)
+                            print(
+                                "website under maintenance. retrying in 3 minutes...")
+                            time.sleep(60)
+                            print(
+                                "website under maintenance. retrying in 2 minutes...")
+                            time.sleep(60)
+                            print(
+                                "website under maintenance. retrying in 1 minute...")
+                            time.sleep(60)
+                            print("website under maintenance. retrying now...")
+                        except TimeoutException:
 
-                    # current_input_row = CurrentInputRow.get_instance()
-                    # current_row_id = current_input_row.get_id(
-                    #     self=current_input_row)
-                    # data_id_range = DataIdRange.get_instance()
-                    # data_id_end = data_id_range.get_end_id(
-                    #     self=data_id_range)
-                    # finding_coverage = FindingCoverage.get_instance()
-                    # finding_coverage.finding_coverage(
-                    #     driver, a, data_id_start=current_row_id, data_id_end=data_id_end)
+                            print("ID ", current_input_row.get_id(
+                                self=current_input_row))
+                            print("HANS - FIND OUT WHAT YOU CAN DO! ITS A PROBLEM!")
+                            try:
+                                WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//div[@class='subContent']//table//tbody//font[@color='red' and contains(text(), 'System unable to process the selected address due to technical issue.')]")))
+                                a.move_to_element(
+                                    driver.find_element(By.XPATH, ""))
+
+                            except TimeoutException:
+                                print(
+                                    "HANS - WE'RE NOT IN THE SYSTEM UNABLE TO PROCESS ADRESS ERROR PAGE.")
+                                print(e)
+                                time.sleep(300)
+                                go_back_to_coverage_search_page(driver, a)
+                        except Exception as e:
+                            print(e)
+                            print("HANS - FIND OUT WHAT YOU CAN DO! ITS A PROBLEM!")
+                            time.sleep(300)
+                            go_back_to_coverage_search_page(driver, a)
+
+    except TimeoutException:
+        return
+
+        # try:
+        #     while driver.execute_script("return document.readyState;") != "complete":
+        #         time.sleep(0.5)
+        #     WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+        #         (By.XPATH, "//table[@align='center' and @class='Yellow']")))
+        #     bridge_to_actual_op(driver, a)
+
+        # except TimeoutException:
+        #     driver.execute_script("window.history.go(-1)")
+        #     # TODO: figure out where this goes to.
+
+        # current_input_row = CurrentInputRow.get_instance()
+        # current_row_id = current_input_row.get_id(
+        #     self=current_input_row)
+        # data_id_range = DataIdRange.get_instance()
+        # data_id_end = data_id_range.get_end_id(
+        #     self=data_id_range)
+        # finding_coverage = FindingCoverage.get_instance()
+        # finding_coverage.finding_coverage(
+        #     driver, a, data_id_start=current_row_id, data_id_end=data_id_end)

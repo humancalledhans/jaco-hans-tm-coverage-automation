@@ -16,8 +16,8 @@ import time
 
 from src.coverage_check.coverage_check import FindingCoverage
 from src.operations.solve_captcha import solve_captcha
-from src.singleton.data_id_range import DataIdRange
-from src.db_read_write.db_get_largest_id import get_max_id_from_db
+from src.db_read_write.db_read_address import read_from_db
+from src.operations.set_accepted_params import set_accepted_params
 
 
 class Login:
@@ -37,10 +37,12 @@ class Login:
             try:
                 s = Service(ChromeDriverManager().install())
                 options = Options()
-                options.headless = True
+                options.headless = False
                 options.add_argument('--disable-dev-shm-usage')
                 options.add_argument('--force-device-scale-factor=1')
                 options.add_argument("--no-sandbox")
+                options.add_experimental_option(
+                    "excludeSwitches", ["enable-logging"])
                 driver = webdriver.Chrome(service=s, options=options)
                 driver.get('https://partners.unifi.my/HSBBPartnerPortal/HSBBPartnerPortal.portal?_nfpb=true&_pageLabel=login_portal&_nfls=false#wlp_HSBBPartnerPortal_portal_HelpCustomer/')
                 while driver.execute_script("return document.readyState;") != "complete":
@@ -59,6 +61,7 @@ class Login:
                 password_field.send_keys(password)
 
                 to_proceed = False
+                wait_iterations = 0
                 while to_proceed == False:
                     captcha_to_solve = driver.find_element(
                         By.XPATH, "//img[@border='1' and @style='width: 220px;']")
@@ -66,6 +69,7 @@ class Login:
                         captcha_elem_to_solve=captcha_to_solve, driver=driver)
                     while driver.execute_script("return document.readyState;") != "complete":
                         time.sleep(0.5)
+                    # print("HERE7")
                     captcha_field = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                         (By.XPATH, "//input[@type='text' and @id='portal.actionForm_captchaCode']")))
                     captcha_field.clear()
@@ -80,6 +84,11 @@ class Login:
                             time.sleep(0.5)
                         WebDriverWait(driver, 3).until(EC.presence_of_element_located(
                             (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+                        wait_iterations += 1
+
+                        if wait_iterations == 10:
+                            driver.refresh()
+                            wait_iterations = 0
 
                     except TimeoutException:
                         try:
@@ -109,15 +118,11 @@ class Login:
                     count = 0
 
         if proceed:
-            data_id_range = DataIdRange.get_instance()
-            data_id_start = data_id_range.get_start_id(self=data_id_range)
-            data_id_end = data_id_range.get_end_id(self=data_id_range)
-            if data_id_end == -1:
-                # get the final value of the database.
-                data_id_end = get_max_id_from_db()
             finding_coverage = FindingCoverage()
+            set_accepted_params()
+            # read_from_db()
             finding_coverage.finding_coverage(
-                driver=driver, a=a, data_id_start=data_id_start, data_id_end=data_id_end)
+                driver=driver, a=a)
 
         else:
             self.login()

@@ -64,7 +64,7 @@ def detecting_captcha_and_solve(driver, a, error_message):
                 (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
             captcha_code = solve_captcha(
                 captcha_elem_to_solve=captcha_to_solve, driver=driver)
-
+            # print("HERE8")
             captcha_field = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
                 (By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")))
             captcha_field.clear()

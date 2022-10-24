@@ -11,7 +11,10 @@ def send_message(msg):
     # to take away same phone numbers in a list.
     phone_num_list = list(set(phone_num_list))
 
-    helper_send_message(msg, phone_num_list=phone_num_list)
+    try:
+        helper_send_message(msg, phone_num_list=phone_num_list)
+    except Exception as e:
+        print(e)
 
 
 def helper_send_message(msg, phone_num_list):

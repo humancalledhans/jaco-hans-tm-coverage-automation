@@ -1,4 +1,5 @@
 import threading
+from src.singleton.num_of_iterations import NumOfIterations
 from src.main import Main
 
 from src.db_read_write.db_get_largest_id import get_max_id_from_db
@@ -16,6 +17,9 @@ class ThreadAsgn:
     def start_threads(self):
         full_ids_to_start = self.ids_to_start_from
         full_ids_to_end = self.ids_to_end_at
+
+        # print("START", full_ids_to_start)
+        # print("END", full_ids_to_end)
 
         threading.Thread(target=self.main_thread, args=(
             full_ids_to_start, full_ids_to_end, "thread-1")).start()
@@ -62,5 +66,10 @@ if __name__ == '__main__':
     # print(threading.activeCount())
     # time.sleep(0.9)
     # print('finally')
-    thread_asgn = ThreadAsgn()
+    num_of_iterations = input("Hi - how many iterations would you like to run? (Press \'Enter\' for infinite)\n")
+    if num_of_iterations == '':
+        num_of_iterations = 999999
+    num_of_iterations_instance = NumOfIterations.get_instance()
+    num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
+    thread_asgn = ThreadAsgn(20, 22)
     thread_asgn.start_threads()

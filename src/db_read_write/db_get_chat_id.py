@@ -5,7 +5,6 @@ from src.db_read_write.db_secrets import get_db_password
 
 
 def get_chat_id(desired_phone_number):
-    print("DESIRED_PHONE_NUM", desired_phone_number)
     password = get_db_password()
     cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=password,
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")

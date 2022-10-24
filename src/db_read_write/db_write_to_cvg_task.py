@@ -1,5 +1,7 @@
 import mysql.connector
 from datetime import datetime
+
+import pytz
 from src.db_read_write.db_secrets import get_db_password
 
 
@@ -8,7 +10,8 @@ def write_to_cvg_task(remark, total, complete):
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
 
-    current_time = datetime.now()
+    tz = pytz.timezone("Asia/Singapore")
+    current_datetime = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
 
     create_table_statement = """
     CREATE TABLE IF NOT EXISTS cvg_task (
@@ -30,7 +33,7 @@ def write_to_cvg_task(remark, total, complete):
     VALUES (%s, %s, %s, %s, %s)
     """
 
-    values = (remark, total, complete, current_time, current_time)
+    values = (remark, total, complete, current_datetime, current_datetime)
 
     cursor.execute(enter_log, values)
 

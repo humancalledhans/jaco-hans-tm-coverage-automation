@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractstaticmethod
+import re
 
 
 class ICurrentInputRow(metaclass=ABCMeta):
@@ -200,9 +201,29 @@ class CurrentInputRow(ICurrentInputRow):
             raise Exception(
                 "CurrentInputRow instance cannot be instantiated more than once!")
         else:
+            CurrentInputRow.__instance = self
             self.accepted_states_list = accepted_states_list
             self.accepted_street_types_list = accepted_street_types_list
-            CurrentInputRow.__instance = self
+            self.current_row_id = None
+            self.current_row_unit_no = None
+            self.current_row_floor = None
+            self.current_row_building = None
+            self.current_row_street = None
+            self.current_row_section = None
+            self.current_row_city = None
+            self.current_row_state = None
+            self.current_row_postcode = None
+            self.current_row_search_level_flag = None
+            self.current_row_source = None
+            self.current_row_source_id = None
+            self.current_row_salesman = None
+            self.current_row_notify_email = None
+            self.current_row_notify_mobile = None
+            self.current_row_result_type = None
+            self.current_row_result_remark = None
+            self.current_row_is_active = None
+            self.current_row_created_at = None
+            self.current_row_updated_at = None
 
     @staticmethod
     def set_accepted_states_list(self, accepted_states_list):
@@ -221,6 +242,16 @@ class CurrentInputRow(ICurrentInputRow):
         if current_row_unit_no == 'None' or current_row_unit_no is None or len(current_row_unit_no) == 0:
             self.current_row_unit_no = ''
         else:
+            int_as_string_lst = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+            if '-' in current_row_unit_no and current_row_unit_no[-1] in int_as_string_lst:
+                x = re.split("-", current_row_unit_no)
+
+                for idx in range(len(x)-1, 0, -1):
+                    if x[idx] not in int_as_string_lst:
+                        continue
+                    else:
+                        x[idx] = "0" + x[idx]
+
             self.current_row_unit_no = current_row_unit_no
 
     @staticmethod
@@ -274,7 +305,7 @@ class CurrentInputRow(ICurrentInputRow):
 
     @staticmethod
     def set_search_level_flag(self, current_row_search_level_flag):
-        if current_row_search_level_flag == 'None' or current_row_search_level_flag is None or len(current_row_search_level_flag) == 0:
+        if current_row_search_level_flag == 'None' or current_row_search_level_flag is None or current_row_search_level_flag != 1:
             self.current_row_search_level_flag = 0
         else:
             self.current_row_search_level_flag = current_row_search_level_flag

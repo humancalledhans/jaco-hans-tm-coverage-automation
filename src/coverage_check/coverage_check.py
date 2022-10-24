@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
 
 import time
+from src.singleton.num_of_iterations import NumOfIterations
 from src.singleton.cvg_task import CVGTask
 from src.singleton.data_id_range import DataIdRange
 from src.notifications.email_msg import send_email
@@ -20,6 +21,7 @@ from .go_back_to_search_page import go_back_to_coverage_search_page
 from .check_coverage_and_notify import check_coverage_and_notify
 from .input_speed_requested import input_speed_requested
 from src.singleton.current_input_row import CurrentInputRow
+from src.singleton.all_the_data import AllTheData
 from src.db_read_write.db_write_address import write_or_edit_result
 from src.db_read_write.db_read_address import read_from_db
 from src.db_read_write.db_get_chat_id import get_chat_id
@@ -89,7 +91,7 @@ class FindingCoverage:
                         (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
                     captcha_code = solve_captcha(
                         captcha_elem_to_solve=captcha_to_solve, driver=driver)
-
+                    # print("HERE1")
                     captcha_field = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
                         (By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")))
                     captcha_field.clear()
@@ -117,6 +119,7 @@ class FindingCoverage:
                     data_id_end = data_id_range.get_end_id(self=data_id_range)
                     self.finding_coverage(
                         driver, a, data_id_start=current_row_id, data_id_end=data_id_end)
+                    continue
                     raise Exception(
                         "Error in the SEARCHING step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
 
@@ -148,9 +151,8 @@ class FindingCoverage:
         checked = False
 
         if filtered == False:
-            # block for when there is only one result in the table.
-            # wait for the elements in the table to come out.
             if (len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))) == 1:
+                # for when there's only one result.
                 check_coverage_and_notify(
                     table_row_num=0, driver=driver, a=a, filtered=filtered)
                 checked = True
@@ -161,9 +163,21 @@ class FindingCoverage:
         else:
             x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]"
 
-        if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
+        if len(driver.find_elements(By.XPATH, x_code_path)) == 0 and street_name_found == False and building_name_found == False:
             write_or_edit_result(
                 id=current_row_id, result_type=8, result_text="No results.")
+            go_back_to_coverage_search_page(driver, a)
+            return
+
+        if len(driver.find_elements(By.XPATH, x_code_path)) == 0 and building_name_found == True:
+            write_or_edit_result(id=current_row_id, result_type=2,
+                                 result_text="Building Name Found, Lot No Not Found.")
+            go_back_to_coverage_search_page(driver, a)
+            return
+
+        if len(driver.find_elements(By.XPATH, x_code_path)) == 0 and street_name_found == True:
+            write_or_edit_result(id=current_row_id, result_type=3,
+                                 result_text="Street Name Found, Lot No Not Found.")
             go_back_to_coverage_search_page(driver, a)
             return
 
@@ -186,6 +200,7 @@ class FindingCoverage:
                 except TimeoutException:
                     # maybe captcha is here. Let's try to solve it.
                     to_proceed = False
+                    retry_times = 0
                     while to_proceed == False:
                         try:
                             while driver.execute_script("return document.readyState;") != "complete":
@@ -194,7 +209,7 @@ class FindingCoverage:
                                 (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
                             captcha_code = solve_captcha(
                                 captcha_elem_to_solve=captcha_to_solve, driver=driver)
-
+                            # print("HERE2")
                             captcha_field = driver.find_element(
                                 By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
                             captcha_field.clear()
@@ -216,10 +231,7 @@ class FindingCoverage:
                         except TimeoutException:
                             # print(
                             #     "Retrying step FIVE - going back and comparing each address...")
-                            retry_times = retry_times + 1
-                            if retry_times > 5:
-                                raise Exception(
-                                    "Error in step FIVE of coverage_check.py - table did not pop up after going back. Captcha did not pop up too.")
+                            to_proceed = True
 
             if len(table_header_data) == 0:
                 # to assemble the header of the results table.
@@ -230,14 +242,21 @@ class FindingCoverage:
                         table_header_data.append(tab.text)
 
             # actually comparing the data of each row.
-            table_row_data = driver.find_elements(
+            table_row_data_list = driver.find_elements(
                 By.XPATH, f"({x_code_path})[{table_row_num+1}]//td[@class='datagrid']")
-            points = return_points_for_row(
-                table_row_data_list=table_row_data, table_header_data=table_header_data)
 
+            table_row_data = []
+            for table_data in table_row_data_list:
+                table_row_data.append(table_data.text)
+            (points, lotNumAndStreetAndPostcodeNoMatchBool) = return_points_for_row(
+                table_row_data=table_row_data, table_header_data=table_header_data)
+
+            # print("POINTS: ", points, "TABLEROW_NUM: ", table_row_num)
             # if the boolean value is 1, we NEED to return BEST MATCH.
             # else if the boolean value if 0, we just get the highest points.
             # print("POINTS: ", points)
+            # print("LOT NUM AND STREET AND POSTCODE NO MATCH BOOL",
+            #   lotNumAndStreetAndPostcodeNoMatchBool)
             if points == 'BEST MATCH':
                 points_list = []
                 check_coverage_and_notify(
@@ -246,45 +265,69 @@ class FindingCoverage:
                 # it's the best that we can get, so we can just break out of the loop.
                 break
             else:
-                points_list.append((table_row_num, points))
+                address_used = ''
+                for string in table_row_data:
+                    string = string.strip()
+                    if string != ' ' and string != '-' and len(string) > 0 and string != 'NIL' and string != 'N/A' and string != 'NA' and string != 'N/A ':
+                        address_used += string + ' '
+
+                address_used = address_used.strip()
+                points_list.append(
+                    (table_row_num, points, lotNumAndStreetAndPostcodeNoMatchBool))
 
         # now, there's no best match. so we take the row with the highest points.
         if checked == False:
+            points_list = sorted(points_list, key=lambda x: x[1])
+
+            max_point_tuple = points_list[0]
+
             if lot_no_detail_flag == 0:
                 # print("WENT INTO LOT_NO_DETAIL_FLAG == 0")
                 # print("LEN_POINTS_LIST", len(points_list))
                 if len(points_list) != 0:
                     # this would mean there's not a best match.
-                    points_list = sorted(points_list, key=lambda x: x[1])
-
-                    max_point_tuple = points_list[0]
 
                     check_coverage_and_notify(
-                        table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=filtered)
+                        table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=filtered, address_remark=address_used)
                     checked = True
+                    # TODO: 15th October: add the address that's searched on.
             elif lot_no_detail_flag == 1:
                 # lot_no_detail_flag == 1.
                 # print("WENT INTO LOT_NO_DETAIL_FLAG == 1")
                 # print("BUILDING_NAME_FOUND", building_name_found)
                 # print("STREET_NAME_FOUND", street_name_found)
 
-                if building_name_found == True and street_name_found == False:
-                    write_or_edit_result(id=current_row_id, result_type=2,
-                                         result_text="Building Name Found, Lot No Not Found.")
-                    go_back_to_coverage_search_page(driver, a)
-                    return
-                elif building_name_found == False and street_name_found == True:
-                    write_or_edit_result(id=current_row_id, result_type=3,
-                                         result_text="Street Name Found, Lot No Not Found.")
-                    go_back_to_coverage_search_page(driver, a)
-                    return
+                # write remarks, and use the address that's used to search.
 
-                elif building_name_found == False and street_name_found == False:
-                    # we need to match the lot no, but we couldn't. The building name was also not found. So we output "NO MATCH".
-                    write_or_edit_result(
-                        id=current_row_id, result_type=8, result_text="No results.")
-                    go_back_to_coverage_search_page(driver, a)
-                    return
+                # if lot number or street or postcode not the same (assigned respectively):
+                if max_point_tuple[2] == False:
+
+                    if building_name_found == True and street_name_found == False:
+                        write_or_edit_result(id=current_row_id, result_type=2,
+                                             result_text="Building Name Found, Lot No Not Found.", address_remark=address_used)
+                        go_back_to_coverage_search_page(driver, a)
+                        return
+                    elif building_name_found == False and street_name_found == True:
+                        write_or_edit_result(id=current_row_id, result_type=3,
+                                             result_text="Street Name Found, Lot No Not Found.", address_remark=address_used)
+                        go_back_to_coverage_search_page(driver, a)
+                        return
+
+                    elif building_name_found == False and street_name_found == False:
+                        # we need to match the lot no, but we couldn't. The building name was also not found. So we output "NO MATCH".
+                        write_or_edit_result(
+                            id=current_row_id, result_type=8, result_text="No results.", address_remark=address_used)
+                        go_back_to_coverage_search_page(driver, a)
+                        return
+
+                else:
+                    points_list = sorted(points_list, key=lambda x: x[1])
+
+                    max_point_tuple = points_list[0]
+
+                    check_coverage_and_notify(
+                        table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=filtered, address_remark=address_used)
+                    checked = True
 
     def select_state(self, driver, a, state):
         # TODO: add condition for when there is only 'Wilayah Persekutuan' in the list.
@@ -300,7 +343,7 @@ class FindingCoverage:
                     (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
                 captcha_code = solve_captcha(
                     captcha_elem_to_solve=captcha_to_solve, driver=driver)
-
+                # print("HERE3")
                 captcha_field = driver.find_element(
                     By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
                 captcha_field.clear()
@@ -360,7 +403,7 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                     (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
                 captcha_code = solve_captcha(
                     captcha_elem_to_solve=captcha_to_solve, driver=driver)
-
+                # print("HERE4")
                 captcha_field = driver.find_element(
                     By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
                 captcha_field.clear()
@@ -382,7 +425,7 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                 # no captcha to solve.
                 to_proceed = True
 
-    def finding_coverage(self, driver, a, data_id_start, data_id_end):
+    def finding_coverage(self, driver, a, data_id_start=-1, data_id_end=-1):
 
         input_speed_requested(driver, a, 50)
 
@@ -406,99 +449,255 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
         # data = csv.reader(f)
 
         # goes through every row of the database address.
-        for data_id in range(data_id_start, data_id_end+1):
 
-            read_from_db(data_id)
+        # puts all the data from the db into AllTheData() singleton object.
+        # AllTheData() singleton contains DataObject() instances.
+        
 
-            # print("DATA_ID", data_id)
-            current_input_row = CurrentInputRow.get_instance()
-            current_row_id = current_input_row.get_id(self=current_input_row)
+        # while True:
+        num_of_iterations_instance = NumOfIterations.get_instance()
+        num_of_iterations = num_of_iterations_instance.get_num_of_iterations()
 
-            # if the 'is_active' column is 0, then we skip this row.
-            if current_input_row.get_is_active(self=current_input_row) == 0:
-                continue
+        for _ in range(num_of_iterations):
 
-            # setting the cvg_task data for current address row id.
-            cvg_task = CVGTask.get_instance()
-            cvg_task.set_current_id_address_being_checked(
-                current_id=current_row_id)
-            cvg_task.increment_current_number_of_addresses_checked()
+            read_from_db()
 
-            # STEP ONE: select state.
-            state = current_input_row.get_state(
-                self=current_input_row).upper().strip()
+            data_range = DataIdRange.get_instance()
+            data_range_start = data_range.get_start_id(self=data_range)
+            data_range_end = data_range.get_end_id(self=data_range)
 
-            state_selected = False
-            retry_count = 0
-            while state_selected == False:
-                try:
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
-                    self.select_state(driver, a, state)
-                    state_selected = True
+            all_the_data = AllTheData.get_instance()
+            
+            for data in all_the_data.get_all_the_data_list():
+                # data all read from db. now, we find the coverage for all the data.
 
-                except NoSuchElementException:
-                    help_new_customer_link = driver.find_element(
-                        By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")
-                    a.move_to_element(help_new_customer_link).click().perform()
-                    self.finding_coverage(
-                        driver, a, data_id_start=data_id, data_id_end=data_id_end)
+                if data.get_is_active() == 0:
                     continue
 
-            if state_selected == False:
-                help_new_customer_link = driver.find_element(
-                    By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")
-                a.move_to_element(help_new_customer_link).click().perform()
-                self.finding_coverage(
-                    driver, a, data_id_start=data_id, data_id_end=data_id_end)
-                continue
+                # hans: reminder that data_id_start and data_id_end are only used when finding_coverage is started again, from where it had error.
 
-            # THIS EXCEPTION is what we mean:
-            # selenium.common.exceptions.NoSuchElementException: Message: Could not locate element with visible text: SELANGOR
+                if data_id_start == -1 and data_id_end == -1:
+                    if data.get_id() < data_range_start or data.get_id() > data_range_end:
+                        continue
+                # elif data_id_start == -1 and data_id_end != -1:
+                #     if data.get_id() < data_range_start or data.get_id() > data_id_end:
+                #         continue
+                # elif data_id_start != -1 and data_id_end == -1:
+                #     if data.get_id() < data_id_start or data.get_id() > data_range_end:
+                #         continue
 
-            # STEP TWO: set up the search string.
-            keyword_search_string = ''
+                else:
+                    if data.get_id() < data_id_start or data.get_id() > data_id_end:
+                        continue
 
-            # STEP TWO A: find if there's a building name.
+                # print("CURRENT ID: ", data.get_id())
 
-            lot_no_detail_flag = current_input_row.get_search_level_flag(
-                self=current_input_row)
-            # 0 means don't need to match lot number.
-            # 1 means need to match lot number. Allows for cases like 'Building/Street name found, lot number not found'
-            # refer to code in iterate_through_all_and_notify(). block where checked==False
+                # print("DATA_ID", data_id)
+                current_input_row = CurrentInputRow.get_instance()
+                current_input_row.set_id(
+                    self=current_input_row, current_row_id=data.get_id())
+                current_input_row.set_state(
+                    self=current_input_row, current_row_state=data.get_state())
+                current_input_row.set_postcode(
+                    self=current_input_row, current_row_postcode=data.get_postcode())
+                current_input_row.set_unit_no(self=current_input_row,
+                                                current_row_unit_no=data.get_unit_no())
+                current_input_row.set_floor(
+                    self=current_input_row, current_row_floor=data.get_floor())
+                current_input_row.set_building(self=current_input_row,
+                                                current_row_building=data.get_building())
+                current_input_row.set_street(self=current_input_row,
+                                                current_row_street=data.get_street())
+                current_input_row.set_section(
+                    self=current_input_row, current_row_section=data.get_section())
+                current_input_row.set_city(
+                    self=current_input_row, current_row_city=data.get_city())
+                current_input_row.set_state(
+                    self=current_input_row, current_row_state=data.get_state())
+                current_input_row.set_postcode(
+                    self=current_input_row, current_row_postcode=data.get_postcode())
+                current_input_row.set_search_level_flag(
+                    self=current_input_row, current_row_search_level_flag=data.get_search_level_flag())
+                current_input_row.set_source(
+                    self=current_input_row, current_row_source=data.get_source())
+                current_input_row.set_source_id(
+                    self=current_input_row, current_row_source_id=data.get_source_id())
+                current_input_row.set_salesman(
+                    self=current_input_row, current_row_salesman=data.get_salesman())
+                current_input_row.set_notify_email(
+                    self=current_input_row, current_row_notify_email=data.get_notify_email())
+                current_input_row.set_notify_mobile(
+                    self=current_input_row, current_row_notify_mobile=data.get_notify_mobile())
+                current_input_row.set_result_type(
+                    self=current_input_row, current_row_result_type=data.get_result_type())
+                current_input_row.set_result_remark(
+                    self=current_input_row, current_row_result_remark=data.get_result_remark())
+                current_input_row.set_is_active(
+                    self=current_input_row, current_row_is_active=data.get_is_active())
+                current_input_row.set_created_at(
+                    self=current_input_row, current_row_created_at=data.get_created_at())
+                current_input_row.set_updated_at(
+                    self=current_input_row, current_row_updated_at=data.get_updated_at())
 
-            building_name = current_input_row.get_building(
-                self=current_input_row)
+                current_row_id = data.get_id()
 
-            if building_name is not None:
-                building_name = building_name.strip()
+                # setting the cvg_task data for current address row id.
+                cvg_task = CVGTask.get_instance()
+                cvg_task.set_current_id_address_being_checked(
+                    current_id=current_row_id)
+                cvg_task.increment_current_number_of_addresses_checked()
 
-            if building_name != '' and building_name is not None and len(building_name) > 3:
+                # STEP ONE: select state.
+                state = current_input_row.get_state(
+                    self=current_input_row).upper().strip()
 
-                # get the building name, and search the results using that query.
+                state_selected = False
+                while state_selected == False:
+                    try:
+                        while driver.execute_script("return document.readyState;") != "complete":
+                            time.sleep(0.5)
+                        print("here")
+                        self.select_state(driver, a, state)
+                        state_selected = True
 
-                keyword_search_string = keyword_search_string + building_name
+                    except NoSuchElementException:
+                        try:
+                            help_new_customer_link = driver.find_element(
+                                By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")
+                            a.move_to_element(
+                                help_new_customer_link).click().perform()
+                            to_proceed = False
+                            retry_times = 0
+                            while to_proceed == False:
+                                try:
+                                    while driver.execute_script("return document.readyState;") != "complete":
+                                        time.sleep(0.5)
+                                    captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                    captcha_code = solve_captcha(
+                                        captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                    # print("HERE2")
+                                    captcha_field = driver.find_element(
+                                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                    captcha_field.clear()
+                                    captcha_field.send_keys(captcha_code)
+                                    submit_captcha_button = driver.find_element(
+                                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                    a.move_to_element(
+                                        submit_captcha_button).click().perform()
 
-                keyword_field = driver.find_element(
-                    By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+                                    try:
+                                        while driver.execute_script("return document.readyState;") != "complete":
+                                            time.sleep(0.5)
+                                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                            (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
 
-                keyword_field.clear()
-                keyword_field.send_keys(keyword_search_string)
+                                    except TimeoutException:
+                                        to_proceed = True
 
-                search_btn_third_col = driver.find_element(
-                    By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
-                a.move_to_element(search_btn_third_col).click().perform()
+                                except TimeoutException:
+                                    # print(
+                                    #     "Retrying step FIVE - going back and comparing each address...")
+                                    to_proceed = True
+                            input_speed_requested(driver, a, 50)
+                            self.select_state(driver, a, state)
+                            state_selected = True
+                        except NoSuchElementException:
+                            help_new_customer_link = driver.find_element(
+                                By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")
+                            a.move_to_element(
+                                help_new_customer_link).click().perform()
+                            to_proceed = False
+                            retry_times = 0
+                            while to_proceed == False:
+                                try:
+                                    while driver.execute_script("return document.readyState;") != "complete":
+                                        time.sleep(0.5)
+                                    captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                    captcha_code = solve_captcha(
+                                        captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                    # print("HERE2")
+                                    captcha_field = driver.find_element(
+                                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                    captcha_field.clear()
+                                    captcha_field.send_keys(captcha_code)
+                                    submit_captcha_button = driver.find_element(
+                                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                    a.move_to_element(
+                                        submit_captcha_button).click().perform()
 
-                # building name is input.
+                                    try:
+                                        while driver.execute_script("return document.readyState;") != "complete":
+                                            time.sleep(0.5)
+                                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                            (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
 
-                # wait for the results table to pop up.
-                try:
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
-                    WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                        (By.XPATH, "//table[@id='resultAddressGrid']")))
-                except TimeoutException:
+                                    except TimeoutException:
+                                        to_proceed = True
+
+                                except TimeoutException:
+                                    # print(
+                                    #     "Retrying step FIVE - going back and comparing each address...")
+                                    to_proceed = True
+                            current_input_row = CurrentInputRow.get_instance()
+                            current_row_id = current_input_row.get_id(
+                                self=current_input_row)
+                            data_id_range = DataIdRange.get_instance()
+                            data_id_end = data_id_range.get_end_id(
+                                self=data_id_range)
+                            self.finding_coverage(
+                                driver, a, data_id_start=current_row_id, data_id_end=data_id_end)
+                            continue
+
+                # if state_selected == False:
+                #     help_new_customer_link = driver.find_element(
+                #         By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")
+                #     a.move_to_element(help_new_customer_link).click().perform()
+                #     self.finding_coverage(
+                #         driver, a)  # we'll just start over again, since we would only take the data rows that have is_active == 1.
+                #     continue
+
+                # THIS EXCEPTION is what we mean:
+                # selenium.common.exceptions.NoSuchElementException: Message: Could not locate element with visible text: SELANGOR
+
+                # STEP TWO: set up the search string.
+                keyword_search_string = ''
+
+                # STEP TWO A: find if there's a building name.
+
+                lot_no_detail_flag = current_input_row.get_search_level_flag(
+                    self=current_input_row)
+
+                # for search_level_flag:
+                # 0 means don't need to match lot number.
+                # 1 means need to match lot number. Allows for cases like 'Building/Street name found, lot number not found'
+                # refer to code in iterate_through_all_and_notify(). block where checked==False
+
+                building_name = current_input_row.get_building(
+                    self=current_input_row)
+
+                if building_name is not None:
+                    building_name = building_name.strip()
+
+                if building_name != '' and building_name is not None and len(building_name) > 3:
+
+                    # get the building name, and search the results using that query.
+
+                    keyword_search_string = keyword_search_string + building_name
+
+                    keyword_field = driver.find_element(
+                        By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+
+                    keyword_field.clear()
+                    keyword_field.send_keys(keyword_search_string)
+
+                    search_btn_third_col = driver.find_element(
+                        By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                    a.move_to_element(search_btn_third_col).click().perform()
+
                     to_proceed = False
+                    retry_times = 0
                     while to_proceed == False:
                         try:
                             while driver.execute_script("return document.readyState;") != "complete":
@@ -507,7 +706,7 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                                 (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
                             captcha_code = solve_captcha(
                                 captcha_elem_to_solve=captcha_to_solve, driver=driver)
-
+                            # print("HERE2")
                             captcha_field = driver.find_element(
                                 By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
                             captcha_field.clear()
@@ -527,15 +726,518 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                                 to_proceed = True
 
                         except TimeoutException:
-                            raise Exception(
-                                "Error in the enter BUILDING NAME step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
+                            # print(
+                            #     "Retrying step FIVE - going back and comparing each address...")
+                            to_proceed = True
 
-                # captcha should be solved now. getting the results...
-                while driver.execute_script("return document.readyState;") != "complete":
-                    time.sleep(0.5)
-                try:
-                    WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                        (By.XPATH, "//table[@id='resultAddressGrid']")))
+                    # building name is input.
+
+                    # wait for the results table to pop up.
+                    try:
+                        while driver.execute_script("return document.readyState;") != "complete":
+                            time.sleep(0.5)
+                        WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                            (By.XPATH, "//table[@id='resultAddressGrid']")))
+                    except TimeoutException:
+                        to_proceed = False
+                        retry_times = 0
+                        while to_proceed == False:
+                            try:
+                                while driver.execute_script("return document.readyState;") != "complete":
+                                    time.sleep(0.5)
+                                captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                captcha_code = solve_captcha(
+                                    captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                # print("HERE5)")
+                                captcha_field = driver.find_element(
+                                    By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                captcha_field.clear()
+                                captcha_field.send_keys(captcha_code)
+                                submit_captcha_button = driver.find_element(
+                                    By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                a.move_to_element(
+                                    submit_captcha_button).click().perform()
+
+                                try:
+                                    while driver.execute_script("return document.readyState;") != "complete":
+                                        time.sleep(0.5)
+                                    WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                                except TimeoutException:
+                                    to_proceed = True
+
+                            except TimeoutException:
+                                raise Exception(
+                                    "Error in the enter BUILDING NAME step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
+
+                    # captcha should be solved now. getting the results...
+                    while driver.execute_script("return document.readyState;") != "complete":
+                        time.sleep(0.5)
+                    try:
+                        WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                            (By.XPATH, "//table[@id='resultAddressGrid']")))
+
+                        number_of_results = len(driver.find_elements(
+                            By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+
+                        if number_of_results == 0:
+                            number_of_results = len(driver.find_elements(
+                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+
+                        if number_of_results > 50:
+                            if lot_no_detail_flag == 0:
+                                unit_no_filter_tab = driver.find_element(
+                                    By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                unit_no_filter_tab.clear()
+                                unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
+                                    self=current_input_row).strip())
+
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+
+                            if number_of_results == 0:
+                                # we should add the word "LOT" to the search string, and try again.
+                                unit_no_filter_tab = driver.find_element(
+                                    By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                unit_no_filter_tab.clear()
+                                unit_no_filter_tab.send_keys("LOT " + current_input_row.get_house_unit_lotno(
+                                    self=current_input_row).strip())
+                                # making sure the filtered resutls pop out, before we proceed.
+                                try:
+                                    WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
+                                except TimeoutException:
+                                    if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                                        replace_bool = False
+                                        if "KONDOMINIUM" in keyword_search_string.upper():
+                                            keyword_search_string = keyword_search_string.replace(
+                                                "KONDOMINIUM", "CONDOMINIUM")
+                                            replace_bool = True
+                                        elif "KONDO" in keyword_search_string.upper():
+                                            keyword_search_string = keyword_search_string.replace(
+                                                "KONDO", "CONDO")
+                                            replace_bool = True
+                                        elif "JLN" in keyword_search_string.upper():
+                                            keyword_search_string = keyword_search_string.replace(
+                                                "JLN", "JALAN")
+                                        if replace_bool:
+                                            keyword_field = driver.find_element(
+                                                By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+
+                                            keyword_field.clear()
+                                            keyword_field.send_keys(
+                                                keyword_search_string)
+
+                                            search_btn_third_col = driver.find_element(
+                                                By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                                            a.move_to_element(
+                                                search_btn_third_col).click().perform()
+                                            to_proceed = False
+                                            retry_times = 0
+                                            while to_proceed == False:
+                                                try:
+                                                    while driver.execute_script("return document.readyState;") != "complete":
+                                                        time.sleep(0.5)
+                                                    captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                                        (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                                    captcha_code = solve_captcha(
+                                                        captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                                    # print("HERE2")
+                                                    captcha_field = driver.find_element(
+                                                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                                    captcha_field.clear()
+                                                    captcha_field.send_keys(
+                                                        captcha_code)
+                                                    submit_captcha_button = driver.find_element(
+                                                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                                    a.move_to_element(
+                                                        submit_captcha_button).click().perform()
+
+                                                    try:
+                                                        while driver.execute_script("return document.readyState;") != "complete":
+                                                            time.sleep(0.5)
+                                                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                                            (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                                                    except TimeoutException:
+                                                        to_proceed = True
+
+                                                except TimeoutException:
+                                                    # print(
+                                                    #     "Retrying step FIVE - going back and comparing each address...")
+                                                    to_proceed = True
+
+                                        # we should add the word "LOT" to the search string, and try again.
+                                        unit_no_filter_tab = driver.find_element(
+                                            By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                        unit_no_filter_tab.clear()
+                                        unit_no_filter_tab.send_keys("LOT " + current_input_row.get_house_unit_lotno(
+                                            self=current_input_row).strip())
+
+                                        try:
+                                            WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                                (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
+                                        except TimeoutException:
+                                            search_btn_third_col = driver.find_element(
+                                                By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                                            a.move_to_element(
+                                                search_btn_third_col).click().perform()
+
+                                            to_proceed = False
+                                            retry_times = 0
+                                            while to_proceed == False:
+                                                try:
+                                                    while driver.execute_script("return document.readyState;") != "complete":
+                                                        time.sleep(0.5)
+                                                    captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                                        (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                                    captcha_code = solve_captcha(
+                                                        captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                                    # print("HERE2")
+                                                    captcha_field = driver.find_element(
+                                                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                                    captcha_field.clear()
+                                                    captcha_field.send_keys(
+                                                        captcha_code)
+                                                    submit_captcha_button = driver.find_element(
+                                                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                                    a.move_to_element(
+                                                        submit_captcha_button).click().perform()
+
+                                                    try:
+                                                        while driver.execute_script("return document.readyState;") != "complete":
+                                                            time.sleep(0.5)
+                                                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                                            (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                                                    except TimeoutException:
+                                                        to_proceed = True
+
+                                                except TimeoutException:
+                                                    # print(
+                                                    #     "Retrying step FIVE - going back and comparing each address...")
+                                                    to_proceed = True
+
+                                        # this would be the correct xpath, as we have filtered using the lot number.
+                                        number_of_results = len(driver.find_elements(
+                                            By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+
+                                        if number_of_results == 0:
+                                            (driver, a) = self.search_using_street_type_and_name(
+                                                driver=driver, a=a)
+
+                                            number_of_results = len(driver.find_elements(
+                                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+
+                                            if number_of_results == 0:
+                                                number_of_results = len(driver.find_elements(
+                                                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+
+                                            if number_of_results == 0:
+                                                write_or_edit_result(
+                                                    id=current_row_id, result_type=8, result_text="No results.")
+                                                go_back_to_coverage_search_page(
+                                                    driver, a)
+                                                continue
+
+                                            else:
+                                                self.iterate_through_all_and_notify(
+                                                    driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                                                continue
+
+                                    else:
+                                        self.iterate_through_all_and_notify(
+                                            driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                                        continue
+
+                                self.iterate_through_all_and_notify(
+                                    driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                                continue
+
+                            elif lot_no_detail_flag == 1:
+                                unit_no_filter_tab = driver.find_element(
+                                    By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                unit_no_filter_tab.clear()
+                                current_input_row = CurrentInputRow.get_instance()
+                                unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
+                                    self=current_input_row).strip())
+
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+
+                            if number_of_results == 0:
+                                # we should add the word "LOT" to the search string, and try again.
+                                unit_no_filter_tab = driver.find_element(
+                                    By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                unit_no_filter_tab.clear()
+                                unit_no_filter_tab.send_keys("LOT " + current_input_row.get_house_unit_lotno(
+                                    self=current_input_row).strip())
+
+                                # making sure the filtered resutls pop out, before we proceed.
+                                try:
+                                    WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
+                                except TimeoutException:
+                                    if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                                        write_or_edit_result(
+                                            id=current_row_id, result_type=8, result_text="No results.")
+                                        go_back_to_coverage_search_page(
+                                            driver, a)
+                                        continue
+                                    else:
+                                        self.iterate_through_all_and_notify(
+                                            driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+                                        continue
+
+                                # assuming that the number of results have been significantly reduced.
+                                # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
+                                self.iterate_through_all_and_notify(
+                                    driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+                                continue
+                            else:
+                                self.iterate_through_all_and_notify(
+                                    driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+
+                        elif number_of_results == 0:
+                            # no results found. so we'll try with the "condominium" instead of the "kondominium" variation things.
+
+                            try:
+                                WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
+                            except TimeoutException:
+                                search_btn_third_col = driver.find_element(
+                                    By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                                a.move_to_element(
+                                    search_btn_third_col).click().perform()
+
+                                to_proceed = False
+                                retry_times = 0
+                                while to_proceed == False:
+                                    try:
+                                        while driver.execute_script("return document.readyState;") != "complete":
+                                            time.sleep(0.5)
+                                        captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                            (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                        captcha_code = solve_captcha(
+                                            captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                        # print("HERE2")
+                                        captcha_field = driver.find_element(
+                                            By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                        captcha_field.clear()
+                                        captcha_field.send_keys(captcha_code)
+                                        submit_captcha_button = driver.find_element(
+                                            By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                        a.move_to_element(
+                                            submit_captcha_button).click().perform()
+
+                                        try:
+                                            while driver.execute_script("return document.readyState;") != "complete":
+                                                time.sleep(0.5)
+                                            WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                                (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                                        except TimeoutException:
+                                            to_proceed = True
+
+                                    except TimeoutException:
+                                        # print(
+                                        #     "Retrying step FIVE - going back and comparing each address...")
+                                        to_proceed = True
+
+                            replace_bool = False
+                            if "KONDOMINIUM" in keyword_search_string.upper():
+                                keyword_search_string = keyword_search_string.replace(
+                                    "KONDOMINIUM", "CONDOMINIUM")
+                                replace_bool = True
+                            elif "KONDO" in keyword_search_string.upper():
+                                keyword_search_string = keyword_search_string.replace(
+                                    "KONDO", "CONDO")
+                                replace_bool = True
+                            elif "JLN" in keyword_search_string.upper():
+                                keyword_search_string = keyword_search_string.replace(
+                                    "JLN", "JALAN")
+                                replace_bool = True
+
+                            if replace_bool == True:
+                                keyword_field = driver.find_element(
+                                    By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+
+                                keyword_field.clear()
+                                keyword_field.send_keys(keyword_search_string)
+
+                                search_btn_third_col = driver.find_element(
+                                    By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                                a.move_to_element(
+                                    search_btn_third_col).click().perform()
+                                to_proceed = False
+                                retry_times = 0
+                                while to_proceed == False:
+                                    try:
+                                        while driver.execute_script("return document.readyState;") != "complete":
+                                            time.sleep(0.5)
+                                        captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                            (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                        captcha_code = solve_captcha(
+                                            captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                        # print("HERE2")
+                                        captcha_field = driver.find_element(
+                                            By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                        captcha_field.clear()
+                                        captcha_field.send_keys(captcha_code)
+                                        submit_captcha_button = driver.find_element(
+                                            By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                        a.move_to_element(
+                                            submit_captcha_button).click().perform()
+
+                                        try:
+                                            while driver.execute_script("return document.readyState;") != "complete":
+                                                time.sleep(0.5)
+                                            WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                                (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                                        except TimeoutException:
+                                            to_proceed = True
+
+                                    except TimeoutException:
+                                        # print(
+                                        #     "Retrying step FIVE - going back and comparing each address...")
+                                        to_proceed = True
+
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+
+                                if number_of_results == 0:
+                                    number_of_results = len(driver.find_elements(
+                                        By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+
+                                # print(
+                                #     "NUMBER_OF_RESULTS_AFTER_REPLACING JLN and KONDOMINIUM", number_of_results)
+
+                            else:
+                                # betul betul takde results.
+                                # END BLOCK, OUTPUT CASE 8.
+
+                                (driver, a) = self.search_using_street_type_and_name(
+                                    driver=driver, a=a)
+
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+
+                                if number_of_results == 0:
+                                    number_of_results = len(driver.find_elements(
+                                        By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+
+                                if number_of_results == 0:
+                                    write_or_edit_result(
+                                        id=current_row_id, result_type=8, result_text="No results.")
+                                    go_back_to_coverage_search_page(driver, a)
+                                    continue
+
+                                else:
+                                    self.iterate_through_all_and_notify(
+                                        driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                                    continue
+                        else:
+                            # the block where 1 < num_of_results < 50
+                            if lot_no_detail_flag == 0:
+                                self.iterate_through_all_and_notify(
+                                    driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                                continue
+
+                            else:
+                                # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
+                                self.iterate_through_all_and_notify(
+                                    driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+                                continue
+                    except TimeoutException:
+                        raise Exception("Results table did not pop up.")
+                else:
+                    # when building name is empty. do the same but for street.
+
+                    # get street_type_and_search() gets the lot no, street type, and street name - puts it tgt and searches.
+                    # the results table would then be there.
+                    # then, it calls iterate_through_all_and_notify().
+
+                    current_row_street = current_input_row.get_street(
+                        self=current_input_row)
+
+                    if len(current_row_street) > 3 and 'NA' != current_row_street.upper() and 'N/A' != current_row_street.upper():
+                        keyword_search_string = ''
+                        keyword_search_string += current_row_street
+
+                    else:
+                        keyword_search_string = ''
+                        keyword_search_string += current_input_row.get_section(
+                            self=current_input_row)
+
+                    keyword_field = driver.find_element(
+                        By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+                    keyword_field.clear()
+                    keyword_field.send_keys(keyword_search_string)
+
+                    search_btn_third_col = driver.find_element(
+                        By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                    a.move_to_element(search_btn_third_col).click().perform()
+
+                    # print("CLICKED ON SEARCH!")
+
+                    # solve captcha
+
+                    try:
+                        while driver.execute_script("return document.readyState;") != "complete":
+                            time.sleep(0.5)
+                        WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                            (By.XPATH, "//table[@id='resultAddressGrid']")))
+
+                    except TimeoutException:
+                        to_proceed = False
+                        while to_proceed == False:
+                            try:
+                                while driver.execute_script("return document.readyState;") != "complete":
+                                    time.sleep(0.5)
+                                captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                captcha_code = solve_captcha(
+                                    captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                # print("HERE6")
+                                while driver.execute_script("return document.readyState;") != "complete":
+                                    time.sleep(0.5)
+                                captcha_field = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                    (By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")))
+                                captcha_field.clear()
+                                captcha_field.send_keys(captcha_code)
+                                submit_captcha_button = driver.find_element(
+                                    By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                a.move_to_element(
+                                    submit_captcha_button).click().perform()
+
+                                try:
+                                    while driver.execute_script("return document.readyState;") != "complete":
+                                        time.sleep(0.5)
+                                    WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                                except TimeoutException:
+                                    to_proceed = True
+                                    # break
+
+                            except TimeoutException:
+                                current_input_row = CurrentInputRow.get_instance()
+                                current_row_id = current_input_row.get_id(
+                                    self=current_input_row)
+                                data_id_range = DataIdRange.get_instance()
+                                data_id_end = data_id_range.get_end_id(
+                                    self=data_id_range)
+                                self.finding_coverage(
+                                    driver, a, data_id_start=current_row_id, data_id_end=data_id_end)
+                                raise Exception(
+                                    "Error in the SEARCHING step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
+                        while driver.execute_script("return document.readyState;") != "complete":
+                            time.sleep(0.5)
+                        WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                            (By.XPATH, "//table[@id='resultAddressGrid']")))
 
                     number_of_results = len(driver.find_elements(
                         By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
@@ -552,344 +1254,241 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                             current_input_row = CurrentInputRow.get_instance()
                             unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
                                 self=current_input_row).strip())
-                            # making sure the filtered resutls pop out, before we proceed.
-                            try:
-                                WebDriverWait(driver, 2).until(EC.presence_of_element_located(
-                                    (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
-                            except TimeoutException:
-                                if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
-                                    replace_bool = False
-                                    if "KONDOMINIUM" in keyword_search_string.upper():
-                                        keyword_search_string = keyword_search_string.replace(
-                                            "KONDOMINIUM", "CONDOMINIUM")
-                                        replace_bool = True
-                                    elif "KONDO" in keyword_search_string.upper():
-                                        keyword_search_string = keyword_search_string.replace(
-                                            "KONDO", "CONDO")
-                                        replace_bool = True
-                                    elif "JLN" in keyword_search_string.upper():
-                                        keyword_search_string = keyword_search_string.replace(
-                                            "JLN", "JALAN")
-                                    if replace_bool:
-                                        keyword_field = driver.find_element(
-                                            By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
-
-                                        keyword_field.clear()
-                                        keyword_field.send_keys(
-                                            keyword_search_string)
-
-                                        search_btn_third_col = driver.find_element(
-                                            By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
-                                        a.move_to_element(
-                                            search_btn_third_col).click().perform()
-
-                                    # this would be the correct xpath, as we have filtered using the lot number.
-                                    number_of_results = len(driver.find_elements(
-                                        By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
-
-                                    if number_of_results == 0:
-                                        (driver, a) = self.search_using_street_type_and_name(
-                                            driver=driver, a=a)
-
-                                        number_of_results = len(driver.find_elements(
-                                            By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
-
-                                        if number_of_results == 0:
-                                            number_of_results = len(driver.find_elements(
-                                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
-
-                                        if number_of_results == 0:
-                                            write_or_edit_result(
-                                                id=current_row_id, result_type=8, result_text="No results.")
-                                            go_back_to_coverage_search_page(
-                                                driver, a)
-                                            continue
-
-                                        else:
-                                            self.iterate_through_all_and_notify(
-                                                driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
-                                            continue
-
-                                else:
-                                    self.iterate_through_all_and_notify(
-                                        driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
-                                    continue
-
-                            self.iterate_through_all_and_notify(
-                                driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
-                            continue
-
-                        elif lot_no_detail_flag == 1:
-                            unit_no_filter_tab = driver.find_element(
-                                By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
-                            unit_no_filter_tab.clear()
-                            current_input_row = CurrentInputRow.get_instance()
-                            unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
-                                self=current_input_row).strip())
-
-                            # making sure the filtered resutls pop out, before we proceed.
-                            try:
-                                WebDriverWait(driver, 2).until(EC.presence_of_element_located(
-                                    (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
-                            except TimeoutException:
-                                if len(driver.fing_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
-                                    write_or_edit_result(
-                                        id=current_row_id, result_type=8, result_text="No results.")
-                                    go_back_to_coverage_search_page(driver, a)
-                                    continue
-                                else:
-                                    self.iterate_through_all_and_notify(
-                                        driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-
-                            # assuming that the number of results have been significantly reduced.
-                            # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
-                            self.iterate_through_all_and_notify(
-                                driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-                            continue
-
-                    elif number_of_results == 0:
-                        # no results found. so we'll try with the "condominium" instead of the "kondominium" variation things.
-
-                        replace_bool = False
-                        if "KONDOMINIUM" in keyword_search_string.upper():
-                            keyword_search_string = keyword_search_string.replace(
-                                "KONDOMINIUM", "CONDOMINIUM")
-                            replace_bool = True
-                        elif "KONDO" in keyword_search_string.upper():
-                            keyword_search_string = keyword_search_string.replace(
-                                "KONDO", "CONDO")
-                            replace_bool = True
-                        elif "JLN" in keyword_search_string.upper():
-                            keyword_search_string = keyword_search_string.replace(
-                                "JLN", "JALAN")
-                            replace_bool = True
-
-                        if replace_bool == True:
-                            keyword_field = driver.find_element(
-                                By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
-
-                            keyword_field.clear()
-                            keyword_field.send_keys(keyword_search_string)
-
-                            search_btn_third_col = driver.find_element(
-                                By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
-                            a.move_to_element(
-                                search_btn_third_col).click().perform()
 
                             number_of_results = len(driver.find_elements(
-                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
+                                By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
 
                             if number_of_results == 0:
-                                number_of_results = len(driver.find_elements(
-                                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
+                                # we should add the word "LOT" to the search string, and try again.
+                                unit_no_filter_tab = driver.find_element(
+                                    By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                unit_no_filter_tab.clear()
+                                unit_no_filter_tab.send_keys("LOT " + current_input_row.get_house_unit_lotno(
+                                    self=current_input_row).strip())
 
-                            # print(
-                            #     "NUMBER_OF_RESULTS_AFTER_REPLACING JLN and KONDOMINIUM", number_of_results)
+                            self.iterate_through_all_and_notify(
+                                driver=driver, a=a, filtered=True, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                            continue
 
                         else:
-                            # betul betul takde results.
-                            # END BLOCK, OUTPUT CASE 8.
-
-                            (driver, a) = self.search_using_street_type_and_name(
-                                driver=driver, a=a)
-
-                            number_of_results = len(driver.find_elements(
-                                By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
-
-                            if number_of_results == 0:
-                                number_of_results = len(driver.find_elements(
-                                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
-
-                            if number_of_results == 0:
-                                write_or_edit_result(
-                                    id=current_row_id, result_type=8, result_text="No results.")
-                                go_back_to_coverage_search_page(driver, a)
-                                continue
+                            # need to search using the lot number too, and l ook at the number of results.
+                            # iterate_through_and_notify() might not work for cases where we need a lot number match.
+                            current_row_lot_no = current_input_row.get_house_unit_lotno(
+                                self=current_input_row)
+                            if len(current_row_lot_no) == 0:
+                                # the lot_number of the current row is not defined.
+                                raise Exception(
+                                    f"Error in the iterate_and_notify() step of coverage_check.py - the address with id {current_row_id} does not have a lot number - Yet, we were told to match the lot number.")
 
                             else:
+
+                                # search using the lot number. iterate and output best match.
+
+                                # we filter the lot number in the table filter row.
+                                unit_no_filter_tab = driver.find_element(
+                                    By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                unit_no_filter_tab.clear()
+                                current_input_row = CurrentInputRow.get_instance()
+                                unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
+                                    self=current_input_row).strip())
+
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+                                if number_of_results == 0:
+                                    # we should add the word "LOT" to the search string, and try again.
+                                    unit_no_filter_tab = driver.find_element(
+                                        By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                    unit_no_filter_tab.clear()
+                                    unit_no_filter_tab.send_keys("LOT " + current_input_row.get_house_unit_lotno(
+                                        self=current_input_row).strip())
+
+                                try:
+                                    WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
+                                except TimeoutException:
+                                    search_btn_third_col = driver.find_element(
+                                        By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                                    a.move_to_element(
+                                        search_btn_third_col).click().perform()
+
+                                    to_proceed = False
+                                    retry_times = 0
+                                    while to_proceed == False:
+                                        try:
+                                            while driver.execute_script("return document.readyState;") != "complete":
+                                                time.sleep(0.5)
+                                            captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                                (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                            captcha_code = solve_captcha(
+                                                captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                            # print("HERE2")
+                                            captcha_field = driver.find_element(
+                                                By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                            captcha_field.clear()
+                                            captcha_field.send_keys(
+                                                captcha_code)
+                                            submit_captcha_button = driver.find_element(
+                                                By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                            a.move_to_element(
+                                                submit_captcha_button).click().perform()
+
+                                            try:
+                                                while driver.execute_script("return document.readyState;") != "complete":
+                                                    time.sleep(0.5)
+                                                WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                                    (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
+
+                                            except TimeoutException:
+                                                to_proceed = True
+
+                                        except TimeoutException:
+                                            # print(
+                                            #     "Retrying step FIVE - going back and comparing each address...")
+                                            to_proceed = True
+
+                                # print("END BLOCK! OUTPUT CASE 3 OR 1 PLEASE!")
+                                self.iterate_through_all_and_notify(
+                                    driver=driver, a=a, filtered=True, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
+                                continue
+
+                    elif number_of_results == 0:
+                        # no results on the table.
+
+                        write_or_edit_result(
+                            id=current_row_id, result_type=8, result_text="No results.")
+                        go_back_to_coverage_search_page(driver, a)
+                        continue
+
+                    else:
+                        # the block where 1 < num_of_results < 50
+
+                        current_row_lot_no = current_input_row.get_house_unit_lotno(
+                            self=current_input_row)
+                        if len(current_row_lot_no) == 0:
+                            if lot_no_detail_flag == 1:
+                                # the lot_number of the current row is not defined.
+                                # TODO: Write to DB when lot number is not found. 23 october.
+                                raise Exception(
+                                    f"Error in the iterate_and_notify() step of coverage_check.py - the address with id {current_row_id} does not have a lot number - Yet, we were told to match the lot number.")
+
+                            else:  # lot_no_detail_flag == 0
+                                # the lot_number of the current row is not defined.
+                                (driver, a) = self.search_using_street_type_and_name(
+                                    driver=driver, a=a)
                                 self.iterate_through_all_and_notify(
                                     driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
                                 continue
-                    else:
-                        # the block where 1 < num_of_results < 50
-                        if lot_no_detail_flag == 0:
-                            self.iterate_through_all_and_notify(
-                                driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
-                            continue
 
                         else:
-                            # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
-                            self.iterate_through_all_and_notify(
-                                driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-                            continue
-                except TimeoutException:
-                    raise Exception("Results table did not pop up.")
-            else:
-                # when building name is empty. do the same but for street.
-
-                # get street_type_and_search() gets the lot no, street type, and street name - puts it tgt and searches.
-                # the results table would then be there.
-                # then, it calls iterate_through_all_and_notify().
-
-                current_row_street = current_input_row.get_street(
-                    self=current_input_row)
-
-                if len(current_row_street) > 3 and 'NA' not in current_row_street.upper() and 'N/A' not in current_row_street.upper():
-                    keyword_search_string = ''
-                    keyword_search_string = keyword_search_string + \
-                        current_row_street
-
-                else:
-                    keyword_search_string = ''
-                    keyword_search_string = keyword_search_string + \
-                        current_input_row.get_section(self=current_input_row)
-
-                keyword_field = driver.find_element(
-                    By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
-                keyword_field.clear()
-                keyword_field.send_keys(keyword_search_string)
-
-                search_btn_third_col = driver.find_element(
-                    By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
-                a.move_to_element(search_btn_third_col).click().perform()
-
-                # solve captcha
-
-                try:
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
-                    WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                        (By.XPATH, "//table[@id='resultAddressGrid']")))
-
-                except TimeoutException:
-                    to_proceed = False
-                    while to_proceed == False:
-                        try:
-                            while driver.execute_script("return document.readyState;") != "complete":
-                                time.sleep(0.5)
-                            captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                                (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
-                            captcha_code = solve_captcha(
-                                captcha_elem_to_solve=captcha_to_solve, driver=driver)
-
-                            while driver.execute_script("return document.readyState;") != "complete":
-                                time.sleep(0.5)
-                            captcha_field = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                                (By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")))
-                            captcha_field.clear()
-                            captcha_field.send_keys(captcha_code)
-                            submit_captcha_button = driver.find_element(
-                                By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
-                            a.move_to_element(
-                                submit_captcha_button).click().perform()
-
-                            try:
-                                while driver.execute_script("return document.readyState;") != "complete":
-                                    time.sleep(0.5)
-                                WebDriverWait(driver, 3).until(EC.presence_of_element_located(
-                                    (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
-
-                            except TimeoutException:
-                                to_proceed = True
-                                # break
-
-                        except TimeoutException:
-                            current_input_row = CurrentInputRow.get_instance()
-                            current_row_id = current_input_row.get_id(
-                                self=current_input_row)
-                            data_id_range = DataIdRange.get_instance()
-                            data_id_end = data_id_range.get_end_id(
-                                self=data_id_range)
-                            self.finding_coverage(
-                                driver, a, data_id_start=current_row_id, data_id_end=data_id_end)
-                            raise Exception(
-                                "Error in the SEARCHING step of coverage_check.py - table did not pop up after clicking 'Search'. Captcha did not pop up too.")
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
-                    WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                        (By.XPATH, "//table[@id='resultAddressGrid']")))
-
-                number_of_results = len(driver.find_elements(
-                    By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"))
-
-                if number_of_results == 0:
-                    number_of_results = len(driver.find_elements(
-                        By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))
-
-                if number_of_results > 50:
-                    if lot_no_detail_flag == 0:
-                        unit_no_filter_tab = driver.find_element(
-                            By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
-                        unit_no_filter_tab.clear()
-                        current_input_row = CurrentInputRow.get_instance()
-                        unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
-                            self=current_input_row).strip())
-                        self.iterate_through_all_and_notify(
-                            driver=driver, a=a, filtered=True, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
-                        continue
-
-                    else:
-                        # need to search using the lot number too, and look at the number of results.
-                        # iterate_through_and_notify() might not work for cases where we need a lot number match.
-
-                        current_row_lot_no = current_input_row.get_house_unit_lotno(
-                            self=current_input_row)
-                        if len(current_row_lot_no) == 0:
-                            # the lot_number of the current row is not defined.
-                            raise Exception(
-                                f"Error in the iterate_and_notify() step of coverage_check.py - the address with id {current_row_id} does not have a lot number - Yet, we were told to match the lot number.")
-
-                        else:
+                            # lot number is defined.
                             # search using the lot number. iterate and output best match.
 
-                            # we filter the lot number in the table filter row.
-                            unit_no_filter_tab = driver.find_element(
-                                By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
-                            unit_no_filter_tab.clear()
-                            current_input_row = CurrentInputRow.get_instance()
-                            unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
-                                self=current_input_row).strip())
+                            if number_of_results == 1:
+                                check_coverage_and_notify(
+                                table_row_num=0, driver=driver, a=a, filtered=False)
+                                continue
 
-                            # print("END BLOCK! OUTPUT CASE 3 OR 1 PLEASE!")
-                            self.iterate_through_all_and_notify(
-                                driver=driver, a=a, filtered=True, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
-                            continue
+                            else:
+                                keyword_search_string = current_input_row.get_street(
+                                    self=current_input_row).strip()
 
-                elif number_of_results == 0:
-                    # no results on the table.
-                    write_or_edit_result(
-                        id=current_row_id, result_type=8, result_text="No results.")
-                    go_back_to_coverage_search_page(driver, a)
-                    continue
+                                keyword_field = driver.find_element(
+                                    By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+                                keyword_field.clear()
+                                keyword_field.send_keys(keyword_search_string)
 
-                else:
-                    # the block where 1 < num_of_results < 50
-                    if lot_no_detail_flag == 0:
-                        (driver, a) = self.search_using_street_type_and_name(
-                            driver=driver, a=a)
+                                unit_no_filter_tab = driver.find_element(
+                                    By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                unit_no_filter_tab.clear()
+                                current_input_row = CurrentInputRow.get_instance()
+                                unit_no_filter_tab.send_keys(current_input_row.get_house_unit_lotno(
+                                    self=current_input_row).strip())
 
-                        self.iterate_through_all_and_notify(
-                            driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
-                        continue
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+                                if number_of_results == 0:
+                                    # we should add the word "LOT" to the search string, and try again.
+                                    unit_no_filter_tab = driver.find_element(
+                                        By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+                                    unit_no_filter_tab.clear()
+                                    unit_no_filter_tab.send_keys("LOT " + current_input_row.get_house_unit_lotno(
+                                        self=current_input_row).strip())
 
-                    else:
-                        # when we need to match the lot number.
-                        current_row_lot_no = current_input_row.get_house_unit_lotno(
-                            self=current_input_row)
-                        if len(current_row_lot_no) == 0:
-                            # the lot_number of the current row is not defined.
-                            raise Exception(
-                                f"Error in the iterate_and_notify() step of coverage_check.py - the address with id {current_row_id} does not have a lot number - Yet, we were told to match the lot number.")
+                                try:
+                                    WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                                        (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")))
+                                except TimeoutException:
+                                    search_btn_third_col = driver.find_element(
+                                        By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+                                    a.move_to_element(
+                                        search_btn_third_col).click().perform()
 
-                        else:
-                            keyword_search_string = current_row_lot_no + ' ' + keyword_search_string
+                                    to_proceed = False
+                                    retry_times = 0
+                                    while to_proceed == False:
+                                        try:
+                                            while driver.execute_script("return document.readyState;") != "complete":
+                                                time.sleep(0.5)
+                                            captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
+                                                (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+                                            captcha_code = solve_captcha(
+                                                captcha_elem_to_solve=captcha_to_solve, driver=driver)
+                                            # print("HERE2")
+                                            captcha_field = driver.find_element(
+                                                By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
+                                            captcha_field.clear()
+                                            captcha_field.send_keys(captcha_code)
+                                            submit_captcha_button = driver.find_element(
+                                                By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
+                                            a.move_to_element(
+                                                submit_captcha_button).click().perform()
 
-                            keyword_field = driver.find_element(
-                                By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
-                            keyword_field.clear()
-                            keyword_field.send_keys(keyword_search_string)
+                                            try:
+                                                while driver.execute_script("return document.readyState;") != "complete":
+                                                    time.sleep(0.5)
+                                                WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                                    (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
 
-                            # print("END BLOCK! OUTPUT CASE 3 OR 1 PLEASE!")
-                            self.iterate_through_all_and_notify(
-                                driver=driver, a=a, filtered=False, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
-                            continue
+                                            except TimeoutException:
+                                                to_proceed = True
+
+                                        except TimeoutException:
+                                            # print(
+                                            #     "Retrying step FIVE - going back and comparing each address...")
+                                            to_proceed = True
+
+                                self.iterate_through_all_and_notify(
+                                    driver=driver, a=a, filtered=True, lot_no_detail_flag=lot_no_detail_flag, building_name_found=False, street_name_found=True)
+                                continue
+
+                # above are recent changes.
+
+                    # if lot_no_detail_flag == 0:
+                    #     (driver, a) = self.search_using_street_type_and_name(
+                    #         driver=driver, a=a)
+
+                    #     self.iterate_through_all_and_notify(
+                    #         driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                    #     continue
+
+                    # else:
+                    #     # when we need to match the lot number.
+                    #     current_row_lot_no = current_input_row.get_house_unit_lotno(
+                    #         self=current_input_row)
+                    #     if len(current_row_lot_no) == 0:
+                    #         # the lot_number of the current row is not defined.
+                    #         raise Exception(
+                    #             f"Error in the iterate_and_notify() step of coverage_check.py - the address with id {current_row_id} does not have a lot number - Yet, we were told to match the lot number.")
+
+                    #     else:
+                    #         keyword_search_string = current_row_lot_no + ' ' + keyword_search_string
+
+                    #         keyword_field = driver.find_element(
+                    #             By.XPATH, "//form[@name='Netui_Form_3']//input[@type='text' and contains(@name, 'searchString')]")
+                    #         keyword_field.clear()
+                    #         keyword_field.send_keys(keyword_search_string)
+
+                    #         # print("END BLOCK! OUTPUT CASE 3 OR 1 PLEASE!")
+                    #         self.iterate_through_all_and_notify(
+                    #             driver=driver, a=a, filtered=False, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
+                    #         continue

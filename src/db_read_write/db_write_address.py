@@ -1,18 +1,294 @@
+from abc import ABCMeta, abstractstaticmethod
 import mysql.connector
 from datetime import datetime
+import smtplib
 import pytz
-from src.singleton.cvg_task import CVGTask
-from src.db_read_write.db_secrets import get_db_password
-# from db_secrets import get_db_password
-from src.singleton.current_input_row import CurrentInputRow
-# from current_input_row import CurrentInputRow
-from src.db_read_write.db_write_log import write_log_to_db
-# from db_write_log import write_log_to_db
+import requests
 
-from src.notifications.email_msg import send_email
-from src.notifications.telegram_msg import send_message
 import csv
 import time
+
+from src.singleton.current_input_row import CurrentInputRow
+
+
+def get_chat_id(desired_phone_number):
+    password = get_db_password()
+    cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=password,
+                                  host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
+    cursor = cnx.cursor()
+
+    query = "SELECT chat_id FROM cvg_telegram WHERE phone_no = %s"
+    phone_num_tuple = (desired_phone_number,)
+    cursor.execute(query, phone_num_tuple)
+    result = cursor.fetchall()
+
+    result = result[0][0]
+    return result
+
+
+def send_message(msg):
+    current_input_row = CurrentInputRow.get_instance()
+    phone_num_list = current_input_row.get_notify_mobile(
+        self=current_input_row).split(',')
+
+    # to take away same phone numbers in a list.
+    phone_num_list = list(set(phone_num_list))
+
+    try:
+        helper_send_message(msg, phone_num_list=phone_num_list)
+    except Exception as ex:
+        print(ex)
+
+
+def helper_send_message(msg, phone_num_list):
+
+    TOKEN = "5558294620:AAGKJDU0ja0ys_0T2-4JhVGx-3XJ1zJRtow"
+    # text = "JacoHansCABot speaks"
+    address_string = ''
+    current_input_row = CurrentInputRow.get_instance()
+    input_house_unit_lotno = current_input_row.get_house_unit_lotno(
+        self=current_input_row)
+    input_street = current_input_row.get_street(
+        self=current_input_row)
+    input_section = current_input_row.get_section(
+        self=current_input_row)
+    input_floor_no = current_input_row.get_floor(
+        self=current_input_row)
+    input_building_name = current_input_row.get_building(
+        self=current_input_row)
+    input_city = current_input_row.get_city(self=current_input_row)
+    input_state = current_input_row.get_state(
+        self=current_input_row)
+    input_postcode = current_input_row.get_postcode(
+        self=current_input_row)
+
+    if input_house_unit_lotno is None:
+        input_house_unit_lotno = ''
+    if input_street is None:
+        input_street = ''
+    if input_section is None:
+        input_section = ''
+    if input_floor_no is None:
+        input_floor_no = ''
+    if input_building_name is None:
+        input_building_name = ''
+    if input_city is None:
+        input_city = ''
+    if input_state is None:
+        input_state = ''
+    if input_postcode is None:
+        input_postcode = ''
+
+    address_string = address_string + \
+        "House/Unit/Lot No." + input_house_unit_lotno + '\n' + \
+        "Street: " + input_street + '\n' + \
+        "Section: " + input_section + '\n' + \
+        "Floor No: " + input_floor_no + '\n' + \
+        "Building Name: " + input_building_name + '\n' + \
+        "City: " + input_city + '\n' + \
+        "State: " + input_state + '\n' + \
+        "Postcode: " + input_postcode
+
+    for elem in phone_num_list:
+        # for every phone number.
+        try:
+            chat_id = get_chat_id(elem.strip())
+
+            text = address_string + msg
+            url = f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id}&text={text}"
+            # url = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
+            r = requests.get(url)
+
+        except IndexError:
+            current_row_id = current_input_row.get_id(self=current_input_row)
+            raise Exception(f"No chat id found for row id {current_row_id}")
+
+
+def setup_notification_text(text):
+    current_input_row = CurrentInputRow.get_instance()
+    email_text = """
+Id: %s
+Source: %s
+Source Trx id: %s
+Unit: %s
+Street: %s
+Section: %s
+Floor No: %s
+Building Name: %s
+City: %s
+State: %s
+Postcode: %s
+    %s
+	""" % (current_input_row.get_id(self=current_input_row), current_input_row.get_source(self=current_input_row),
+        current_input_row.get_source_id(
+            self=current_input_row), current_input_row.get_house_unit_lotno(self=current_input_row),
+        current_input_row.get_street(
+            self=current_input_row), current_input_row.get_section(self=current_input_row),
+        current_input_row.get_floor(
+            self=current_input_row), current_input_row.get_building(self=current_input_row),
+        current_input_row.get_city(
+            self=current_input_row), current_input_row.get_state(self=current_input_row),
+        current_input_row.get_postcode(self=current_input_row), text)
+
+    return email_text
+
+
+def send_email(text, email_to):
+    gmail_user = 'botourssp@gmail.com'
+    gmail_password = 'jshmktlmwgeginnx'
+
+    if len(email_to) > 0:
+        email_to_list = email_to.split(',')
+
+        for email in email_to_list:
+            email_to = email.strip()
+            sent_from = gmail_user
+            to = email_to
+            subject = 'Coverage Automation Notification'
+            body = setup_notification_text(text)
+
+            try:
+                smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                smtp_server.ehlo()
+                smtp_server.login(gmail_user, gmail_password)
+                smtp_server.sendmail(sent_from, to, body)
+                smtp_server.close()
+            except Exception as ex:
+                break
+
+
+def get_db_password():
+    return "ExtInfo!@#"
+
+
+def write_log_to_db(db_id, result_type, result_remark, address_remark=None):
+    cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=get_db_password(),
+                                  host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
+    cursor = cnx.cursor()
+
+    tz = pytz.timezone("Asia/Singapore")
+    current_datetime = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+
+    create_table_statement = """
+    CREATE TABLE IF NOT EXISTS cvg_log (
+        db_id INT(11),
+        result_type INT(11),
+        result_remark VARCHAR(255),
+        created_at TIMESTAMP,
+        address_remark VARCHAR(255),
+        )
+    """
+
+    # enter_log = f"""
+    # UPDATE cvg_log
+    # SET result_type = '{result_type}', result_remark = '{result_remark}', created_at = '{current_time}'
+    # WHERE db_id = {db_id};
+    # """
+
+    enter_log = """
+    INSERT INTO cvg_log (db_id, result_type, result_remark, created_at, address_remark)
+    VALUES (%s, %s, %s, %s, %s)
+    """
+
+    values = (db_id, result_type, result_remark,
+              current_datetime, address_remark)
+
+    # cursor.execute(create_table_statement)
+    cursor.execute(enter_log, values)
+
+    cnx.commit()
+
+    cursor.close()
+    cnx.close()
+
+
+def write_to_cvg_task(remark, total, complete):
+    cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=get_db_password(),
+                                  host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
+    cursor = cnx.cursor()
+
+    tz = pytz.timezone("Asia/Singapore")
+    current_datetime = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+
+    create_table_statement = """
+    CREATE TABLE IF NOT EXISTS cvg_task (
+        id INT PRIMARY_KEY AUTO_INCREMENT,
+        remark VARCHAR(255),
+        total INT,
+        complete INT,
+        created_at TIMESTAMP,
+        updated_at TIMESTAMP
+        )
+    """
+
+    # remark = current id of address being checked
+    # total = total number of addresses to check
+    # complete = current number of addresses checked
+
+    enter_log = """
+    INSERT INTO cvg_task (remark, total, complete, created_at, updated_at)
+    VALUES (%s, %s, %s, %s, %s)
+    """
+
+    values = (remark, total, complete, current_datetime, current_datetime)
+
+    cursor.execute(enter_log, values)
+
+    cnx.commit()
+
+    cursor.close()
+    cnx.close()
+
+
+class ICVGTask(metaclass=ABCMeta):
+
+    @abstractstaticmethod
+    def set_current_id_address_being_checked():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def increment_current_number_of_addresses_checked():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def increment_completed_addresses():
+        """ to implement in child class """
+
+
+class CVGTask(ICVGTask):
+
+    __instance = None
+
+    @staticmethod
+    def get_instance():
+        if CVGTask.__instance is None:
+            CVGTask()
+        return CVGTask.__instance
+
+    def __init__(self):
+        if CVGTask.__instance is not None:
+            raise Exception(
+                "CVGTask instance cannot be instantiated more than once!")
+        else:
+            self.current_id_address_being_checked = None
+            self.total_number_of_addresses_to_check = 0
+            self.current_number_of_addresses_checked = 0
+            self.completed_addresses = 0
+            CVGTask.__instance = self
+
+    def set_current_id_address_being_checked(self, current_id):
+        self.current_id_address_being_checked = current_id
+
+    def increment_current_number_of_addresses_checked(self):
+        self.current_number_of_addresses_checked += 1
+
+    def increment_completed_addresses(self):
+        self.completed_addresses += 1
+        self.write_to_db()
+
+    def write_to_db(self):
+        write_to_cvg_task(remark=self.current_id_address_being_checked,
+                          total=self.current_number_of_addresses_checked, complete=self.completed_addresses)
 
 
 def write_from_csv_to_db():
@@ -43,9 +319,12 @@ def write_from_csv_to_db():
         notify_mobile VARCHAR(255) DEFAULT NULL,
         result_type INT(11) DEFAULT NULL,
         result_remark VARCHAR(255) DEFAULT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        created_at TIMESTAMP,
+        updated_at TIMESTAMP
     );"""
+
+    tz = pytz.timezone("Asia/Singapore")
+    current_datetime = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
 
     cursor.execute(create_table_statement)
     cnx.commit()
@@ -67,11 +346,11 @@ def write_from_csv_to_db():
                 # print(key, value)
 
             data = (row['\ufeffHouse/Unit/Lot No.'], row['Floor No.'], row['Building Name'], row['Street Type'] + " " + row['Street Name'], row['Section'], row['City'], row['State'], row['Postcode'],
-                    row['unit_num_match (0/1)'], row['CUSTOMER EMAIL ADDRESS'], row['CUSTOMER CONTACT NUMBER'])
+                    row['unit_num_match (0/1)'], row['CUSTOMER EMAIL ADDRESS'], row['CUSTOMER CONTACT NUMBER'], current_datetime)
 
             insert_statement = """
-            INSERT INTO cvg_db ( unit_no, floor, building, street, section, city, state, postcode, search_level_flag, notify_email, notify_mobile )
-            VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )
+            INSERT INTO cvg_db ( unit_no, floor, building, street, section, city, state, postcode, search_level_flag, notify_email, notify_mobile, created_at )
+            VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )
             """
 
             cursor.execute(insert_statement, data)
@@ -81,7 +360,12 @@ def write_from_csv_to_db():
             cursor.close()
 
 
-def write_or_edit_result(id, result_type, result_text):
+def write_or_edit_result(id, result_type, result_text, address_remark=None):
+    print("ID: ", id)
+    print("RESULT TYPE: ", result_type)
+    print("RESULT TEXT: ", result_text)
+    print("ADDRESS REMARK: ", address_remark)
+    print("------------")
     cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=get_db_password(),
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
@@ -121,28 +405,37 @@ def write_or_edit_result(id, result_type, result_text):
         current_row_notify_mobile = current_input_row.get_notify_mobile(
             self=current_input_row)
 
-        if result_type == 1:
-            if len(current_row_notify_mobile) > 0:
-                send_message(msg="\nIs within serviceable area!")
-            if len(current_row_notify_email) > 0:
-                send_email(
-                    "\nIs within serviceable area!", current_row_notify_email)
-        elif result_type == 2:
-            if len(current_row_notify_mobile) > 0:
-                send_message(
-                    msg="\nBuilding Name Found, but Lot Number not Found.")
-            if len(current_row_notify_email) > 0:
-                send_email(
-                    "\nBuilding Name Found, but Lot Number not Found.", current_row_notify_email)
-        elif result_type == 3:
-            if len(current_row_notify_mobile) > 0:
-                send_message(
-                    msg="\nStreet Name Found, but Lot Number not Found.")
-            if len(current_row_notify_email) > 0:
-                send_email(
-                    "\nStreet Name Found, but Lot Number not Found.", current_row_notify_email)
+        print("CURRENT ROW EMAIL", current_row_notify_email)
+        print("CURRENT ROW MOBILE", current_row_notify_mobile)
 
-    write_log_to_db(id, result_type, result_text)
+        if result_type == 1:
+            if current_row_notify_mobile is not None:
+                if len(current_row_notify_mobile) > 0:
+                    send_message(msg="\nIs within serviceable area!")
+            if current_row_notify_mobile is not None:
+                if len(current_row_notify_email) > 0:
+                    send_email(
+                        "\nIs within serviceable area!", current_row_notify_email)
+        elif result_type == 2:
+            if current_row_notify_mobile is not None:
+                if len(current_row_notify_mobile) > 0:
+                    send_message(
+                        msg="\nBuilding Name Found, but Lot Number not Found.")
+            if current_row_notify_mobile is not None:
+                if len(current_row_notify_email) > 0:
+                    send_email(
+                        "\nBuilding Name Found, but Lot Number not Found.", current_row_notify_email)
+        elif result_type == 3:
+            if current_row_notify_mobile is not None:
+                if len(current_row_notify_mobile) > 0:
+                    send_message(
+                        msg="\nStreet Name Found, but Lot Number not Found.")
+            if current_row_notify_mobile is not None:
+                if len(current_row_notify_email) > 0:
+                    send_email(
+                        "\nStreet Name Found, but Lot Number not Found.", current_row_notify_email)
+
+    write_log_to_db(id, result_type, result_text, address_remark)
 
     # increment the number of addresses checked for cvg_task.
     cvg_task = CVGTask.get_instance()
