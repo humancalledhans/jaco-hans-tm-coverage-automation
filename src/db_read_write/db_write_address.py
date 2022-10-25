@@ -33,6 +33,7 @@ def send_message(msg):
 
     # to take away same phone numbers in a list.
     phone_num_list = list(set(phone_num_list))
+    print("PHONE NUM LIST")
 
     try:
         helper_send_message(msg, phone_num_list=phone_num_list)
@@ -90,6 +91,7 @@ def helper_send_message(msg, phone_num_list):
         "Postcode: " + input_postcode
 
     for elem in phone_num_list:
+        print("CURRENT PHONE NUMBER", elem)
         # for every phone number.
         try:
             chat_id = get_chat_id(elem.strip())
@@ -405,32 +407,32 @@ def write_or_edit_result(id, result_type, result_text, address_remark=None):
         current_row_notify_mobile = current_input_row.get_notify_mobile(
             self=current_input_row)
 
-        print("CURRENT ROW EMAIL", current_row_notify_email)
-        print("CURRENT ROW MOBILE", current_row_notify_mobile)
+        # print("CURRENT ROW EMAIL", current_row_notify_email)
+        # print("CURRENT ROW MOBILE", current_row_notify_mobile)
 
         if result_type == 1:
-            if current_row_notify_mobile is not None:
+            if current_row_notify_mobile is not None and current_row_notify_mobile.lower() != "null":
                 if len(current_row_notify_mobile) > 0:
                     send_message(msg="\nIs within serviceable area!")
-            if current_row_notify_mobile is not None:
+            if current_row_notify_email is not None and current_row_notify_email.lower() != "null":
                 if len(current_row_notify_email) > 0:
                     send_email(
                         "\nIs within serviceable area!", current_row_notify_email)
         elif result_type == 2:
-            if current_row_notify_mobile is not None:
+            if current_row_notify_mobile is not None and current_row_notify_mobile.lower() != "null":
                 if len(current_row_notify_mobile) > 0:
                     send_message(
                         msg="\nBuilding Name Found, but Lot Number not Found.")
-            if current_row_notify_mobile is not None:
+            if current_row_notify_email is not None and current_row_notify_email.lower() != "null":
                 if len(current_row_notify_email) > 0:
                     send_email(
                         "\nBuilding Name Found, but Lot Number not Found.", current_row_notify_email)
         elif result_type == 3:
-            if current_row_notify_mobile is not None:
+            if current_row_notify_mobile is not None and current_row_notify_mobile.lower() != "null":
                 if len(current_row_notify_mobile) > 0:
                     send_message(
                         msg="\nStreet Name Found, but Lot Number not Found.")
-            if current_row_notify_mobile is not None:
+            if current_row_notify_email is not None and current_row_notify_email.lower() != "null":
                 if len(current_row_notify_email) > 0:
                     send_email(
                         "\nStreet Name Found, but Lot Number not Found.", current_row_notify_email)

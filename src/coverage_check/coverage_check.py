@@ -460,19 +460,20 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
 
         for _ in range(num_of_iterations):
 
-            read_from_db()
+            all_the_data = AllTheData.get_instance()
+            all_the_data.reset_all_data()
 
+            read_from_db()
+            
             data_range = DataIdRange.get_instance()
             data_range_start = data_range.get_start_id(self=data_range)
             data_range_end = data_range.get_end_id(self=data_range)
 
-            all_the_data = AllTheData.get_instance()
-            
             for data in all_the_data.get_all_the_data_list():
                 # data all read from db. now, we find the coverage for all the data.
 
-                if data.get_is_active() == 0:
-                    continue
+                # if data.get_is_active() == 0:
+                #     continue
 
                 # hans: reminder that data_id_start and data_id_end are only used when finding_coverage is started again, from where it had error.
 
@@ -556,7 +557,6 @@ State needs to be one of \'MELAKA\', \'KELANTAN\', \'KEDAH\', \'JOHOR\', \
                     try:
                         while driver.execute_script("return document.readyState;") != "complete":
                             time.sleep(0.5)
-                        print("here")
                         self.select_state(driver, a, state)
                         state_selected = True
 

@@ -34,3 +34,6 @@ class AllTheData(IAllTheData):
 
     def get_all_the_data_list(self):
         return self.all_the_data_list
+
+    def reset_all_data(self):
+        self.all_the_data_list = []
