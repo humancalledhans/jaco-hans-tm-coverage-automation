@@ -4,15 +4,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
+from src.operations.detect_and_solve_captcha import detect_and_solve_captcha
+from src.operations.pause_until_loaded import pause_until_loaded
 from src.operations.solve_captcha import solve_captcha
-# from src.coverage_check.coverage_check import FindingCoverage
-# from src.singleton.data_id_range import DataIdRange
 from src.db_read_write.db_write_address import write_or_edit_result
 from src.db_read_write.db_get_chat_id import get_chat_id
 
 from src.singleton.current_input_row import CurrentInputRow
-from src.notifications.telegram_msg import send_message
-from src.notifications.email_msg import send_email
 from .go_back_to_search_page import go_back_to_coverage_search_page
 
 import time
@@ -36,8 +34,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered, address_remark
             self=current_input_row)
 
         try:
-            while driver.execute_script("return document.readyState;") != "complete":
-                time.sleep(0.5)
+            (driver, a) = pause_until_loaded(driver, a)
             WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                 (By.XPATH, "/html/body/div/div/div[4]/center/div[2]/div[2]/div/table/tbody/tr[2]/td/div[2]/div/form/div[3]/div[1]/table/tbody/tr[2]/td[1]/img[contains(@src, 'tick_checkcoverage')]")))
             # the green check mark is available.
@@ -152,39 +149,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered, address_remark
             next_button = driver.find_element(
                 By.XPATH, "//input[@type='image' and contains(@src, 'btnNext')]")
             a.move_to_element(next_button).click().perform()
-            to_proceed = False
-            retry_times = 0
-            while to_proceed == False:
-                try:
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
-                    captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                        (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
-                    captcha_code = solve_captcha(
-                        captcha_elem_to_solve=captcha_to_solve, driver=driver)
-                    # print("HERE2")
-                    captcha_field = driver.find_element(
-                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
-                    captcha_field.clear()
-                    captcha_field.send_keys(captcha_code)
-                    submit_captcha_button = driver.find_element(
-                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
-                    a.move_to_element(
-                        submit_captcha_button).click().perform()
-
-                    try:
-                        while driver.execute_script("return document.readyState;") != "complete":
-                            time.sleep(0.5)
-                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
-                            (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
-
-                    except TimeoutException:
-                        to_proceed = True
-
-                except TimeoutException:
-                    # print(
-                    #     "Retrying step FIVE - going back and comparing each address...")
-                    to_proceed = True
+            (driver, a) = detect_and_solve_captcha(driver, a)
             check_coverage_and_notify_actual(driver, a, address_remark)
         except NoSuchElementException:
             # it means we're not at the "Type in more details" page.
@@ -193,8 +158,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered, address_remark
     # the implementation of the check_coverage_and_notify function starts here.
     # it calls bridge_to_actual_op() next, if there are no exceptions and problems.
     if not filtered:
-        while driver.execute_script("return document.readyState;") != "complete":
-            time.sleep(0.5)
+        (driver, a) = pause_until_loaded(driver, a)
         try:
             WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                 (By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']")))
@@ -213,42 +177,9 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered, address_remark
     try:
         a.move_to_element(select_button).click().perform()
 
-        to_proceed = False
-        retry_times = 0
-        while to_proceed == False:
-            try:
-                while driver.execute_script("return document.readyState;") != "complete":
-                    time.sleep(0.5)
-                captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                    (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
-                captcha_code = solve_captcha(
-                    captcha_elem_to_solve=captcha_to_solve, driver=driver)
-                # print("HERE2")
-                captcha_field = driver.find_element(
-                    By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
-                captcha_field.clear()
-                captcha_field.send_keys(captcha_code)
-                submit_captcha_button = driver.find_element(
-                    By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
-                a.move_to_element(
-                    submit_captcha_button).click().perform()
+        (driver, a) = detect_and_solve_captcha(driver, a)
 
-                try:
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
-                    WebDriverWait(driver, 3).until(EC.presence_of_element_located(
-                        (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
-
-                except TimeoutException:
-                    to_proceed = True
-
-            except TimeoutException:
-                # print(
-                #     "Retrying step FIVE - going back and comparing each address...")
-                to_proceed = True
-
-        while driver.execute_script("return document.readyState;") != "complete":
-            time.sleep(0.5)
+        (driver, a) = pause_until_loaded(driver, a)
 
         try:
             # The page with "Sorry, we are unable to proceed at the moment. This error could be due to loss of connection to the server. Please try again later."
@@ -258,44 +189,12 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered, address_remark
                 By.XPATH, "(//div[@class='errorDisplay']//div//table//tr//td//b//a)[1]")
             a.move_to_element(link_to_click).click().perform()
 
-            to_proceed = False
-            while to_proceed == False:
-                try:
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
-                    captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                        (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
-                    captcha_code = solve_captcha(
-                        captcha_elem_to_solve=captcha_to_solve, driver=driver)
-                    # print("HERE2")
-                    captcha_field = driver.find_element(
-                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//input[@type='text']")
-                    captcha_field.clear()
-                    captcha_field.send_keys(captcha_code)
-                    submit_captcha_button = driver.find_element(
-                        By.XPATH, "//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[contains(@src, 'btnGo')]")
-                    a.move_to_element(
-                        submit_captcha_button).click().perform()
-
-                    try:
-                        while driver.execute_script("return document.readyState;") != "complete":
-                            time.sleep(0.5)
-                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
-                            (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
-
-                    except TimeoutException:
-                        to_proceed = True
-
-                except TimeoutException:
-                    # print(
-                    #     "Retrying step FIVE - going back and comparing each address...")
-                    to_proceed = True
+            (driver, a) = detect_and_solve_captcha(driver, a)
 
         except NoSuchElementException:
 
             try:
-                while driver.execute_script("return document.readyState;") != "complete":
-                    time.sleep(0.5)
+                (driver, a) = pause_until_loaded(driver, a)
 
                 # for when there is the "kindly fill in the missing information" page.
                 WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
@@ -307,8 +206,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered, address_remark
 
             except TimeoutException:
                 # for when there is NOT the "kindly fill in the missing information" page.
-                while driver.execute_script("return document.readyState;") != "complete":
-                    time.sleep(0.5)
+                (driver, a) = pause_until_loaded(driver, a)
 
                 try:
                     WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
@@ -319,8 +217,7 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered, address_remark
                     try:
                         a.move_to_element(driver.find_element(
                             By.XPATH, "(//div[@class='wlp-bighorn-window-content']//div[@class='errorDisplay']//td//b)[1]")).click().perform()
-                        while driver.execute_script("return document.readyState;") != "complete":
-                            time.sleep(0.5)
+                        (driver, a) = pause_until_loaded(driver, a)
 
                     except NoSuchElementException:
                         current_input_row = CurrentInputRow.get_instance()

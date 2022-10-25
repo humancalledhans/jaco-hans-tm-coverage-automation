@@ -1,6 +1,7 @@
 import os
 from PIL import Image
 from anticaptchaofficial.imagecaptcha import *
+from src.operations.pause_until_loaded import pause_until_loaded
 from src.singleton.image_names import ImageName
 
 from selenium.webdriver.common.by import By
@@ -58,8 +59,7 @@ def detecting_captcha_and_solve(driver, a, error_message):
     retry_times = 0
     while to_proceed == False:
         try:
-            while driver.execute_script("return document.readyState;") != "complete":
-                time.sleep(0.5)
+            (driver, a) = pause_until_loaded(driver, a)
             captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                 (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
             captcha_code = solve_captcha(
@@ -74,8 +74,7 @@ def detecting_captcha_and_solve(driver, a, error_message):
             a.move_to_element(submit_captcha_button).click().perform()
 
             try:
-                while driver.execute_script("return document.readyState;") != "complete":
-                    time.sleep(0.5)
+                (driver, a) = pause_until_loaded(driver, a)
                 WebDriverWait(driver, 3).until(EC.presence_of_element_located(
                     (By.XPATH, "//font[@color='red' and contains(text(), 'The code you entered previously is incorrect. Please try again.')]")))
                 retry_times += 1
@@ -83,8 +82,7 @@ def detecting_captcha_and_solve(driver, a, error_message):
                     print("RETRY_TIMES > 5. WEBSITE IS REFRESHING")
                     # raise Exception("Unable to solve captcha after 5 attempts. Refreshing page...")
                     driver.refresh()
-                    while driver.execute_script("return document.readyState;") != "complete":
-                        time.sleep(0.5)
+                    (driver, a) = pause_until_loaded(driver, a)
                     retry_times = 0
             except TimeoutException:
                 to_proceed = True

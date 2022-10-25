@@ -5,6 +5,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 
 import time
+from src.operations.pause_until_loaded import pause_until_loaded
 
 from src.coverage_check.input_speed_requested import input_speed_requested
 
@@ -12,8 +13,7 @@ from src.coverage_check.input_speed_requested import input_speed_requested
 def go_back_to_coverage_search_page(driver, a):
     a.move_to_element(driver.find_element(By.XPATH, "(//div[@class='wlp-bighorn-window-content']//table//td//a)[1]")).click().perform()
     input_speed_requested(driver, a, 50)
-    while driver.execute_script("return document.readyState;") != "complete":
-        time.sleep(0.5)
+    (driver, a) = pause_until_loaded(driver, a)
 
     try:
         WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(

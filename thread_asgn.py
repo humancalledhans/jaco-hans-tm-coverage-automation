@@ -54,18 +54,12 @@ class ThreadAsgn:
 
 
 if __name__ == '__main__':
-    num_of_iterations = 2  # jaco, change this line.
+    num_of_iterations = 4  # jaco, change this line.
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
-    thread_asgn = ThreadAsgn(10,15)
+    thread_asgn = ThreadAsgn(2,8)
     thread_asgn.start_threads()
 
     # x = threading.Thread(target=func)
     # x.start()
     # print(threading.activeCount())
-    # time.sleep(0.9)
-    # print('finally')youtube
-
-    # num_of_iterations = input("Hi - how many iterations would you like to run? (Press \'Enter\' for infinite)\n")
-    # if num_of_iterations == '':
-    # num_of_iterations = 999999

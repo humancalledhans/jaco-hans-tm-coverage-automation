@@ -4,6 +4,8 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import Select
 
+from src.operations.pause_until_loaded import pause_until_loaded
+
 
 def input_speed_requested(driver, a, speed):
     # inputing the "speed requested"
@@ -18,10 +20,8 @@ def input_speed_requested(driver, a, speed):
         check_coverage_button = driver.find_element(
             By.XPATH, "//input[@type='image' and @value='Next' and @alt='submit']")
         a.move_to_element(check_coverage_button).click().perform()
-        while driver.execute_script("return document.readyState;") != "complete":
-            time.sleep(0.5)
+        (driver, a) = pause_until_loaded(driver, a)
     except NoSuchElementException:
         driver.refresh()
-        while driver.execute_script("return document.readyState;") != "complete":
-            time.sleep(0.5)
+        (driver, a) = pause_until_loaded(driver, a)
         input_speed_requested(driver, a, speed)
