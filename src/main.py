@@ -1,6 +1,6 @@
-from src.operations.login import Login
-from src.singleton.data_id_range import DataIdRange
-from src.singleton.image_names import ImageName
+from src.tm_partners.operations.login import Login
+from src.tm_partners.singleton.data_id_range import DataIdRange
+from src.tm_partners.singleton.image_names import ImageName
 
 # TODO: make main an object. so that the singletons are all separate instances for each main object instance.
 
@@ -22,8 +22,8 @@ class Main:
             self=data_id_range, start_id=int(ids_to_start_from))
         data_id_range.set_end_id(self=data_id_range, end_id=int(ids_to_end_at))
 
-        # login = Login('DPPJ1901', 'Dsync110!!')
-        login = Login('DPSL3601', 'Dptama201!')
+        login = Login('DPPJ1901', 'Dsync110!!')
+        # login = Login('DPSL3601', 'Dptama201!')
         login.login()
 
         # print("Hi! This is a Coverage Automation System. It will:\n1. Read in a Database of Addresses\n2. Check the coverage of the addresses\n3. Send an email with a screenshot depending on the 4 coverage end results.")

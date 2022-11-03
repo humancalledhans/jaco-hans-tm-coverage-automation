@@ -1,12 +1,15 @@
 import threading
-from src.singleton.num_of_iterations import NumOfIterations
+from src.tm_partners.singleton.num_of_iterations import NumOfIterations
 from src.main import Main
 
-from src.db_read_write.db_get_largest_id import get_max_id_from_db
+from src.tm_partners.db_read_write.db_get_largest_id import get_max_id_from_db
 
 
 class ThreadAsgn:
-    def __init__(self, ids_to_start_from=1, ids_to_end_at=get_max_id_from_db()):
+    # def __init__(self, ids_to_start_from=1, ids_to_end_at=get_max_id_from_db()):
+    def __init__(self, ids_to_start_from=121, ids_to_end_at=121):
+        # print("thread asgn ids to start from", ids_to_start_from)
+        # print("thread asgn ids to end at", ids_to_end_at)
         self.ids_to_start_from = ids_to_start_from
         self.ids_to_end_at = ids_to_end_at
 
@@ -57,7 +60,7 @@ if __name__ == '__main__':
     num_of_iterations = 4  # jaco, change this line.
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
-    thread_asgn = ThreadAsgn(2,8)
+    thread_asgn = ThreadAsgn()
     thread_asgn.start_threads()
 
     # x = threading.Thread(target=func)
