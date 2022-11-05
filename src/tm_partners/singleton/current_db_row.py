@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractstaticmethod
 import re
 
 
-class ICurrentInputRow(metaclass=ABCMeta):
+class ICurrentDBRow(metaclass=ABCMeta):
 
     @abstractstaticmethod
     def set_accepted_states_list():
@@ -185,23 +185,23 @@ class ICurrentInputRow(metaclass=ABCMeta):
         """ to implement in child class """
 
 
-class CurrentInputRow(ICurrentInputRow):
+class CurrentDBRow(ICurrentDBRow):
 
     __instance = None
 
     @staticmethod
     def get_instance():
-        if CurrentInputRow.__instance is None:
-            CurrentInputRow(
+        if CurrentDBRow.__instance is None:
+            CurrentDBRow(
                 accepted_states_list=None, accepted_street_types_list=None)
-        return CurrentInputRow.__instance
+        return CurrentDBRow.__instance
 
     def __init__(self, accepted_states_list=None, accepted_street_types_list=None):
-        if CurrentInputRow.__instance is not None:
+        if CurrentDBRow.__instance is not None:
             raise Exception(
-                "CurrentInputRow instance cannot be instantiated more than once!")
+                "CurrentDBRow instance cannot be instantiated more than once!")
         else:
-            CurrentInputRow.__instance = self
+            CurrentDBRow.__instance = self
             self.accepted_states_list = accepted_states_list
             self.accepted_street_types_list = accepted_street_types_list
             self.current_row_id = None

@@ -6,10 +6,8 @@ from src.tm_partners.db_read_write.db_get_largest_id import get_max_id_from_db
 
 
 class ThreadAsgn:
-    # def __init__(self, ids_to_start_from=1, ids_to_end_at=get_max_id_from_db()):
-    def __init__(self, ids_to_start_from=121, ids_to_end_at=121):
-        # print("thread asgn ids to start from", ids_to_start_from)
-        # print("thread asgn ids to end at", ids_to_end_at)
+    def __init__(self, ids_to_start_from=1, ids_to_end_at=get_max_id_from_db()):
+        # def __init__(self, ids_to_start_from=318, ids_to_end_at=318):
         self.ids_to_start_from = ids_to_start_from
         self.ids_to_end_at = ids_to_end_at
 

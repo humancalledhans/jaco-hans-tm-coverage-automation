@@ -8,8 +8,9 @@ import requests
 import csv
 import time
 
-from src.tm_partners.singleton.current_input_row import CurrentInputRow
+from src.tm_partners.singleton.current_db_row import CurrentDBRow
 from src.tm_partners.singleton.cvg_task import CVGTask
+from src.tm_partners.singleton.selected_table_row import SelectedTableRow
 
 
 def get_chat_id(desired_phone_number):
@@ -28,13 +29,12 @@ def get_chat_id(desired_phone_number):
 
 
 def send_message(msg):
-    current_input_row = CurrentInputRow.get_instance()
-    phone_num_list = current_input_row.get_notify_mobile(
-        self=current_input_row).split(',')
+    current_db_row = CurrentDBRow.get_instance()
+    phone_num_list = current_db_row.get_notify_mobile(
+        self=current_db_row).split(',')
 
     # to take away same phone numbers in a list.
     phone_num_list = list(set(phone_num_list))
-    print("PHONE NUM LIST")
 
     try:
         helper_send_message(msg, phone_num_list=phone_num_list)
@@ -47,22 +47,22 @@ def helper_send_message(msg, phone_num_list):
     TOKEN = "5558294620:AAGKJDU0ja0ys_0T2-4JhVGx-3XJ1zJRtow"
     # text = "JacoHansCABot speaks"
     address_string = ''
-    current_input_row = CurrentInputRow.get_instance()
-    input_house_unit_lotno = current_input_row.get_house_unit_lotno(
-        self=current_input_row)
-    input_street = current_input_row.get_street(
-        self=current_input_row)
-    input_section = current_input_row.get_section(
-        self=current_input_row)
-    input_floor_no = current_input_row.get_floor(
-        self=current_input_row)
-    input_building_name = current_input_row.get_building(
-        self=current_input_row)
-    input_city = current_input_row.get_city(self=current_input_row)
-    input_state = current_input_row.get_state(
-        self=current_input_row)
-    input_postcode = current_input_row.get_postcode(
-        self=current_input_row)
+    current_db_row = CurrentDBRow.get_instance()
+    input_house_unit_lotno = current_db_row.get_house_unit_lotno(
+        self=current_db_row)
+    input_street = current_db_row.get_street(
+        self=current_db_row)
+    input_section = current_db_row.get_section(
+        self=current_db_row)
+    input_floor_no = current_db_row.get_floor(
+        self=current_db_row)
+    input_building_name = current_db_row.get_building(
+        self=current_db_row)
+    input_city = current_db_row.get_city(self=current_db_row)
+    input_state = current_db_row.get_state(
+        self=current_db_row)
+    input_postcode = current_db_row.get_postcode(
+        self=current_db_row)
 
     if input_house_unit_lotno is None:
         input_house_unit_lotno = ''
@@ -92,7 +92,6 @@ def helper_send_message(msg, phone_num_list):
         "Postcode: " + input_postcode
 
     for elem in phone_num_list:
-        print("CURRENT PHONE NUMBER", elem)
         # for every phone number.
         try:
             chat_id = get_chat_id(elem.strip())
@@ -103,12 +102,12 @@ def helper_send_message(msg, phone_num_list):
             r = requests.get(url)
 
         except IndexError:
-            current_row_id = current_input_row.get_id(self=current_input_row)
+            current_row_id = current_db_row.get_id(self=current_db_row)
             raise Exception(f"No chat id found for row id {current_row_id}")
 
 
 def setup_notification_text(text):
-    current_input_row = CurrentInputRow.get_instance()
+    current_db_row = CurrentDBRow.get_instance()
     email_text = """
 Id: %s
 Source: %s
@@ -122,16 +121,16 @@ City: %s
 State: %s
 Postcode: %s
     %s
-	""" % (current_input_row.get_id(self=current_input_row), current_input_row.get_source(self=current_input_row),
-        current_input_row.get_source_id(
-            self=current_input_row), current_input_row.get_house_unit_lotno(self=current_input_row),
-        current_input_row.get_street(
-            self=current_input_row), current_input_row.get_section(self=current_input_row),
-        current_input_row.get_floor(
-            self=current_input_row), current_input_row.get_building(self=current_input_row),
-        current_input_row.get_city(
-            self=current_input_row), current_input_row.get_state(self=current_input_row),
-        current_input_row.get_postcode(self=current_input_row), text)
+	""" % (current_db_row.get_id(self=current_db_row), current_db_row.get_source(self=current_db_row),
+        current_db_row.get_source_id(
+            self=current_db_row), current_db_row.get_house_unit_lotno(self=current_db_row),
+        current_db_row.get_street(
+            self=current_db_row), current_db_row.get_section(self=current_db_row),
+        current_db_row.get_floor(
+            self=current_db_row), current_db_row.get_building(self=current_db_row),
+        current_db_row.get_city(
+            self=current_db_row), current_db_row.get_state(self=current_db_row),
+        current_db_row.get_postcode(self=current_db_row), text)
 
     return email_text
 
@@ -249,9 +248,6 @@ def write_from_csv_to_db():
     cursor = cnx.cursor()
 
     # note that 'street_name' and 'street_type' would be put together into 'street'.
-
-    # TODO: double check the create_table statement. result_type should have not null instead of default null. things like these.
-    # there ARE 19 columns, however.
     create_table_statement = """
     CREATE TABLE IF NOT EXISTS cvg_db (
         id INT(11) AUTO_INCREMENT PRIMARY KEY,
@@ -312,7 +308,12 @@ def write_from_csv_to_db():
             cursor.close()
 
 
-def write_or_edit_result(id, result_type, result_text, address_remark=None):
+def write_or_edit_result(id, result_type, result_text):
+
+    selected_table_row_instance = SelectedTableRow.get_instance()
+    address_remark = selected_table_row_instance.get_address(
+        self=selected_table_row_instance)
+    address_remark = ''
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)
     print("RESULT TEXT: ", result_text)
@@ -330,8 +331,8 @@ def write_or_edit_result(id, result_type, result_text, address_remark=None):
     SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}'
     WHERE id = {id};
     """
-    current_input_row = CurrentInputRow.get_instance()
-    # print("RESULTS UPDATED!\n", "id: ", id, "\naddress: ", current_input_row.get_address(self=current_input_row), "\nresult_type: ",
+    current_db_row = CurrentDBRow.get_instance()
+    # print("RESULTS UPDATED!\n", "id: ", id, "\naddress: ", current_db_row.get_address(self=current_db_row), "\nresult_type: ",
     #   result_type, "\nresult_text: ", result_text)
 
     cursor.execute(edit_stmt)
@@ -352,10 +353,10 @@ def write_or_edit_result(id, result_type, result_text, address_remark=None):
 
     if result_type == 1 or result_type == 2 or result_type == 3:
 
-        current_row_notify_email = current_input_row.get_notify_email(
-            self=current_input_row)
-        current_row_notify_mobile = current_input_row.get_notify_mobile(
-            self=current_input_row)
+        current_row_notify_email = current_db_row.get_notify_email(
+            self=current_db_row)
+        current_row_notify_mobile = current_db_row.get_notify_mobile(
+            self=current_db_row)
 
         # print("CURRENT ROW EMAIL", current_row_notify_email)
         # print("CURRENT ROW MOBILE", current_row_notify_mobile)

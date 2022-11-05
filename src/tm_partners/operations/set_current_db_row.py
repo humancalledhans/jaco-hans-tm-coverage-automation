@@ -1,7 +1,7 @@
-from src.tm_global.singleton.current_db_row import CurrentDBRow
+from src.tm_partners.singleton.current_db_row import CurrentDBRow
 
 
-def set_current_db_row_singleton(data):
+def set_current_db_row(data):
     current_db_row = CurrentDBRow.get_instance()
     current_db_row.set_id(
         self=current_db_row, current_row_id=data.get_id())

@@ -29,4 +29,9 @@ def replace_keywords(driver, a, keyword_search_string):
     (driver1, a1) = click_search_btn(driver, a)
     (driver2, a2) = detect_and_solve_captcha(driver1, a1)
 
-    return try_diff_xpath_for_results_table(driver2, a2)
+    (driver3, a3, num_of_results) = try_diff_xpath_for_results_table(driver2, a2)
+
+    if num_of_results > 0:
+        return (driver3, a3)
+    else:
+        return (driver2, a2)

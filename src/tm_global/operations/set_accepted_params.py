@@ -1,4 +1,4 @@
-from src.tm_global.singleton.current_input_row import CurrentInputRow
+from src.tm_global.singleton.current_db_row import CurrentDBRow
 
 
 def set_accepted_params():
@@ -24,12 +24,12 @@ def set_accepted_params():
 
 
 def set_accepted_states(accepted_states_list):
-    current_input_row = CurrentInputRow.get_instance()
-    current_input_row.set_accepted_states_list(
-        self=current_input_row, accepted_states_list=accepted_states_list)
+    current_db_row = CurrentDBRow.get_instance()
+    current_db_row.set_accepted_states_list(
+        self=current_db_row, accepted_states_list=accepted_states_list)
 
 
 def set_accepted_street_types(accepted_street_types_list):
-    current_input_row = CurrentInputRow.get_instance()
-    current_input_row.set_accepted_street_types_list(
-        self=current_input_row, accepted_street_types_list=accepted_street_types_list)
+    current_db_row = CurrentDBRow.get_instance()
+    current_db_row.set_accepted_street_types_list(
+        self=current_db_row, accepted_street_types_list=accepted_street_types_list)

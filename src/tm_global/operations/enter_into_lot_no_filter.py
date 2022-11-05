@@ -3,7 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from src.tm_global.singleton.current_input_row import CurrentInputRow
+from src.tm_global.singleton.current_db_row import CurrentDBRow
 from src.tm_global.operations.pause_until_loaded import pause_until_loaded
 
 
@@ -11,8 +11,8 @@ def enter_into_lot_number_filter(driver, a):
     """
     if there are no results after we filter, we take away the unit number filter.
     """
-    current_input_row = CurrentInputRow.get_instance()
-    lot_number = current_input_row.get_house_unit_lotno(self=current_input_row)
+    current_db_row = CurrentDBRow.get_instance()
+    lot_number = current_db_row.get_house_unit_lotno(self=current_db_row)
     lot_num_filter_field = driver.find_element(
         By.XPATH, "//td[@style='padding: 1px !important; border-color: transparent !important']//input[@type='text' and @id='house_unit_lot']")
     lot_num_filter_field.clear()

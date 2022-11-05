@@ -1,4 +1,4 @@
-from src.tm_partners.singleton.current_input_row import CurrentInputRow
+from src.tm_partners.singleton.current_db_row import CurrentDBRow
 
 
 def return_points_for_row(table_row_data, table_header_data) -> bool:
@@ -6,15 +6,15 @@ def return_points_for_row(table_row_data, table_header_data) -> bool:
     could return "CONFIRMED MATCH" for max possible matches, or the number of columns matched.
     """
 
-    current_input_row = CurrentInputRow.get_instance()
+    current_db_row = CurrentDBRow.get_instance()
 
     # assembling input_row_data
 
-    input_unit_num_match_bool = current_input_row.get_search_level_flag(
-        self=current_input_row)
+    input_unit_num_match_bool = current_db_row.get_search_level_flag(
+        self=current_db_row)
 
-    input_house_unit_lotno = current_input_row.get_house_unit_lotno(
-        self=current_input_row)
+    input_house_unit_lotno = current_db_row.get_house_unit_lotno(
+        self=current_db_row)
 
     table_house_unit_lotno_index = table_header_data.index(
         'House/Unit/Lot No.')
@@ -24,14 +24,14 @@ def return_points_for_row(table_row_data, table_header_data) -> bool:
         return (0, None)
 
     else:
-        input_street = current_input_row.get_street(self=current_input_row)
-        input_section = current_input_row.get_section(self=current_input_row)
-        input_floor_no = current_input_row.get_floor(self=current_input_row)
-        input_building_name = current_input_row.get_building(
-            self=current_input_row)
-        input_city = current_input_row.get_city(self=current_input_row)
-        input_state = current_input_row.get_state(self=current_input_row)
-        input_postcode = current_input_row.get_postcode(self=current_input_row)
+        input_street = current_db_row.get_street(self=current_db_row)
+        input_section = current_db_row.get_section(self=current_db_row)
+        input_floor_no = current_db_row.get_floor(self=current_db_row)
+        input_building_name = current_db_row.get_building(
+            self=current_db_row)
+        input_city = current_db_row.get_city(self=current_db_row)
+        input_state = current_db_row.get_state(self=current_db_row)
+        input_postcode = current_db_row.get_postcode(self=current_db_row)
 
         table_street_type_index = table_header_data.index('Street Type')
         table_street_name_index = table_header_data.index('Street Name')

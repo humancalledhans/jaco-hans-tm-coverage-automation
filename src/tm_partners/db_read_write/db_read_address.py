@@ -5,7 +5,7 @@ from src.tm_partners.singleton.all_the_data import AllTheData
 from src.tm_partners.db_read_write.data_object import DataObject
 
 # from db_secrets import get_db_password
-# from current_input_row import CurrentInputRow
+# from current_db_row import CurrentDBRow
 # from all_the_data import AllTheData
 # from data_object import DataObject
 
@@ -38,15 +38,17 @@ def read_from_db():
 
     all_the_data = AllTheData.get_instance()
     for elem in result:
-        
+
         data_object = DataObject(id=elem[all_the_column_names.index('id')], unit_no=elem[all_the_column_names.index('unit_no')], floor=elem[all_the_column_names.index('floor')], building=elem[all_the_column_names.index('building')],
-                                 street=elem[all_the_column_names.index('street')], section=elem[all_the_column_names.index('section')], city=elem[all_the_column_names.index('city')], state=elem[all_the_column_names.index('state')],
-                                 postcode=elem[all_the_column_names.index('postcode')], search_level_flag=elem[all_the_column_names.index('search_level_flag')], source=elem[all_the_column_names.index('source')], source_id=all_the_column_names.index('source_id'),
-                                 salesman=elem[all_the_column_names.index('salesman')], notify_email=elem[all_the_column_names.index('notify_email')], notify_mobile=elem[all_the_column_names.index('notify_mobile')], result_type=elem[all_the_column_names.index('result_type')],
+                                 street=elem[all_the_column_names.index('street')], section=elem[all_the_column_names.index(
+                                     'section')], city=elem[all_the_column_names.index('city')], state=elem[all_the_column_names.index('state')],
+                                 postcode=elem[all_the_column_names.index('postcode')], search_level_flag=elem[all_the_column_names.index(
+                                     'search_level_flag')], source=elem[all_the_column_names.index('source')], source_id=all_the_column_names.index('source_id'),
+                                 salesman=elem[all_the_column_names.index('salesman')], notify_email=elem[all_the_column_names.index(
+                                     'notify_email')], notify_mobile=elem[all_the_column_names.index('notify_mobile')], result_type=elem[all_the_column_names.index('result_type')],
                                  result_remark=elem[all_the_column_names.index('result_remark')], is_active=elem[all_the_column_names.index('is_active')], created_at=elem[all_the_column_names.index('created_at')], updated_at=elem[all_the_column_names.index('updated_at')])
 
         all_the_data.add_into_data_list(data_object)
-    
 
     # id=current_row[0]
     # unit_no=current_row[1]

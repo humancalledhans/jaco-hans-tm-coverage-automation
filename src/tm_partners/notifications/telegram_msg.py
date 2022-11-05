@@ -1,12 +1,12 @@
 import requests
 from src.tm_partners.db_read_write.db_get_chat_id import get_chat_id
-from src.tm_partners.singleton.current_input_row import CurrentInputRow
+from src.tm_partners.singleton.current_db_row import CurrentDBRow
 
 
 def send_message(msg):
-    current_input_row = CurrentInputRow.get_instance()
-    phone_num_list = current_input_row.get_notify_mobile(
-        self=current_input_row).split(',')
+    current_db_row = CurrentDBRow.get_instance()
+    phone_num_list = current_db_row.get_notify_mobile(
+        self=current_db_row).split(',')
 
     # to take away same phone numbers in a list.
     phone_num_list = list(set(phone_num_list))
@@ -22,22 +22,22 @@ def helper_send_message(msg, phone_num_list):
     TOKEN = "5558294620:AAGKJDU0ja0ys_0T2-4JhVGx-3XJ1zJRtow"
     # text = "JacoHansCABot speaks"
     address_string = ''
-    current_input_row = CurrentInputRow.get_instance()
-    input_house_unit_lotno = current_input_row.get_house_unit_lotno(
-        self=current_input_row)
-    input_street = current_input_row.get_street(
-        self=current_input_row)
-    input_section = current_input_row.get_section(
-        self=current_input_row)
-    input_floor_no = current_input_row.get_floor(
-        self=current_input_row)
-    input_building_name = current_input_row.get_building(
-        self=current_input_row)
-    input_city = current_input_row.get_city(self=current_input_row)
-    input_state = current_input_row.get_state(
-        self=current_input_row)
-    input_postcode = current_input_row.get_postcode(
-        self=current_input_row)
+    current_db_row = CurrentDBRow.get_instance()
+    input_house_unit_lotno = current_db_row.get_house_unit_lotno(
+        self=current_db_row)
+    input_street = current_db_row.get_street(
+        self=current_db_row)
+    input_section = current_db_row.get_section(
+        self=current_db_row)
+    input_floor_no = current_db_row.get_floor(
+        self=current_db_row)
+    input_building_name = current_db_row.get_building(
+        self=current_db_row)
+    input_city = current_db_row.get_city(self=current_db_row)
+    input_state = current_db_row.get_state(
+        self=current_db_row)
+    input_postcode = current_db_row.get_postcode(
+        self=current_db_row)
 
     if input_house_unit_lotno is None:
         input_house_unit_lotno = ''
@@ -77,7 +77,7 @@ def helper_send_message(msg, phone_num_list):
             r = requests.get(url)
 
         except IndexError:
-            current_row_id = current_input_row.get_id(self=current_input_row)
+            current_row_id = current_db_row.get_id(self=current_db_row)
             raise Exception(f"No chat id found for row id {current_row_id}")
 
 

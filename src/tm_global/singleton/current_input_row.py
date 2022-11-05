@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractstaticmethod
 import re
 
 
-class ICurrentInputRow(metaclass=ABCMeta):
+class ICurrentDBRow(metaclass=ABCMeta):
 
     @abstractstaticmethod
     def set_accepted_states_list():
@@ -185,23 +185,23 @@ class ICurrentInputRow(metaclass=ABCMeta):
         """ to implement in child class """
 
 
-class CurrentInputRow(ICurrentInputRow):
+class CurrentDBRow(ICurrentDBRow):
 
     __instance = None
 
     @staticmethod
     def get_instance():
-        if CurrentInputRow.__instance is None:
-            CurrentInputRow(
+        if CurrentDBRow.__instance is None:
+            CurrentDBRow(
                 accepted_states_list=None, accepted_street_types_list=None)
-        return CurrentInputRow.__instance
+        return CurrentDBRow.__instance
 
     def __init__(self, accepted_states_list=None, accepted_street_types_list=None):
-        if CurrentInputRow.__instance is not None:
+        if CurrentDBRow.__instance is not None:
             raise Exception(
-                "CurrentInputRow instance cannot be instantiated more than once!")
+                "CurrentDBRow instance cannot be instantiated more than once!")
         else:
-            CurrentInputRow.__instance = self
+            CurrentDBRow.__instance = self
             self.accepted_states_list = accepted_states_list
             self.accepted_street_types_list = accepted_street_types_list
             self.current_row_id = None
@@ -242,7 +242,8 @@ class CurrentInputRow(ICurrentInputRow):
         if current_row_unit_no == 'None' or current_row_unit_no is None or len(current_row_unit_no) == 0:
             self.current_row_unit_no = ''
         else:
-            int_as_string_lst = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+            int_as_string_lst = ['0', '1', '2',
+                                 '3', '4', '5', '6', '7', '8', '9']
             if '-' in current_row_unit_no and current_row_unit_no[-1] in int_as_string_lst:
                 x = re.split("-", current_row_unit_no)
 
@@ -449,17 +450,17 @@ class CurrentInputRow(ICurrentInputRow):
     @staticmethod
     def get_address(self):
         address_string = ''
-        current_input_row = CurrentInputRow.get_instance()
-        input_house_unit_lotno = current_input_row.get_house_unit_lotno(
-            self=current_input_row)
-        input_street = current_input_row.get_street(self=current_input_row)
-        input_section = current_input_row.get_section(self=current_input_row)
-        input_floor_no = current_input_row.get_floor(self=current_input_row)
-        input_building_name = current_input_row.get_building(
-            self=current_input_row)
-        input_city = current_input_row.get_city(self=current_input_row)
-        input_state = current_input_row.get_state(self=current_input_row)
-        input_postcode = current_input_row.get_postcode(self=current_input_row)
+        current_db_row = CurrentDBRow.get_instance()
+        input_house_unit_lotno = current_db_row.get_house_unit_lotno(
+            self=current_db_row)
+        input_street = current_db_row.get_street(self=current_db_row)
+        input_section = current_db_row.get_section(self=current_db_row)
+        input_floor_no = current_db_row.get_floor(self=current_db_row)
+        input_building_name = current_db_row.get_building(
+            self=current_db_row)
+        input_city = current_db_row.get_city(self=current_db_row)
+        input_state = current_db_row.get_state(self=current_db_row)
+        input_postcode = current_db_row.get_postcode(self=current_db_row)
 
         if input_house_unit_lotno is None:
             input_house_unit_lotno = ''

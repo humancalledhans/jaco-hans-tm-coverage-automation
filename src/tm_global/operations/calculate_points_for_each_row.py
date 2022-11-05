@@ -1,7 +1,7 @@
 import time
 from selenium.webdriver.common.by import By
 
-from src.tm_global.singleton.current_input_row import CurrentInputRow
+from src.tm_global.singleton.current_db_row import CurrentDBRow
 
 
 def calculate_points_for_each_row(driver, a, result):
@@ -51,21 +51,21 @@ def calculate_points_for_each_row(driver, a, result):
     # table_address_type = table_column_data[table_column_headers.index(
     # 'Address Type')]
 
-    current_input_row = CurrentInputRow.get_instance()
-    current_row_unit_no = current_input_row.get_house_unit_lotno(
-        self=current_input_row)
-    current_row_street = current_input_row.get_street(self=current_input_row)
-    current_row_section = current_input_row.get_section(self=current_input_row)
-    current_row_floor_no = current_input_row.get_floor(
-        self=current_input_row)
-    current_row_building_name = current_input_row.get_building(
-        self=current_input_row)
-    current_row_city = current_input_row.get_city(self=current_input_row)
-    current_row_postcode = current_input_row.get_postcode(
-        self=current_input_row)
+    current_db_row = CurrentDBRow.get_instance()
+    current_row_unit_no = current_db_row.get_house_unit_lotno(
+        self=current_db_row)
+    current_row_street = current_db_row.get_street(self=current_db_row)
+    current_row_section = current_db_row.get_section(self=current_db_row)
+    current_row_floor_no = current_db_row.get_floor(
+        self=current_db_row)
+    current_row_building_name = current_db_row.get_building(
+        self=current_db_row)
+    current_row_city = current_db_row.get_city(self=current_db_row)
+    current_row_postcode = current_db_row.get_postcode(
+        self=current_db_row)
 
-    current_row_unit_num_match_bool = current_input_row.get_search_level_flag(
-        self=current_input_row)
+    current_row_unit_num_match_bool = current_db_row.get_search_level_flag(
+        self=current_db_row)
 
     # print("current_row", "table_house")
     # print("current_row_unit_num_match_bool", current_row_unit_num_match_bool)

@@ -1,11 +1,11 @@
 
 from src.tm_global.singleton.cvg_task import CVGTask
-from src.tm_global.singleton.current_input_row import CurrentInputRow
+from src.tm_global.singleton.current_db_row import CurrentDBRow
 
 
 def set_cvg_task():
     cvg_task = CVGTask.get_instance()
-    current_row_id = CurrentInputRow.get_instance().get_id()
+    current_row_id = CurrentDBRow.get_instance().get_id()
     cvg_task.set_current_id_address_being_checked(
         current_id=current_row_id)
     cvg_task.increment_current_number_of_addresses_checked()

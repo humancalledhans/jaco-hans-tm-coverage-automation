@@ -1,5 +1,5 @@
 import time
-from src.tm_global.singleton.current_input_row import CurrentInputRow
+from src.tm_global.singleton.current_db_row import CurrentDBRow
 from src.tm_global.operations.enter_into_keyword_field import enter_into_keyword_field
 from src.tm_global.operations.click_on_search_btn import click_on_search_button
 from src.tm_global.operations.pause_until_loaded import pause_until_loaded
@@ -12,9 +12,9 @@ from src.tm_global.operations.reset_for_next_search import reset_for_next_search
 
 def try_using_building_name(driver, a):
 
-    current_input_row = CurrentInputRow.get_instance()
+    current_db_row = CurrentDBRow.get_instance()
 
-    building_name = current_input_row.get_building(self=current_input_row)
+    building_name = current_db_row.get_building(self=current_db_row)
 
     if building_name is not None:
         building_name = building_name.strip()
@@ -39,9 +39,9 @@ def try_using_building_name(driver, a):
 
 def try_using_street(driver, a):
 
-    current_input_row = CurrentInputRow.get_instance()
+    current_db_row = CurrentDBRow.get_instance()
 
-    street = current_input_row.get_street(self=current_input_row)
+    street = current_db_row.get_street(self=current_db_row)
 
     if street is not None:
         street = street.strip()
@@ -65,9 +65,9 @@ def try_using_street(driver, a):
 
 
 def try_using_section(driver, a):
-    current_input_row = CurrentInputRow.get_instance()
+    current_db_row = CurrentDBRow.get_instance()
 
-    section = current_input_row.get_section(self=current_input_row)
+    section = current_db_row.get_section(self=current_db_row)
 
     if section is not None:
         section = section.strip()
@@ -116,8 +116,8 @@ def enter_right_keyword(driver, a):
         return (driver, a)
 
     else:
-        current_input_row = CurrentInputRow.get_instance()
-        print(current_input_row.get_id(self=current_input_row))
+        current_db_row = CurrentDBRow.get_instance()
+        print(current_db_row.get_id(self=current_db_row))
         print()
         raise Exception(
             "No results found using building name, street name, or section name.")

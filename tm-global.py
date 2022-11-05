@@ -16,7 +16,7 @@ from src.tm_partners.operations.go_to_coverage_search_page import to_coverage_se
 from src.tm_global.operations.set_accepted_params import set_accepted_params
 from src.tm_global.db_read_write.db_read_address import read_from_db
 from src.tm_global.operations.select_state import select_state
-from src.tm_global.operations.set_current_input_row_singleton import set_current_input_row_singleton
+from src.tm_global.operations.set_current_db_row_singleton import set_current_db_row_singleton
 from src.tm_global.singleton.all_the_data import AllTheData
 from src.tm_partners.singleton.data_id_range import DataIdRange
 from src.tm_global.coverage_check.coverage_check import finding_coverage

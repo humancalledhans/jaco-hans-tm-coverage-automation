@@ -1,15 +1,15 @@
-from src.tm_global.singleton.current_input_row import CurrentInputRow
+from src.tm_global.singleton.current_db_row import CurrentDBRow
 
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 
 
 def select_state(driver, a):
-    current_input_row = CurrentInputRow.get_instance()
-    accepted_states_list = current_input_row.get_accepted_states_list(
-        self=current_input_row)
-    current_row_id = current_input_row.get_id(self=current_input_row)
-    state = current_input_row.get_state(self=current_input_row)
+    current_db_row = CurrentDBRow.get_instance()
+    accepted_states_list = current_db_row.get_accepted_states_list(
+        self=current_db_row)
+    current_row_id = current_db_row.get_id(self=current_db_row)
+    state = current_db_row.get_state(self=current_db_row)
 
     if state in accepted_states_list:
         state_tab = Select(driver.find_element(

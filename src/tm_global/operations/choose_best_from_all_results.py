@@ -13,7 +13,7 @@ def choose_best_match_from_all_results(driver, a):
     # tuple: (row_number, points, lotNumAndStreetAndPostcodeNoMatchBool)
     for result_idx in range(len(all_results)):
         # need to determine the column headers first, to match.
-        # then, for each row, match the data with those in current_input_row.
+        # then, for each row, match the data with those in current_db_row.
         all_results[result_idx] = (all_results[result_idx], calculate_points_for_each_row(
             driver, a, all_results[result_idx]))
 

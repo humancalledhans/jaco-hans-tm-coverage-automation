@@ -14,6 +14,5 @@ def driver_setup():
     options.add_experimental_option(
         "excludeSwitches", ["enable-logging"])
     driver = webdriver.Chrome(service=s, options=options)
-    driver.get('https://partners.unifi.my/HSBBPartnerPortal/HSBBPartnerPortal.portal?_nfpb=true&_pageLabel=login_portal&_nfls=false#wlp_HSBBPartnerPortal_portal_HelpCustomer/')
-
+    
     return driver

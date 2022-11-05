@@ -1,4 +1,4 @@
-from src.tm_partners.singleton.current_input_row import CurrentInputRow
+from src.tm_partners.singleton.current_db_row import CurrentDBRow
 from src.tm_partners.singleton.data_id_range import DataIdRange
 from src.tm_partners.operations.solve_captcha import solve_captcha
 from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
@@ -72,9 +72,9 @@ def detect_and_solve_captcha_but_rerun(driver, a, finding_coverage_instance):
                 # break
 
         except TimeoutException:
-            current_input_row = CurrentInputRow.get_instance()
-            current_row_id = current_input_row.get_id(
-                self=current_input_row)
+            current_db_row = CurrentDBRow.get_instance()
+            current_row_id = current_db_row.get_id(
+                self=current_db_row)
             data_id_range = DataIdRange.get_instance()
             data_id_end = data_id_range.get_end_id(self=data_id_range)
             finding_coverage_instance.finding_coverage(
