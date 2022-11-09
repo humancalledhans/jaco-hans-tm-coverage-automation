@@ -3,6 +3,7 @@ from src.tm_partners.db_read_write.db_secrets import get_db_password
 # from db_secrets import get_db_password
 from src.tm_partners.singleton.all_the_data import AllTheData
 from src.tm_partners.db_read_write.data_object import DataObject
+from src.tm_partners.singleton.data_id_range import DataIdRange
 
 # from db_secrets import get_db_password
 # from current_db_row import CurrentDBRow
@@ -16,9 +17,17 @@ def read_from_db():
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
 
-    # query = f"SELECT * FROM cvg_db WHERE is_active = 1 ORDER BY created_at DESC"
-    query = f"SELECT * FROM cvg_db ORDER BY created_at DESC"
-    # query = "SELECT * FROM cvg_db WHERE id = 140"
+    data_id_range = DataIdRange.get_instance()
+    start_id = data_id_range.get_start_id(
+        self=data_id_range)
+    end_id = data_id_range.get_end_id(self=data_id_range)
+
+    if start_id == end_id:
+        query = f"SELECT * FROM cvg_db WHERE id = {start_id}"
+    else:
+        # query = f"SELECT * FROM cvg_db WHERE is_active = 1 ORDER BY created_at DESC"
+        query = f"SELECT * FROM cvg_db ORDER BY created_at DESC"
+        # query = f"SELECT * FROM cvg_db ORDER BY created_at ASC"
     cursor.execute(query)
     result = cursor.fetchall()
 
@@ -49,38 +58,3 @@ def read_from_db():
                                  result_remark=elem[all_the_column_names.index('result_remark')], is_active=elem[all_the_column_names.index('is_active')], created_at=elem[all_the_column_names.index('created_at')], updated_at=elem[all_the_column_names.index('updated_at')])
 
         all_the_data.add_into_data_list(data_object)
-
-    # id=current_row[0]
-    # unit_no=current_row[1]
-    # floor=current_row[2]
-    # building=current_row[3]
-    # street=current_row[4]
-    # section=current_row[5]
-    # city=current_row[6]
-    # state=current_row[7]
-    # postcode=current_row[8]
-    # search_level_flag=current_row[9]
-    # source=current_row[10]
-    # source_id=current_row[11]
-    # salesman=current_row[12]
-    # notify_email=current_row[13]
-    # notify_mobile=current_row[14]
-    # result_type=current_row[15]
-    # result_remark=current_row[16]
-    # is_active=current_row[17]
-    # created_at=current_row[18]
-    # updated_at=current_row[19]
-
-    # data_object=DataObject(id=id, unit_no=unit_no, floor=floor,
-    #                          building=building, street=street, section=section,
-    #                          city=city, state=state, postcode=postcode,
-    #                          search_level_flag=search_level_flag, source=source,
-    #                          source_id=source_id, salesman=salesman,
-    #                          notify_email=notify_email, notify_mobile=notify_mobile,
-    #                          result_type=result_type, result_remark=result_remark,
-    #                          is_active=is_active, created_at=created_at,
-    #                          updated_at=updated_at)
-
-
-# if __name__ == '__main__':
-    # print(read_from_db(1))

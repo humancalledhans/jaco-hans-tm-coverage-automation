@@ -45,6 +45,4 @@ def concatenate_results_from_all_pages(driver, a):
 
             except NoSuchElementException:
                 break
-    
-    print("ALL RESULTS", all_results)
     return all_results

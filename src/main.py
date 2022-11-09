@@ -6,9 +6,7 @@ from src.tm_partners.singleton.image_names import ImageName
 
 
 class Main:
-    def __init__(self, ids_to_start_from, ids_to_end_at, thread_name):
-        self.ids_to_start_from = ids_to_start_from
-        self.ids_to_end_at = ids_to_end_at
+    def __init__(self, thread_name):
         self.thread_name = thread_name
 
         image_name = ImageName.get_instance()
@@ -16,11 +14,6 @@ class Main:
             self=image_name, full_page_image_name=thread_name+"_full_page.png")
         image_name.set_captcha_image_name(
             self=image_name, captcha_image_name=thread_name+"_captcha.png")
-
-        data_id_range = DataIdRange.get_instance()
-        data_id_range.set_start_id(
-            self=data_id_range, start_id=int(ids_to_start_from))
-        data_id_range.set_end_id(self=data_id_range, end_id=int(ids_to_end_at))
 
         login = Login('DPPJ1901', 'Dsync110!!')
         # login = Login('DPSL3601', 'Dptama201!')

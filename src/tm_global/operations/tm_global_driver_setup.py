@@ -14,6 +14,5 @@ def tm_global_driver_setup():
     options.add_experimental_option(
         "excludeSwitches", ["enable-logging"])
     driver = webdriver.Chrome(service=s, options=options)
-    driver.get('https://wholesalepremium.tm.com.my/')
 
     return driver

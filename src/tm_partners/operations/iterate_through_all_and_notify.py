@@ -46,7 +46,7 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
                 table_row_num=0, driver=driver, a=a, filtered=False)
             (driver, a) = bridge_to_actual_op(driver, a)
             check_coverage_and_notify_actual(
-                driver, a, address_remark=None, to_notify=False)
+                driver, a, to_notify=True)
 
             driver.close()
             driver.switch_to.window(
@@ -136,7 +136,8 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
                 (table_row_num, points, lotNumAndStreetAndPostcodeNoMatchBool))
     if len(best_match_row_num_list) > 0:
 
-        set_selected_table_row(driver, a, x_code_path, max_point_tuple[0])
+        set_selected_table_row(driver, a, x_code_path,
+                               best_match_row_num_list[0])
 
         possible_multiple_best_match_operation(
             driver, a, best_match_row_num_list, filtered)
@@ -160,14 +161,13 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
                     table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=False)
                 (driver, a) = bridge_to_actual_op(driver, a)
                 check_coverage_and_notify_actual(
-                    driver, a, to_notify=False)
+                    driver, a, to_notify=True)
 
                 driver.close()
                 driver.switch_to.window(
                     driver.window_handles[0])
 
                 checked = True
-                # TODO: 15th October: add the address that's searched on.
         elif lot_no_detail_flag == 1:
 
             # if lot number or street or postcode not the same (assigned respectively):
@@ -196,13 +196,14 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
 
                 max_point_tuple = points_list[0]
 
-                set_selected_table_row(driver, a, x_code_path, max_point_tuple[0])
+                set_selected_table_row(
+                    driver, a, x_code_path, max_point_tuple[0])
 
                 (driver, a) = check_coverage_and_notify(
                     table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=filtered)
                 (driver, a) = bridge_to_actual_op(driver, a)
                 check_coverage_and_notify_actual(
-                    driver, a, to_notify=False)
+                    driver, a, to_notify=True)
 
                 driver.close()
                 driver.switch_to.window(

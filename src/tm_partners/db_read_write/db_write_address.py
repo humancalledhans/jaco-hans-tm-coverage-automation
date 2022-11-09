@@ -339,14 +339,14 @@ def write_or_edit_result(id, result_type, result_text):
 
     cnx.commit()
 
-    if result_type == 1:
-        edit_stmt = f"""
-        UPDATE cvg_db
-        SET is_active = 0
-        WHERE id = {id};
-        """
-        cursor.execute(edit_stmt)
-        cnx.commit()
+    # if result_type == 1:
+    #     edit_stmt = f"""
+    #     UPDATE cvg_db
+    #     SET is_active = 0
+    #     WHERE id = {id};
+    #     """
+    #     cursor.execute(edit_stmt)
+    #     cnx.commit()
 
     cursor.close()
     cnx.close()

@@ -29,10 +29,6 @@ def calculate_points_for_each_row(driver, a, result):
         for res in result[0]:
             table_column_data.append(res)
 
-    print("TABLE COLUMN DATA", table_column_data)
-
-    print("result", result)
-
     table_house_unit_no = table_column_data[table_column_headers.index(
         'House / Unit No')]
     table_street_type = table_column_data[table_column_headers.index(

@@ -14,5 +14,5 @@ def driver_setup():
     options.add_experimental_option(
         "excludeSwitches", ["enable-logging"])
     driver = webdriver.Chrome(service=s, options=options)
-    
+
     return driver

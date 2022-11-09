@@ -2,6 +2,7 @@ import mysql.connector
 from src.tm_global.db_read_write.db_secrets import get_db_password
 from src.tm_global.singleton.all_the_data import AllTheData
 from src.tm_global.db_read_write.data_object import DataObject
+from src.tm_global.singleton.data_id_range import DataIdRange
 
 
 def read_from_db():
@@ -10,7 +11,18 @@ def read_from_db():
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
 
-    query = f"SELECT * FROM cvg_db WHERE is_active = 1 ORDER BY created_at DESC"
+    data_range = DataIdRange.get_instance()
+    data_range_start = data_range.get_start_id(self=data_range)
+    data_range_end = data_range.get_end_id(self=data_range)
+
+    if data_range_start == data_range_end:
+        query = f"SELECT * FROM cvg_db WHERE id = {data_range_start}"
+
+    else:
+        query = f"SELECT * FROM cvg_db ORDER BY created_at DESC"
+        # query = f"SELECT * FROM cvg_db ORDER BY created_at ASC"
+        # query = f"SELECT * FROM cvg_db WHERE is_active = 1 ORDER BY created_at DESC"
+
     # query = "SELECT * FROM cvg_db WHERE id = 140"
     cursor.execute(query)
     result = cursor.fetchall()

@@ -1,29 +1,31 @@
 import threading
 from src.tm_partners.singleton.num_of_iterations import NumOfIterations
-from src.main import Main
-
+from src.tm_partners.singleton.data_id_range import DataIdRange
 from src.tm_partners.db_read_write.db_get_largest_id import get_max_id_from_db
+
+from src.main import Main
 
 
 class ThreadAsgn:
     def __init__(self, ids_to_start_from=1, ids_to_end_at=get_max_id_from_db()):
-        # def __init__(self, ids_to_start_from=318, ids_to_end_at=318):
+    # def __init__(self, ids_to_start_from=1, ids_to_end_at=380):
         self.ids_to_start_from = ids_to_start_from
         self.ids_to_end_at = ids_to_end_at
+        data_id_range = DataIdRange.get_instance()
+        data_id_range.set_start_id(
+            self=data_id_range, start_id=int(ids_to_start_from))
+        data_id_range.set_end_id(self=data_id_range, end_id=int(ids_to_end_at))
 
-    def main_thread(self, id_to_start, id_to_end, thread_name):
+    def main_thread(self, thread_name):
         # get the indexes, and then assign the indexes to four different threads
-        Main(id_to_start, id_to_end, thread_name)
+        Main(thread_name)
 
     def start_threads(self):
-        full_ids_to_start = self.ids_to_start_from
-        full_ids_to_end = self.ids_to_end_at
 
         # print("START", full_ids_to_start)
         # print("END", full_ids_to_end)
 
-        threading.Thread(target=self.main_thread, args=(
-            full_ids_to_start, full_ids_to_end, "thread-1")).start()
+        threading.Thread(target=self.main_thread, args=("thread-1",)).start()
 
         # if full_ids_to_end - full_ids_to_start < 4:
         #     threading.Thread(target=self.main_thread, args=(
@@ -55,7 +57,7 @@ class ThreadAsgn:
 
 
 if __name__ == '__main__':
-    num_of_iterations = 4  # jaco, change this line.
+    num_of_iterations = 1  # jaco, change this line.
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
     thread_asgn = ThreadAsgn()

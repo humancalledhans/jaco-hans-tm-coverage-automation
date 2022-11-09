@@ -1,10 +1,19 @@
 import time
-from src.tm_global.operations.search_the_exact_address import search_the_exact_address
+from src.tm_global.operations.get_coverage_result import get_coverage_result
+
+from selenium.webdriver.common.by import By
+
+from src.tm_global.operations.pause_until_loaded import pause_until_loaded
+from src.tm_global.operations.filter_all_columns import filter_all_columns
+from src.tm_global.operations.click_on_selected_row import click_on_selected_row
+from src.tm_global.operations.duplicate_in_new_tab import duplicate_in_new_tab
+from src.tm_global.operations.close_duplicated_tab import close_duplicated_tab
+from src.tm_global.operations.verify_to_click_on_row import verify_to_click_on_row
 
 
-def clicked_on_the_right_address(driver, a, address):
+def coverage_search_the_right_address(driver, a, address):
     """
-    address would be in the form of:
+    'address' param would be in the form of:
     ((['61', 'JALAN', 'TANJUNG 2', 'BUKIT BERUNTUNG', '', '', 'SERENDAH', '48300', 'FTTH', 'Residential'],1), ('BEST MATCH', True))
     """
     address_marks = address[1][0]
@@ -12,12 +21,35 @@ def clicked_on_the_right_address(driver, a, address):
     address_string = ''
     for str_idx in range(len(address[0][0])-2):
         if address[0][0][str_idx] != '' and address[0][0][str_idx] != ' ' and address[0][0][str_idx].strip() != '-':
-            address_string += address[0][str_idx] + ' '
+            address_string += address[0][0][str_idx] + ' '
 
     address_string = address_string.strip()
-    print("resultant address string", address_string)
 
-    # search the exact address.
-    (driver, a) = search_the_exact_address(driver, a, address_string)
+    (driver, a) = filter_all_columns(driver, a, address)
+
+    best_selection_row = driver.find_elements(
+        By.XPATH, "//table[@id='table_result']//tbody//tr[@role='row']")
+
+    # problem:
+    # the filtering mechanism takes all lot numbers that contain that digit.
+    # eg: '3', would include 13, 33, 43, 23, etc.
+    # solution: find a way to truncate / ensure that /3/ is the only digit
+    # solution: check each row manually, only when bestmatchbool is True.
+
+    root_tab_url = driver.current_url
+    results = []
+    for selected_row_num in range(len(best_selection_row)):
+        # selected_row = driver.find_element(
+        # By.XPATH, f"(//table[@id='table_result']//tbody//tr[@role='row'])[{selected_row_num+1}]")
+        to_click_on_row = verify_to_click_on_row(driver, a, selected_row_num)
+        if to_click_on_row:
+            (driver, a) = duplicate_in_new_tab(driver, a, root_tab_url)
+            (driver, a) = filter_all_columns(driver, a, address)
+            (driver, a) = click_on_selected_row(
+                driver, a, selected_row_num)
+            results.append(get_coverage_result(driver, a))
+            (driver, a) = close_duplicated_tab(driver, a)
+
+    print('results', results)
 
     return (driver, a)

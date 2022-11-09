@@ -119,5 +119,4 @@ def enter_right_keyword(driver, a):
         current_db_row = CurrentDBRow.get_instance()
         print(current_db_row.get_id(self=current_db_row))
         print()
-        raise Exception(
-            "No results found using building name, street name, or section name.")
+        return "No results found using building name, street name, or section name."

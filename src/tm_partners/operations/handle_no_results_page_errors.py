@@ -27,9 +27,6 @@ def handle_no_results_page_errors(driver, a):
 
         except TimeoutException:
 
-            print("ID ", current_db_row.get_id(
-                self=current_db_row))
-            print("HANS - FIND OUT WHAT YOU CAN DO! ITS A PROBLEM!")
             try:
                 WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                     (By.XPATH, "//div[@class='subContent']//table//tbody//font[@color='red' and contains(text(), 'System unable to process the selected address due to technical issue.')]")))
@@ -47,6 +44,8 @@ def handle_no_results_page_errors(driver, a):
                     time.sleep(300)
                     go_back_to_coverage_search_page(driver, a)
         except Exception as e:
+            print("ID ", current_db_row.get_id(
+                self=current_db_row))
             print(e)
             print("HANS - FIND OUT WHAT YOU CAN DO! ITS A PROBLEM!")
             time.sleep(300)
