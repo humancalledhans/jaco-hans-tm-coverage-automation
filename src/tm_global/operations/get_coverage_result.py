@@ -10,5 +10,5 @@ def get_coverage_result(driver, a):
     result_type = 0
 
     print('result remark', result_remark)
-    time.sleep(5)
+    time.sleep(2)
     return (result_type, result_remark)

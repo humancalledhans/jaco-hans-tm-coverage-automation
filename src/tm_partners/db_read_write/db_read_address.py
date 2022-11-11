@@ -57,4 +57,4 @@ def read_from_db():
                                      'notify_email')], notify_mobile=elem[all_the_column_names.index('notify_mobile')], result_type=elem[all_the_column_names.index('result_type')],
                                  result_remark=elem[all_the_column_names.index('result_remark')], is_active=elem[all_the_column_names.index('is_active')], created_at=elem[all_the_column_names.index('created_at')], updated_at=elem[all_the_column_names.index('updated_at')])
 
-        all_the_data.add_into_data_list(data_object)
+        all_the_data.add_into_data_list(self=all_the_data, data=data_object)

@@ -1,6 +1,8 @@
 from src.tm_partners.operations.login import Login
 from src.tm_partners.singleton.data_id_range import DataIdRange
+from src.tm_partners.coverage_check.coverage_check import FindingCoverage
 from src.tm_partners.singleton.image_names import ImageName
+from src.tm_partners.operations.set_accepted_params import set_accepted_params
 
 # TODO: make main an object. so that the singletons are all separate instances for each main object instance.
 
@@ -15,9 +17,14 @@ class Main:
         image_name.set_captcha_image_name(
             self=image_name, captcha_image_name=thread_name+"_captcha.png")
 
-        login = Login('DPPJ1901', 'Dsync110!!')
-        # login = Login('DPSL3601', 'Dptama201!')
-        login.login()
+        login = Login()
+        (driver, a) = login.login()
+        finding_coverage = FindingCoverage()
+        set_accepted_params()
+        # read_from_db()
+        finding_coverage.finding_coverage(
+            driver=driver, a=a)
+        driver.quit()
 
         # print("Hi! This is a Coverage Automation System. It will:\n1. Read in a Database of Addresses\n2. Check the coverage of the addresses\n3. Send an email with a screenshot depending on the 4 coverage end results.")
         # ids_to_start_from = input(

@@ -132,6 +132,16 @@ def return_points_for_row(table_row_data, table_header_data) -> bool:
                 accumulated_points = accumulated_points + 1
             else:
                 lotNumAndStreetAndPostcodeNoMatchBool = False
+                if ',' in input_house_unit_lotno.strip():
+                    for lotNum in input_house_unit_lotno.strip().split(','):
+                        if lotNum == table_house_unit_lotno.strip():
+                            accumulated_points = accumulated_points + 1
+                            break
+                elif ' ' in input_house_unit_lotno.strip():
+                    for lotNum in input_house_unit_lotno.strip().split(' '):
+                        if lotNum == table_house_unit_lotno.strip():
+                            accumulated_points = accumulated_points + 1
+                            break
         if input_street is not None and input_street != '':
             if input_street.upper().strip() == table_street.upper().strip():
                 accumulated_points = accumulated_points + 1

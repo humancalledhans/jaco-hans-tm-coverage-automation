@@ -11,16 +11,19 @@ from src.tm_partners.operations.enter_username_and_password import enter_usernam
 from src.tm_partners.operations.driver_setup import driver_setup
 from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 
-from src.tm_partners.coverage_check.coverage_check import FindingCoverage
+
 from src.tm_partners.operations.solve_captcha import solve_captcha
 from src.tm_partners.operations.set_accepted_params import set_accepted_params
 
 
 class Login:
 
-    def __init__(self, username: str, password: str):
-        self.username = username
-        self.password = password
+    def __init__(self):
+        self.username = 'DPPJ1901'
+        self.password = 'Dsync110!!'
+
+        # self.username = 'DPSL3601'
+        # self.password = 'Dptama201!'
 
     def login(self):
 
@@ -92,11 +95,7 @@ class Login:
                     count = 0
 
         if proceed:
-            finding_coverage = FindingCoverage()
-            set_accepted_params()
-            # read_from_db()
-            finding_coverage.finding_coverage(
-                driver=driver, a=a)
+            return (driver, a)
 
         else:
             self.login()

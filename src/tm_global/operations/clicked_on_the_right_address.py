@@ -30,18 +30,13 @@ def coverage_search_the_right_address(driver, a, address):
     best_selection_row = driver.find_elements(
         By.XPATH, "//table[@id='table_result']//tbody//tr[@role='row']")
 
-    # problem:
-    # the filtering mechanism takes all lot numbers that contain that digit.
-    # eg: '3', would include 13, 33, 43, 23, etc.
-    # solution: find a way to truncate / ensure that /3/ is the only digit
-    # solution: check each row manually, only when bestmatchbool is True.
-
     root_tab_url = driver.current_url
     results = []
     for selected_row_num in range(len(best_selection_row)):
         # selected_row = driver.find_element(
         # By.XPATH, f"(//table[@id='table_result']//tbody//tr[@role='row'])[{selected_row_num+1}]")
         to_click_on_row = verify_to_click_on_row(driver, a, selected_row_num)
+        print('to click on row', to_click_on_row)
         if to_click_on_row:
             (driver, a) = duplicate_in_new_tab(driver, a, root_tab_url)
             (driver, a) = filter_all_columns(driver, a, address)

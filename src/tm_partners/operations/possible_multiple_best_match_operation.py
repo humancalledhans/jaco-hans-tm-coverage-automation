@@ -12,7 +12,7 @@ def possible_multiple_best_match_operation(driver, a, best_match_row_num_list, f
             row_num, driver, a, filtered)
         (driver, a) = bridge_to_actual_op(driver, a)
         tuple_to_append = check_coverage_and_notify_actual(
-            driver, a, to_notify=False)
+            driver, a)
         best_match_results_list.append(tuple_to_append)
 
         driver.close()

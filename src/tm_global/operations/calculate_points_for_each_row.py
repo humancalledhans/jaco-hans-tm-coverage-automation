@@ -2,6 +2,7 @@ import time
 from selenium.webdriver.common.by import By
 
 from src.tm_global.singleton.current_db_row import CurrentDBRow
+from src.tm_global.assumptions.table_column_headers_assumption import return_assummed_table_column_headers
 
 
 def calculate_points_for_each_row(driver, a, result):
@@ -16,8 +17,7 @@ def calculate_points_for_each_row(driver, a, result):
     #         table_column_headers.append(header.text)
 
     # print("table column headers", table_column_headers)
-    table_column_headers = ['House / Unit No', 'Street Type', 'Street Name', 'Section',
-                            'Floor No', 'Building Name', 'City', 'Postcode', 'Cable Type', 'Address Type']
+    table_column_headers = return_assummed_table_column_headers()
 
     # time.sleep(30)
 
@@ -63,23 +63,26 @@ def calculate_points_for_each_row(driver, a, result):
     current_row_unit_num_match_bool = current_db_row.get_search_level_flag(
         self=current_db_row)
 
-    # print("current_row", "table_house")
-    # print("current_row_unit_num_match_bool", current_row_unit_num_match_bool)
-    # print("lot no.", current_row_unit_no, table_house_unit_no)
-    # print("street", current_row_street, table_street)
-    # print("section", current_row_section, table_section)
-    # print("floor no.", current_row_floor_no, table_floor_no)
-    # print("building name", current_row_building_name, table_building_name)
-    # print("city", current_row_city, table_city)
-    # print("postcode", current_row_postcode, table_postcode)
-    # print("----------\n")
+    print("\n/ / / / / / / / / / / / / / / / / / / / / \n")
+    print("current_row", "table_house")
+    print("current_row_unit_num_match_bool", current_row_unit_num_match_bool)
+    print("lot no.", current_row_unit_no, table_house_unit_no)
+    print("street", current_row_street, table_street)
+    print("section", current_row_section, table_section)
+    print("floor no.", current_row_floor_no, table_floor_no)
+    print("building name", current_row_building_name, table_building_name)
+    print("city", current_row_city, table_city)
+    print("postcode", current_row_postcode, table_postcode)
+    print("\n/ / / / / / / / / / / / / / / / / / / / / \n")
 
+    # unit num needs to be matched when unit_num_match_bool == 1
     if current_row_unit_num_match_bool == 1 and \
         str(current_row_unit_no) != str(table_house_unit_no) and \
             ("LOT " + current_row_unit_no) != str(table_house_unit_no) and \
             ("LOT" + current_row_unit_no) != str(table_house_unit_no):
         return (0, None)
 
+    # street name needs to be matching.
     if current_row_street.strip().upper() != table_street.strip().upper():
         return (0, None)
 
@@ -109,10 +112,21 @@ def calculate_points_for_each_row(driver, a, result):
     lotNumAndStreetNumMatchBool = True
 
     if current_row_unit_no is not None and current_row_unit_no != '':
-        if current_row_unit_no == table_house_unit_no:
+        if current_row_unit_no.strip() == table_house_unit_no.strip():
             accumulated_points = accumulated_points + 1
         else:
             lotNumAndStreetNumMatchBool = False
+            if ',' in current_row_unit_no.strip():
+                for lotNum in current_row_unit_no.strip().split(','):
+                    if lotNum == table_house_unit_no.strip():
+                        accumulated_points = accumulated_points + 1
+                        break
+            elif ' ' in current_row_unit_no.strip():
+                for lotNum in current_row_unit_no.strip().split(' '):
+                    if lotNum == table_house_unit_no.strip():
+                        accumulated_points = accumulated_points + 1
+                        break
+
     if current_row_street is not None and current_row_street != '':
         if current_row_street.upper().strip() == table_street.upper().strip():
             accumulated_points = accumulated_points + 1

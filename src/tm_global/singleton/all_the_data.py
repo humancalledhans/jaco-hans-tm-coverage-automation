@@ -7,6 +7,18 @@ class IAllTheData(metaclass=ABCMeta):
     def add_into_data_list():
         """ to implement in child class """
 
+    @abstractstaticmethod
+    def set_data_list():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_all_the_data_list():
+        """ to implement in child class """
+
+    @staticmethod
+    def reset_all_data():
+        """ to implement in child class """
+
 
 class AllTheData(IAllTheData):
 
@@ -26,14 +38,21 @@ class AllTheData(IAllTheData):
             self.all_the_data_list = []
             AllTheData.__instance = self
 
+    @staticmethod
     def add_into_data_list(self, data):
         """
         Remember that data should be a DataObject object.
         """
         self.all_the_data_list.append(data)
 
+    @staticmethod
+    def set_data_list(self, data_list):
+        self.all_the_data_list = data_list
+
+    @staticmethod
     def get_all_the_data_list(self):
         return self.all_the_data_list
 
+    @staticmethod
     def reset_all_data(self):
         self.all_the_data_list = []

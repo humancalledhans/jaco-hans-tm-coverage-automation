@@ -1,11 +1,9 @@
-import re
-import time
-from selenium.webdriver.common.by import By
-
 from src.tm_global.operations.concatenate_results_from_all_pages import concatenate_results_from_all_pages
 from src.tm_global.operations.calculate_points_for_each_row import calculate_points_for_each_row
 from src.tm_global.operations.clicked_on_the_right_address import coverage_search_the_right_address
 from src.tm_global.singleton.lot_num_match_bool import LotNumMatchBool
+from src.tm_global.operations.set_selected_row_singleton import set_selected_row_singleton
+from src.tm_global.operations.reoptimise_all_results_sorted import reoptimise_all_results_sorted
 
 
 def choose_best_match_from_all_results(driver, a):
@@ -32,14 +30,17 @@ def choose_best_match_from_all_results(driver, a):
             lot_num_match_bool_singleton.set_lotnummatch(
                 self=lot_num_match_bool_singleton, lotnummatch=True)
 
-    # removing the addresses with 'best match'.
+    # removing the addresses with 'best match', because we added all of them into
     # so that we can have a list with best matches at the front, and highest points appended at the back.
     for result in results_to_be_removed:
         all_results.remove(result)
 
     all_results_sorted += sorted(all_results, key=lambda x: x[1][0])
 
-    print('all results sorted', all_results_sorted)
+    if all_results_sorted[0][1][0] != 'BEST MATCH':
+        all_results_sorted = reoptimise_all_results_sorted(all_results_sorted)
+
+    set_selected_row_singleton(all_results_sorted[0])
 
     (driver, a) = coverage_search_the_right_address(
         driver, a, all_results_sorted[0])

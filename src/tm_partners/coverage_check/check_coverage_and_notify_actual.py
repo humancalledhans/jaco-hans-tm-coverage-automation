@@ -9,10 +9,13 @@ from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 from src.tm_partners.db_read_write.db_write_address import write_or_edit_result
 
 from src.tm_partners.singleton.current_db_row import CurrentDBRow
+from src.tm_partners.coverage_check.input_speed_requested import input_speed_requested
+from src.tm_partners.operations.login import Login
+from src.tm_partners.singleton.retry_at_end import RetryAtEndCache
 from ..operations.go_back_to_search_page import go_back_to_coverage_search_page
 
 
-def check_coverage_and_notify_actual(driver, a, to_notify=True):
+def check_coverage_and_notify_actual(driver, a):
     current_db_row = CurrentDBRow.get_instance()
     current_row_id = current_db_row.get_id(
         self=current_db_row)
@@ -31,11 +34,7 @@ def check_coverage_and_notify_actual(driver, a, to_notify=True):
         # if "within the serviceable area" in result_text.lower():
 
         # print("RESULT: is within servicable area")
-        if to_notify:
-            write_or_edit_result(
-                id=current_row_id, result_type=1, result_text="Is within serviceable area!")
-        else:
-            return ((current_row_id, 1, "Is within serviceable area!"))
+        return ((current_row_id, 1, "Is within serviceable area!"))
 
         # print("we're in the block where the green check mark is not available")
 
@@ -49,11 +48,7 @@ def check_coverage_and_notify_actual(driver, a, to_notify=True):
             if 'unable to process order. another progressing order created on the same address has been detected.' in result_text.lower():
                 # print(
                 # 'RESULT: unable to process order. another progressing order created on the same address has been detected.')
-                if (to_notify):
-                    write_or_edit_result(
-                        id=current_row_id, result_type=6, result_text="Another progressing order is created on the same address.")
-                else:
-                    return ((current_row_id, 6, "Another progressing order is created on the same address."))
+                return ((current_row_id, 6, "Another progressing order is created on the same address."))
                 # send_message(
                 #     address_string + "\nAnother progressing order created on the same address has been detected!")
                 # send_email(
@@ -69,11 +64,7 @@ def check_coverage_and_notify_actual(driver, a, to_notify=True):
 
                 if "cannot proceed with transfer request. service provider not the same with transfer request." in result_text.lower() or "due to create transfer request is required" in result_text.lower():
                     # print('RESULT: service provider not the same with transfer request.')
-                    if (to_notify):
-                        write_or_edit_result(
-                            id=current_row_id, result_type=5, result_text="Service provider not the same with Transfer Request.")
-                    else:
-                        return ((current_row_id, 5, "Service provider not the same with Transfer Request."))
+                    return ((current_row_id, 5, "Service provider not the same with Transfer Request."))
                     # send_message(
                     #     address_string + "\nService provider not the same with Transfer Request!")
                     # send_email(
@@ -82,28 +73,17 @@ def check_coverage_and_notify_actual(driver, a, to_notify=True):
 
                 elif "is not within the serviceable area" in result_text.lower():
                     # print("RESULT: is not within the servicable area.")
-                    if (to_notify):
-                        write_or_edit_result(
-                            id=current_row_id, result_type=4, result_text="Not within serviceable area.")
-                    else:
-                        return ((current_row_id, 4, "Not within serviceable area."))
+                    return ((current_row_id, 4, "Not within serviceable area."))
                     # send_message(address_string +
                     #              "\nIs not within the servicable area!")
                     # send_email(address_string + "\nIs not within servicable area!")
                     # return go_back_to_coverage_search_page(driver, a)
 
                 else:
-                    if (to_notify):
-                        write_or_edit_result(
-                            id=current_row_id, result_type=7, result_text="Other Error.")
-                    else:
-                        return ((current_row_id, 7, "Other Error."))
+                    return ((current_row_id, 7, "Other Error."))
+
             except NoSuchElementException:
 
-                if (to_notify):
-                    write_or_edit_result(
-                        id=current_row_id, result_type=7, result_text="Other Error.")
-                else:
-                    return ((current_row_id, 7, "Other Error."))
+                return ((current_row_id, 7, "Other Error."))
 
                 # return go_back_to_coverage_search_page(driver, a)

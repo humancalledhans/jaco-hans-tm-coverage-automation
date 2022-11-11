@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 
 from src.tm_partners.operations.wait_for_results_table import wait_for_results_table
-from src.tm_partners.operations.detect_and_solve_captcha import detect_and_solve_captcha, detect_and_solve_captcha_but_rerun
+from src.tm_partners.operations.detect_and_solve_captcha import detect_and_solve_captcha
 
 from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 from src.tm_partners.operations.set_selected_table_row import set_selected_table_row
@@ -17,6 +17,9 @@ from src.tm_partners.db_read_write.db_write_address import write_or_edit_result
 from src.tm_partners.operations.possible_multiple_best_match_operation import possible_multiple_best_match_operation
 from src.tm_partners.coverage_check.bridge_to_actual_op import bridge_to_actual_op
 from src.tm_partners.coverage_check.check_coverage_and_notify_actual import check_coverage_and_notify_actual
+from src.tm_partners.coverage_check.input_speed_requested import input_speed_requested
+from src.tm_partners.operations.login import Login
+from src.tm_partners.singleton.retry_at_end import RetryAtEndCache
 
 
 def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, building_name_found, street_name_found):
@@ -45,12 +48,26 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
             (driver, a) = check_coverage_and_notify(
                 table_row_num=0, driver=driver, a=a, filtered=False)
             (driver, a) = bridge_to_actual_op(driver, a)
-            check_coverage_and_notify_actual(
-                driver, a, to_notify=True)
+            (current_row_id, result_type, result_text) = check_coverage_and_notify_actual(
+                driver=driver, a=a)
+            write_or_edit_result(
+                id=current_row_id, result_type=result_type, result_text=result_text)
 
-            driver.close()
-            driver.switch_to.window(
-                driver.window_handles[0])
+            if result_type != 7:
+                driver.close()
+                driver.switch_to.window(
+                    driver.window_handles[0])
+            else:
+                retry_at_end_singleton = RetryAtEndCache.get_instance()
+                retry_at_end_singleton.add_data_id_to_retry(
+                    self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                time.sleep(7)
+                driver.quit()
+                login = Login()
+                (driver, a) = login.login()
+                (driver, a) = input_speed_requested(
+                    driver, a, 50)
+
             checked = True
             return
 
@@ -160,12 +177,25 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
                 (driver, a) = check_coverage_and_notify(
                     table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=False)
                 (driver, a) = bridge_to_actual_op(driver, a)
-                check_coverage_and_notify_actual(
-                    driver, a, to_notify=True)
+                (current_row_id, result_type, result_text) = check_coverage_and_notify_actual(
+                    driver=driver, a=a)
+                write_or_edit_result(
+                    id=current_row_id, result_type=result_type, result_text=result_text)
 
-                driver.close()
-                driver.switch_to.window(
-                    driver.window_handles[0])
+                if result_type != 7:
+                    driver.close()
+                    driver.switch_to.window(
+                        driver.window_handles[0])
+                else:
+                    retry_at_end_singleton = RetryAtEndCache.get_instance()
+                    retry_at_end_singleton.add_data_id_to_retry(
+                        self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                    time.sleep(7)
+                    driver.quit()
+                    login = Login()
+                    (driver, a) = login.login()
+                    (driver, a) = input_speed_requested(
+                        driver, a, 50)
 
                 checked = True
         elif lot_no_detail_flag == 1:
@@ -202,11 +232,24 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
                 (driver, a) = check_coverage_and_notify(
                     table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=filtered)
                 (driver, a) = bridge_to_actual_op(driver, a)
-                check_coverage_and_notify_actual(
-                    driver, a, to_notify=True)
+                (current_row_id, result_type, result_text) = check_coverage_and_notify_actual(
+                    driver=driver, a=a)
+                write_or_edit_result(
+                    id=current_row_id, result_type=result_type, result_text=result_text)
 
-                driver.close()
-                driver.switch_to.window(
-                    driver.window_handles[0])
+                if result_type != 7:
+                    driver.close()
+                    driver.switch_to.window(
+                        driver.window_handles[0])
+                else:
+                    retry_at_end_singleton = RetryAtEndCache.get_instance()
+                    retry_at_end_singleton.add_data_id_to_retry(
+                        self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                    time.sleep(7)
+                    driver.quit()
+                    login = Login()
+                    (driver, a) = login.login()
+                    (driver, a) = input_speed_requested(
+                        driver, a, 50)
 
                 checked = True

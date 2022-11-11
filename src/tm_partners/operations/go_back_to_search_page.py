@@ -13,7 +13,7 @@ from src.tm_partners.coverage_check.input_speed_requested import input_speed_req
 def go_back_to_coverage_search_page(driver, a):
     a.move_to_element(driver.find_element(
         By.XPATH, "(//div[@class='wlp-bighorn-window-content']//table//td//a)[1]")).click().perform()
-    input_speed_requested(driver, a, 50)
+    (driver, a) = input_speed_requested(driver, a, 50)
     (driver, a) = pause_until_loaded(driver, a)
 
     try:

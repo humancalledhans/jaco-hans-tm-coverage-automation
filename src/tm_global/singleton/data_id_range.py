@@ -33,7 +33,7 @@ class DataIdRange(IDataIdRange):
         return DataIdRange.__instance
 
     def __init__(self, start_id=get_min_id_from_db(), end_id=get_max_id_from_db()):
-        # def __init__(self, start_id=503, end_id=503):
+        # def __init__(self, start_id=892, end_id=892):
         if DataIdRange.__instance != None:
             raise Exception(
                 "DataIdRange instance cannot be instantiated more than once!")

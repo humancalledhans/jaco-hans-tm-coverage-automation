@@ -24,4 +24,6 @@ def input_speed_requested(driver, a, speed):
     except NoSuchElementException:
         driver.refresh()
         (driver, a) = pause_until_loaded(driver, a)
-        input_speed_requested(driver, a, speed)
+        (driver, a) = input_speed_requested(driver, a, speed)
+    
+    return (driver, a)

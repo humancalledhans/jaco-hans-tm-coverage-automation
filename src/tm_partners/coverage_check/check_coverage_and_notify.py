@@ -48,24 +48,3 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
     (driver, a) = arrive_at_results_page(driver, a)
 
     return (driver, a)
-
-    # try:
-    #     while driver.execute_script("return document.readyState;") != "complete":
-    #         time.sleep(0.5)
-    #     WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-    #         (By.XPATH, "//table[@align='center' and @class='Yellow']")))
-    #     bridge_to_actual_op(driver, a)
-
-    # except TimeoutException:
-    #     driver.execute_script("window.history.go(-1)")
-    #     # TODO: figure out where this goes to.
-
-    # current_db_row = CurrentDBRow.get_instance()
-    # current_row_id = current_db_row.get_id(
-    #     self=current_db_row)
-    # data_id_range = DataIdRange.get_instance()
-    # data_id_end = data_id_range.get_end_id(
-    #     self=data_id_range)
-    # finding_coverage = FindingCoverage.get_instance()
-    # finding_coverage.finding_coverage(
-    #     driver, a, data_id_start=current_row_id, data_id_end=data_id_end)

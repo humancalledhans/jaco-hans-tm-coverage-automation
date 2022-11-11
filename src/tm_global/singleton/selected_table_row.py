@@ -8,6 +8,10 @@ class ISelectedTableRow(metaclass=ABCMeta):
         """ to implement in child class """
 
     @abstractstaticmethod
+    def set_is_best_match():
+        """ to implement in child class """
+
+    @abstractstaticmethod
     def set_unit_no():
         """ to implement in child class """
 
@@ -43,6 +47,58 @@ class ISelectedTableRow(metaclass=ABCMeta):
     def set_postcode():
         """ to implement in child class """
 
+    @abstractstaticmethod
+    def set_result_remark():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_is_best_match():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_unit_no():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_street_type():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_street_name():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_section():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_floor():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_building():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_city():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_state():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_postcode():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_address():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_result_remark():
+        """ to implement in child class """
+
 
 class SelectedTableRow(ISelectedTableRow):
 
@@ -60,6 +116,7 @@ class SelectedTableRow(ISelectedTableRow):
                 "SelectedTableRow instance cannot be instantiated more than once!")
         else:
             self.lotnumfound = None
+            self.isbestmatch = False
             self.unit_no = None
             self.street_type = None
             self.street_name = None
@@ -69,6 +126,7 @@ class SelectedTableRow(ISelectedTableRow):
             self.city = None
             self.state = None
             self.postcode = None
+            self.result_remark = None
             SelectedTableRow.__instance = self
 
     @staticmethod
@@ -152,6 +210,18 @@ class SelectedTableRow(ISelectedTableRow):
             self.postcode = selected_table_row_postcode
 
     @staticmethod
+    def set_result_remark(self, result_remark):
+        self.resut_remark = result_remark
+
+    @staticmethod
+    def set_is_best_match(self, is_best_match):
+        self.is_best_match = is_best_match
+
+    @staticmethod
+    def get_is_best_match(self):
+        return self.is_best_match
+
+    @staticmethod
     def get_unit_no(self):
         return self.unit_no
 
@@ -231,3 +301,7 @@ class SelectedTableRow(ISelectedTableRow):
             input_state + ' ' + input_postcode
 
         return address_string
+
+    @staticmethod
+    def get_result_remark(self):
+        return self.result_remark
