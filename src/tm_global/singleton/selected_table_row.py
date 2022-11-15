@@ -212,42 +212,42 @@ class SelectedTableRow(ISelectedTableRow):
         if selected_table_row_street_type == 'None' or selected_table_row_street_type is None or len(selected_table_row_street_type) == 0:
             self.street_type = ''
         else:
-            self.street_type = selected_table_row_street_type
+            self.street_type = selected_table_row_street_type.strip()
 
     @staticmethod
     def set_street_name(self, selected_table_row_street_name):
         if selected_table_row_street_name == 'None' or selected_table_row_street_name is None or len(selected_table_row_street_name) == 0:
             self.street_name = ''
         else:
-            self.street_name = selected_table_row_street_name
+            self.street_name = selected_table_row_street_name.strip()
 
     @staticmethod
     def set_section(self, selected_table_row_section):
         if selected_table_row_section == 'None' or selected_table_row_section is None or len(selected_table_row_section) == 0:
             self.section = ''
         else:
-            self.section = selected_table_row_section
+            self.section = selected_table_row_section.strip()
 
     @staticmethod
     def set_floor(self, selected_table_row_floor):
         if selected_table_row_floor == 'None' or selected_table_row_floor is None or len(selected_table_row_floor) == 0:
             self.floor = ''
         else:
-            self.floor = selected_table_row_floor
+            self.floor = selected_table_row_floor.strip()
 
     @staticmethod
     def set_building(self, selected_table_row_building):
         if selected_table_row_building == 'None' or selected_table_row_building is None or len(selected_table_row_building) == 0:
             self.building = ''
         else:
-            self.building = selected_table_row_building
+            self.building = selected_table_row_building.strip()
 
     @staticmethod
     def set_city(self, selected_table_row_city):
         if selected_table_row_city == 'None' or selected_table_row_city is None or len(selected_table_row_city) == 0:
             self.city = ''
         else:
-            self.city = selected_table_row_city
+            self.city = selected_table_row_city.strip()
 
     @staticmethod
     def set_state(self, selected_table_row_state):
@@ -261,7 +261,7 @@ class SelectedTableRow(ISelectedTableRow):
         if selected_table_row_postcode == 'None' or selected_table_row_postcode is None or len(selected_table_row_postcode) == 0:
             self.postcode = ''
         else:
-            self.postcode = selected_table_row_postcode
+            self.postcode = selected_table_row_postcode.strip()
 
     @staticmethod
     def set_result_remark(self, result_remark):
@@ -289,7 +289,7 @@ class SelectedTableRow(ISelectedTableRow):
 
     @staticmethod
     def set_result_type(self, result_type):
-        self.result_type = result_type
+        self.result_type = result_type.strip()
 
     @staticmethod
     def set_is_best_match(self, is_best_match):
@@ -297,7 +297,7 @@ class SelectedTableRow(ISelectedTableRow):
 
     @staticmethod
     def set_part_of_address_used(self, part_of_address_used):
-        self.part_of_address_used = part_of_address_used
+        self.part_of_address_used = part_of_address_used.strip()
 
     @staticmethod
     def set_used_lot_num_as_filter(self, used_lot_num_as_filter):

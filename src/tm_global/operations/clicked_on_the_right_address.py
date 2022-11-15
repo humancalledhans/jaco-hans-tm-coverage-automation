@@ -41,7 +41,7 @@ def coverage_search_the_right_address(driver, a, address):
         # selected_row = driver.find_element(
         # By.XPATH, f"(//table[@id='table_result']//tbody//tr[@role='row'])[{selected_row_num+1}]")
         to_click_on_row = verify_to_click_on_row(driver, a, selected_row_num)
-        print('to click on row', to_click_on_row)
+        # print('to click on row', to_click_on_row)
         if to_click_on_row:
             try:
                 (driver, a) = duplicate_in_new_tab(driver, a, root_tab_url)

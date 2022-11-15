@@ -15,7 +15,6 @@ def choose_best_match_from_all_results(driver, a):
     all_results = concatenate_results_from_all_pages(driver, a)
     # return best match row number.
     # tuple: (row_number, points, lotNumAndStreetAndPostcodeNoMatchBool)
-    print('lengh of all_results: ', len(all_results))
     for result_idx in range(len(all_results)):
         # need to determine the column headers first, to match.
         # then, for each row, match the data with those in current_db_row.

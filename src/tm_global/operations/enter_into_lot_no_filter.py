@@ -34,7 +34,6 @@ def enter_into_lot_number_filter(driver, a):
                 self=selected_table_row_instance, used_lot_num_as_filter=False)
 
         except NoSuchElementException:
-            print("lot num filter used")
             selected_table_row_instance = SelectedTableRow.get_instance()
             selected_table_row_instance.set_used_lot_num_as_filter(
                 self=selected_table_row_instance, used_lot_num_as_filter=True)

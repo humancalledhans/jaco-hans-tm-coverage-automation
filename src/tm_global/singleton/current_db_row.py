@@ -169,6 +169,10 @@ class ICurrentDBRow(metaclass=ABCMeta):
     def get_updated_at():
         """ to implement in child class """
 
+    @abstractstaticmethod
+    def get_partial_address_without_keys():
+        """ to implement in child class """
+
 
 class CurrentDBRow(ICurrentDBRow):
 
@@ -454,6 +458,28 @@ class CurrentDBRow(ICurrentDBRow):
             "City: " + input_city + '\n' + \
             "State: " + input_state + '\n' + \
             "Postcode: " + input_postcode
+
+        return address_string
+
+    @staticmethod
+    def get_partial_address_without_keys(self):
+        current_db_row = CurrentDBRow.get_instance()
+        input_house_unit_lotno = current_db_row.get_house_unit_lotno(
+            self=current_db_row)
+        input_street = current_db_row.get_street(self=current_db_row)
+
+        if input_house_unit_lotno is None:
+            input_house_unit_lotno = ''
+        if input_street is None:
+            input_street = ''
+
+        if input_house_unit_lotno == '' and input_street != '':
+            address_string = input_street
+        elif input_house_unit_lotno != '' and input_street == '':
+            address_string = ''
+        elif input_house_unit_lotno != '' and input_street != '':
+            address_string = input_house_unit_lotno + ' ' + input_street
+        # address_string = input_house_unit_lotno + ' ' + input_street
 
         return address_string
 

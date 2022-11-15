@@ -97,8 +97,8 @@ def enter_right_keyword(driver, a):
     (driver, a, num_of_results_from_building_name) = try_using_building_name(driver, a)
 
     if num_of_results_from_building_name > 0:
-        print('building name results: ' +
-              str(num_of_results_from_building_name))
+        # print('building name results: ' +
+            #   str(num_of_results_from_building_name))
         selected_table_row_instance = SelectedTableRow.get_instance()
         selected_table_row_instance.set_part_of_address_used(
             self=selected_table_row_instance, part_of_address_used='Building Name')
@@ -110,7 +110,7 @@ def enter_right_keyword(driver, a):
     (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
 
     if num_of_results_from_street_name > 0:
-        print('street name results: ' + str(num_of_results_from_street_name))
+        # print('street name results: ' + str(num_of_results_from_street_name))
         selected_table_row_instance = SelectedTableRow.get_instance()
         selected_table_row_instance.set_part_of_address_used(
             self=selected_table_row_instance, part_of_address_used='Street Name')
@@ -120,7 +120,7 @@ def enter_right_keyword(driver, a):
     (driver, a) = reset_for_next_search(driver, a)
     (driver, a, num_of_results_from_section) = try_using_section(driver, a)
     if num_of_results_from_section > 0:
-        print('section name results: ' + str(num_of_results_from_section))
+        # print('section name results: ' + str(num_of_results_from_section))
         selected_table_row_instance = SelectedTableRow.get_instance()
         selected_table_row_instance.set_part_of_address_used(
             self=selected_table_row_instance, part_of_address_used='Section Name')

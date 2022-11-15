@@ -11,7 +11,6 @@ from src.tm_global.singleton.num_of_iterations import NumOfIterations
 from src.tm_global.singleton.cvg_task import CVGTask
 from src.tm_global.db_read_write.db_read_address import read_from_db
 from src.tm_global.operations.select_state import select_state
-from src.tm_global.operations.enter_into_keyword_field import enter_into_keyword_field
 from src.tm_global.operations.set_up_input_keyword import enter_right_keyword
 from src.tm_global.operations.return_to_coverage_search_page import return_to_coverage_search_page
 from src.tm_global.singleton.current_db_row import CurrentDBRow
@@ -26,6 +25,7 @@ from src.tm_global.operations.reset_singleton_values_for_next_address import res
 from src.tm_global.singleton.selected_table_row import SelectedTableRow
 from src.tm_global.singleton.lot_num_match_bool import LotNumMatchBool
 from src.tm_global.operations.set_lot_num_or_building_name_match_if_appropriate import set_lot_num_or_building_name_match_if_appropriate
+from src.tm_global.operations.search_the_exact_db_address import try_to_search_the_full_address
 
 
 def finding_coverage(driver, a):
@@ -72,27 +72,37 @@ def finding_coverage(driver, a):
                 reset_singleton_values_for_next_address()
                 continue
 
+            # print('sleeping.')
+            # time.sleep(5000)
             # try:
             try:
-                enter_right_keyword_res = enter_right_keyword(driver, a)
-                if enter_right_keyword_res != "No results found using building name, street name, or section name.":
-                    (driver, a) = enter_right_keyword_res
+                (driver, a, searched_using_full_address) = try_to_search_the_full_address(
+                    driver, a)
 
-                else:
-                    print(
-                        "no results found using building name, street name, or section name.")
-                    selected_table_row_instance = SelectedTableRow.get_instance()
-                    selected_table_row_instance.set_result_remark(
-                        self=selected_table_row_instance, result_remark="No results found using building name, street name, or section name.")
-                    (driver, a) = return_to_coverage_search_page(driver, a)
-                    # https://wholesalepremium.tm.com.my/coverage-search/result
+            except Exception as e:
+                print("hans, exception at the new try to search full address code.")
+                print(e)
+                time.sleep(400)
 
-                    # TODO: write to database with no results.
-                    continue
+            if not searched_using_full_address:
+                try:
+                    enter_right_keyword_res = enter_right_keyword(driver, a)
+                    if enter_right_keyword_res != "No results found using building name, street name, or section name.":
+                        (driver, a) = enter_right_keyword_res
 
-            except NoSuchElementException:
-                print('unable to find keyword field')
-                time.sleep(5000)
+                    else:
+                        print(
+                            "no results found using building name, street name, or section name.")
+                        selected_table_row_instance = SelectedTableRow.get_instance()
+                        selected_table_row_instance.set_result_remark(
+                            self=selected_table_row_instance, result_remark="No results found using building name, street name, or section name.")
+                        (driver, a) = return_to_coverage_search_page(driver, a)
+                        # https://wholesalepremium.tm.com.my/coverage-search/result
+                        continue
+
+                except NoSuchElementException:
+                    print('unable to find keyword field')
+                    time.sleep(5000)
 
             try:
                 (driver, a) = filter_by_building_name(driver, a)
