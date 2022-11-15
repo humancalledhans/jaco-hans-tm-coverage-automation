@@ -2,6 +2,9 @@ from src.tm_global.singleton.current_db_row import CurrentDBRow
 
 
 def reoptimise_all_results_sorted(all_results_sorted):
+    """
+    only gets the results that are equal to or higher than the number of points that we have, as the highest.
+    """
     max_points = all_results_sorted[0][1][0]
     current_db_row = CurrentDBRow.get_instance()
     current_db_row_unit_no = current_db_row.get_house_unit_lotno(
@@ -33,4 +36,5 @@ def reoptimise_all_results_sorted(all_results_sorted):
 
     all_results_sorted_reoptimised = sorted(
         all_results_sorted, key=lambda x: x[1][0], reverse=True)
+
     return all_results_sorted_reoptimised

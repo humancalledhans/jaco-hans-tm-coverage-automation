@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from src.tm_global.operations.get_num_of_results import get_num_of_results
 from src.tm_global.operations.return_to_coverage_search_page import return_to_coverage_search_page
 from src.tm_global.operations.reset_for_next_search import reset_for_next_search
+from src.tm_global.singleton.selected_table_row import SelectedTableRow
 
 
 def try_using_building_name(driver, a):
@@ -98,6 +99,10 @@ def enter_right_keyword(driver, a):
     if num_of_results_from_building_name > 0:
         print('building name results: ' +
               str(num_of_results_from_building_name))
+        selected_table_row_instance = SelectedTableRow.get_instance()
+        selected_table_row_instance.set_part_of_address_used(
+            self=selected_table_row_instance, part_of_address_used='Building Name')
+
         return (driver, a)
 
     # step 2: no results using building name. check if there is a street name.
@@ -106,6 +111,9 @@ def enter_right_keyword(driver, a):
 
     if num_of_results_from_street_name > 0:
         print('street name results: ' + str(num_of_results_from_street_name))
+        selected_table_row_instance = SelectedTableRow.get_instance()
+        selected_table_row_instance.set_part_of_address_used(
+            self=selected_table_row_instance, part_of_address_used='Street Name')
         return (driver, a)
 
     # step 3: no results using building name and street name. try using section name.
@@ -113,6 +121,9 @@ def enter_right_keyword(driver, a):
     (driver, a, num_of_results_from_section) = try_using_section(driver, a)
     if num_of_results_from_section > 0:
         print('section name results: ' + str(num_of_results_from_section))
+        selected_table_row_instance = SelectedTableRow.get_instance()
+        selected_table_row_instance.set_part_of_address_used(
+            self=selected_table_row_instance, part_of_address_used='Section Name')
         return (driver, a)
 
     else:

@@ -48,7 +48,31 @@ class ISelectedTableRow(metaclass=ABCMeta):
         """ to implement in child class """
 
     @abstractstaticmethod
+    def set_result_type():
+        """ to implement in child class """
+
+    @abstractstaticmethod
     def set_result_remark():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_part_of_address_used():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_used_lot_num_as_filter():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_used_building_name_as_filter():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_used_street_name_as_filter():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def set_used_section_name_as_filter():
         """ to implement in child class """
 
     @abstractstaticmethod
@@ -99,6 +123,30 @@ class ISelectedTableRow(metaclass=ABCMeta):
     def get_result_remark():
         """ to implement in child class """
 
+    @abstractstaticmethod
+    def get_part_of_address_used():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_used_building_name_as_filter():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_used_street_name_as_filter():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_used_section_name_as_filter():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_used_lot_num_as_filter():
+        """ to implement in child class """
+
+    @abstractstaticmethod
+    def get_filters_used_to_search():
+        """ to implement in child class """
+
 
 class SelectedTableRow(ISelectedTableRow):
 
@@ -126,7 +174,13 @@ class SelectedTableRow(ISelectedTableRow):
             self.city = None
             self.state = None
             self.postcode = None
+            self.result_type = None
             self.result_remark = None
+            self.part_of_address_used = None
+            self.used_building_name_as_filter = None
+            self.used_street_name_as_filter = None
+            self.used_section_name_as_filter = None
+            self.used_lot_num_as_filter = None
             SelectedTableRow.__instance = self
 
     @staticmethod
@@ -163,9 +217,9 @@ class SelectedTableRow(ISelectedTableRow):
     @staticmethod
     def set_street_name(self, selected_table_row_street_name):
         if selected_table_row_street_name == 'None' or selected_table_row_street_name is None or len(selected_table_row_street_name) == 0:
-            self.street_type = ''
+            self.street_name = ''
         else:
-            self.street_type = selected_table_row_street_name
+            self.street_name = selected_table_row_street_name
 
     @staticmethod
     def set_section(self, selected_table_row_section):
@@ -211,11 +265,55 @@ class SelectedTableRow(ISelectedTableRow):
 
     @staticmethod
     def set_result_remark(self, result_remark):
-        self.resut_remark = result_remark
+
+        # all result remarks:
+        # 'THE ADDRESS FOUND IS WITHIN THE SERVICEABLE AREA'
+        # 'No matching lot number results, and Lot Number match bool = 1.'
+        # 'THE ADDRESS FOUND IS NOT SERVICEABLE DUE TO: PORT FULL'
+        # 'THE ADDRESS FOUND IS WITHIN THE SERVICEABLE AREA BUT REQUIRE NEW INFRA DEVELOPMENT. PLEASE BE INFORMED ANY CANCELLATION RELATED TO NEW INFRA IS SUBJECT TO CANCELLATION FEES.'
+
+        if result_remark == 'THE ADDRESS FOUND IS WITHIN THE SERVICEABLE AREA':
+            self.result_remark = 'Within Serviceable Area.'
+        elif result_remark == 'No matching lot number results, and Lot Number match bool = 1.':  # no lot number found
+            self.result_remark = 'No Lot Number Found, but Lot Num Match = 1'
+        elif result_remark == 'THE ADDRESS FOUND IS NOT SERVICEABLE DUE TO: PORT FULL':
+            self.result_remark = 'Not Serviceable - Port Full'
+        elif result_remark == 'THE ADDRESS FOUND IS WITHIN THE SERVICEABLE AREA BUT REQUIRE NEW INFRA DEVELOPMENT. PLEASE BE INFORMED ANY CANCELLATION RELATED TO NEW INFRA IS SUBJECT TO CANCELLATION FEES.':
+            self.result_remark = 'Within Servicable Area, Require New Infra Development'
+        
+        else:
+            print("NEW RESULT REMARK", result_remark)
+            # if result_remark == 'No matching lot number results, and Lot Number match bool = 1.'
+        #     self.set_result_type(
+        #         self=self, result_type=3)
+
+    @staticmethod
+    def set_result_type(self, result_type):
+        self.result_type = result_type
 
     @staticmethod
     def set_is_best_match(self, is_best_match):
         self.is_best_match = is_best_match
+
+    @staticmethod
+    def set_part_of_address_used(self, part_of_address_used):
+        self.part_of_address_used = part_of_address_used
+
+    @staticmethod
+    def set_used_lot_num_as_filter(self, used_lot_num_as_filter):
+        self.used_lot_num_as_filter = used_lot_num_as_filter
+
+    @staticmethod
+    def set_used_building_name_as_filter(self, used_building_name_as_filter):
+        self.used_building_name_as_filter = used_building_name_as_filter
+
+    @staticmethod
+    def set_used_street_name_as_filter(self, used_street_name_as_filter):
+        self.used_street_name_as_filter = used_street_name_as_filter
+
+    @staticmethod
+    def set_used_section_name_as_filter(self, used_section_name_as_filter):
+        self.used_section_name_as_filter = used_section_name_as_filter
 
     @staticmethod
     def get_is_best_match(self):
@@ -263,11 +361,14 @@ class SelectedTableRow(ISelectedTableRow):
             self=self)
         if self.get_street_type(
                 self=self) is None and self.get_street_name(self=self) is not None:
-            input_street = ' ' + self.get_street_name(self=self)
+            input_street = self.get_street_name(self=self)
         elif self.get_street_type(
                 self=self) is not None and self.get_street_name(self=self) is not None:
             input_street = self.get_street_type(self=self) + ' ' + self.get_street_name(
                 self=self)
+        elif self.get_street_type(
+                self=self) is not None and self.get_street_name(self=self) is None:
+            input_street = self.get_street_type(self=self)
         else:
             input_street = ''
         input_section = self.get_section(self=self)
@@ -300,8 +401,71 @@ class SelectedTableRow(ISelectedTableRow):
             input_building_name + ' ' + input_city + \
             input_state + ' ' + input_postcode
 
+        # address_string = "House/Unit/Lot No: " + input_house_unit_lotno + '\n' + \
+        #     "Street: " + input_street + '\n' + \
+        #     "Section: " + input_section + '\n' + \
+        #     "Floor No: " + input_floor_no + '\n' + \
+        #     "Building Name: " + input_building_name + '\n' + \
+        #     "City: " + input_city + '\n' + \
+        #     "State: " + input_state + '\n' + \
+        #     "Postcode: " + input_postcode
+
         return address_string
 
     @staticmethod
     def get_result_remark(self):
         return self.result_remark
+
+    @staticmethod
+    def get_part_of_address_used(self):
+        return self.part_of_address_used
+
+    @staticmethod
+    def get_used_building_name_as_filter(self):
+        return self.used_building_name_as_filter
+
+    @staticmethod
+    def get_used_street_name_as_filter(self):
+        return self.used_street_name_as_filter
+
+    @staticmethod
+    def get_used_section_name_as_filter(self):
+        return self.used_section_name_as_filter
+
+    @staticmethod
+    def get_used_lot_num_as_filter(self):
+        return self.used_lot_num_as_filter
+
+    @staticmethod
+    def get_filters_used_to_search(self):
+        res = []
+        if self.get_used_building_name_as_filter(self=self):
+            res.append('Building Name')
+        if self.get_used_street_name_as_filter(self=self):
+            res.append('Street Name')
+        if self.get_used_section_name_as_filter(self=self):
+            res.append('Section Name')
+        if self.get_used_lot_num_as_filter(self=self):
+            res.append('Lot Number')
+        return res
+
+    @staticmethod
+    def reset_all_values(self):
+        self.lotnumfound = None
+        self.isbestmatch = False
+        self.unit_no = None
+        self.street_type = None
+        self.street_name = None
+        self.section = None
+        self.floor = None
+        self.building = None
+        self.city = None
+        self.state = None
+        self.postcode = None
+        self.result_type = None
+        self.result_remark = None
+        self.part_of_address_used = None
+        self.used_building_name_as_filter = None
+        self.used_street_name_as_filter = None
+        self.used_section_name_as_filter = None
+        self.used_lot_num_as_filter = None

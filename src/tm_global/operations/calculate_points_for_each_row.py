@@ -19,7 +19,6 @@ def calculate_points_for_each_row(driver, a, result):
     # print("table column headers", table_column_headers)
     table_column_headers = return_assummed_table_column_headers()
 
-    # time.sleep(30)
 
     table_column_data = []
     if len(result) == 2:
@@ -59,21 +58,20 @@ def calculate_points_for_each_row(driver, a, result):
     current_row_city = current_db_row.get_city(self=current_db_row)
     current_row_postcode = current_db_row.get_postcode(
         self=current_db_row)
-
     current_row_unit_num_match_bool = current_db_row.get_search_level_flag(
         self=current_db_row)
 
-    print("\n/ / / / / / / / / / / / / / / / / / / / / \n")
-    print("current_row", "table_house")
-    print("current_row_unit_num_match_bool", current_row_unit_num_match_bool)
-    print("lot no.", current_row_unit_no, table_house_unit_no)
-    print("street", current_row_street, table_street)
-    print("section", current_row_section, table_section)
-    print("floor no.", current_row_floor_no, table_floor_no)
-    print("building name", current_row_building_name, table_building_name)
-    print("city", current_row_city, table_city)
-    print("postcode", current_row_postcode, table_postcode)
-    print("\n/ / / / / / / / / / / / / / / / / / / / / \n")
+    # print("\n/ / / / / / / / / / / / / / / / / / / / / \n")
+    # print("current_row", "table_house")
+    # print("current_row_unit_num_match_bool", current_row_unit_num_match_bool)
+    # print("lot no.", current_row_unit_no, table_house_unit_no)
+    # print("street", current_row_street, table_street)
+    # print("section", current_row_section, table_section)
+    # print("floor no.", current_row_floor_no, table_floor_no)
+    # print("building name", current_row_building_name, table_building_name)
+    # print("city", current_row_city, table_city)
+    # print("postcode", current_row_postcode, table_postcode)
+    # print("\n/ / / / / / / / / / / / / / / / / / / / / \n")
 
     # unit num needs to be matched when unit_num_match_bool == 1
     if current_row_unit_num_match_bool == 1 and \
@@ -129,18 +127,18 @@ def calculate_points_for_each_row(driver, a, result):
 
     if current_row_street is not None and current_row_street != '':
         if current_row_street.upper().strip() == table_street.upper().strip():
-            accumulated_points = accumulated_points + 1
+            accumulated_points = accumulated_points + 2
         else:
             lotNumAndStreetNumMatchBool = False
     if current_row_section is not None and current_row_section != '':
         if current_row_section.upper().strip() == table_section.upper().strip():
-            accumulated_points = accumulated_points + 1
+            accumulated_points = accumulated_points + 2
     if current_row_floor_no is not None and current_row_floor_no != '':
         if current_row_floor_no == table_floor_no:
             accumulated_points = accumulated_points + 1
     if current_row_building_name is not None and current_row_building_name != '':
         if current_row_building_name.upper().strip() == table_building_name.upper().strip():
-            accumulated_points = accumulated_points + 1
+            accumulated_points = accumulated_points + 2
     if current_row_city is not None and current_row_city != '':
         if current_row_city.upper().strip() == table_city.upper().strip():
             accumulated_points = accumulated_points + 1

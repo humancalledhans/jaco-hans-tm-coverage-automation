@@ -1,4 +1,5 @@
 from src.tm_global.singleton.current_db_row import CurrentDBRow
+from src.tm_global.assumptions.accepted_states_list import get_accepted_states
 
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
@@ -6,8 +7,7 @@ from selenium.webdriver.common.by import By
 
 def select_state(driver, a):
     current_db_row = CurrentDBRow.get_instance()
-    accepted_states_list = current_db_row.get_accepted_states_list(
-        self=current_db_row)
+    accepted_states_list = get_accepted_states()
     current_row_id = current_db_row.get_id(self=current_db_row)
     state = current_db_row.get_state(self=current_db_row)
 

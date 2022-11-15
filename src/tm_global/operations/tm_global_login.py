@@ -9,11 +9,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver import ActionChains
 
 from src.tm_global.operations.enter_username_and_password import enter_username_and_password
-from src.tm_global.operations.tm_global_driver_setup import tm_global_driver_setup
+from src.tm_global.operations.driver_setup import tm_global_driver_setup
 from src.tm_global.operations.pause_until_loaded import pause_until_loaded
 
 # from src.tm_global.coverage_check.coverage_check import FindingCoverage
-from src.tm_global.operations.set_accepted_params import set_accepted_params
 from src.tm_global.operations.click_on_login_btn import click_on_login_button
 
 

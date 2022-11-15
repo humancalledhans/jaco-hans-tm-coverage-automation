@@ -1,5 +1,5 @@
 # from src.tm_global.operations.thread_asgn import ThreadAsgn
-from src.tm_global.operations.tm_global_driver_setup import tm_global_driver_setup
+from src.tm_global.operations.driver_setup import tm_global_driver_setup
 from src.tm_global.operations.tm_global_login import TMGlobalLogin
 
 from selenium.webdriver import ActionChains

@@ -1,7 +1,8 @@
 import time
 from selenium.webdriver import ActionChains
+from selenium.common.exceptions import NoSuchElementException
 
-from src.tm_global.operations.tm_global_driver_setup import tm_global_driver_setup
+from src.tm_global.operations.driver_setup import tm_global_driver_setup
 from src.tm_global.operations.pause_until_loaded import pause_until_loaded
 from src.tm_global.operations.set_current_db_row_singleton import set_current_db_row_singleton
 from src.tm_global.singleton.all_the_data import AllTheData
@@ -17,7 +18,14 @@ from src.tm_global.singleton.current_db_row import CurrentDBRow
 from src.tm_global.operations.filter_by_lot_num import filter_by_lot_number
 from src.tm_global.operations.choose_best_from_all_results import choose_best_match_from_all_results
 from src.tm_global.singleton.retry_at_end import RetryAtEndCache
-from src.tm_global.operations.write_results_to_db import write_results_to_db
+from src.tm_global.db_read_write.write_results_to_db import write_results_to_db
+from src.tm_global.operations.filter_by_street_name import filter_by_street_name
+from src.tm_global.operations.filter_by_building_name import filter_by_building_name
+from src.tm_global.operations.filter_by_section_name import filter_by_section_name
+from src.tm_global.operations.reset_singleton_values_for_next_address import reset_singleton_values_for_next_address
+from src.tm_global.singleton.selected_table_row import SelectedTableRow
+from src.tm_global.singleton.lot_num_match_bool import LotNumMatchBool
+from src.tm_global.operations.set_lot_num_or_building_name_match_if_appropriate import set_lot_num_or_building_name_match_if_appropriate
 
 
 def finding_coverage(driver, a):
@@ -60,25 +68,39 @@ def finding_coverage(driver, a):
                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                 retry_at_end_singleton.add_data_id_to_retry(
                     self=retry_at_end_singleton, data_id=data.get_id())
-
-            # try:
-            enter_right_keyword_res = enter_right_keyword(driver, a)
-            if enter_right_keyword_res != "No results found using building name, street name, or section name.":
-                (driver, a) = enter_right_keyword_res
-
-            else:
-                print(
-                    "no results found using building name, street name, or section name.")
                 (driver, a) = return_to_coverage_search_page(driver, a)
-                # https://wholesalepremium.tm.com.my/coverage-search/result
-
-                # TODO: write to database with no results.
+                reset_singleton_values_for_next_address()
                 continue
 
+            # try:
             try:
-                (driver, a) = filter_by_lot_number(driver, a)
-            except Exception('Lot number filter field did not pop up.'):
+                enter_right_keyword_res = enter_right_keyword(driver, a)
+                if enter_right_keyword_res != "No results found using building name, street name, or section name.":
+                    (driver, a) = enter_right_keyword_res
 
+                else:
+                    print(
+                        "no results found using building name, street name, or section name.")
+                    selected_table_row_instance = SelectedTableRow.get_instance()
+                    selected_table_row_instance.set_result_remark(
+                        self=selected_table_row_instance, result_remark="No results found using building name, street name, or section name.")
+                    (driver, a) = return_to_coverage_search_page(driver, a)
+                    # https://wholesalepremium.tm.com.my/coverage-search/result
+
+                    # TODO: write to database with no results.
+                    continue
+
+            except NoSuchElementException:
+                print('unable to find keyword field')
+                time.sleep(5000)
+
+            try:
+                (driver, a) = filter_by_building_name(driver, a)
+                (driver, a) = filter_by_street_name(driver, a)
+                (driver, a) = filter_by_section_name(driver, a)
+                (driver, a) = filter_by_lot_number(driver, a)
+            except Exception:
+                print("error at some excepion her/? by lot number page")
                 # # setup driver again.
                 # driver = tm_global_driver_setup()
                 # driver.get(
@@ -89,10 +111,11 @@ def finding_coverage(driver, a):
                 retry_at_end_singleton.add_data_id_to_retry(
                     self=retry_at_end_singleton, data_id=data.get_id())
                 time.sleep(7)
+                (driver, a) = return_to_coverage_search_page(driver, a)
+                reset_singleton_values_for_next_address()
                 continue
 
-            finally:
-                choose_best_match_from_all_results(driver, a)
+            choose_best_match_from_all_results(driver, a)
 
             # except Exception as e:
             #     current_db_row = CurrentDBRow.get_instance()
@@ -123,7 +146,8 @@ def finding_coverage(driver, a):
 
             # filter_iterate_and_notify(driver, a)
 
-            print("--------------------\n")
-            (driver, a) = return_to_coverage_search_page(driver, a)
+            set_lot_num_or_building_name_match_if_appropriate()
 
             write_results_to_db()
+            reset_singleton_values_for_next_address()
+            (driver, a) = return_to_coverage_search_page(driver, a)

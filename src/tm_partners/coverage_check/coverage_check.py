@@ -284,6 +284,8 @@ class FindingCoverage:
                                                                 driver, a, 50)
                                                             continue
                                                 except NoSuchElementException:
+                                                    print('retry keywords 1')
+                                                    time.sleep(5000)
                                                     retry_at_end_singleton = RetryAtEndCache.get_instance()
                                                     retry_at_end_singleton.add_data_id_to_retry(
                                                         self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -390,6 +392,8 @@ class FindingCoverage:
                                                     driver, a, 50)
                                                 continue
                                             except NoSuchElementException:
+                                                print('retry keywords 2')
+                                                time.sleep(5000)
                                                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                                                 retry_at_end_singleton.add_data_id_to_retry(
                                                     self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -401,6 +405,8 @@ class FindingCoverage:
                                                     driver, a, 50)
                                                 continue
                                     except NoSuchElementException:
+                                        print('retry keywords 3')
+                                        time.sleep(5000)
                                         retry_at_end_singleton = RetryAtEndCache.get_instance()
                                         retry_at_end_singleton.add_data_id_to_retry(
                                             self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -427,11 +433,22 @@ class FindingCoverage:
                                 try:
                                     driver.find_element(
                                         By.XPATH, "//table[@border='0' and @class='errorDisplay1']//tbody//tr//td//b[contains(text(), 'Sorry, we are unable to proceed at the moment. This error could be due to loss of connection to the server. Please try again later.')]")
+                                    retry_at_end_singleton = RetryAtEndCache.get_instance()
+                                    retry_at_end_singleton.add_data_id_to_retry(
+                                        self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                                    time.sleep(7)
+                                    driver.quit()
+                                    login = Login()
+                                    (driver, a) = login.login()
+                                    (driver, a) = input_speed_requested(
+                                        driver, a, 50)
                                     continue
                                 except NoSuchElementException:
                                     raise Exception(
                                         "Results table did not pop up.")
                         except NoSuchElementException:
+                            print('retry keywords 5')
+                            time.sleep(5000)
                             retry_at_end_singleton = RetryAtEndCache.get_instance()
                             retry_at_end_singleton.add_data_id_to_retry(
                                 self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -576,6 +593,8 @@ class FindingCoverage:
                                                 driver, a, 50)
                                             continue
                                         except NoSuchElementException:
+                                            print('retry keywords 6')
+                                            time.sleep(5000)
                                             retry_at_end_singleton = RetryAtEndCache.get_instance()
                                             retry_at_end_singleton.add_data_id_to_retry(
                                                 self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -656,6 +675,8 @@ class FindingCoverage:
                                                 driver=driver, a=a, filtered=True, lot_no_detail_flag=lot_no_detail_flag, building_name_found=False, street_name_found=True)
                                             continue
                                         except NoSuchElementException:
+                                            print('retry keywords 7')
+                                            time.sleep(5000)
                                             retry_at_end_singleton = RetryAtEndCache.get_instance()
                                             retry_at_end_singleton.add_data_id_to_retry(
                                                 self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -667,6 +688,8 @@ class FindingCoverage:
                                                 driver, a, 50)
                                             continue
                         except NoSuchElementException:
+                            print('retry keywords 8')
+                            time.sleep(5000)
                             retry_at_end_singleton = RetryAtEndCache.get_instance()
                             retry_at_end_singleton.add_data_id_to_retry(
                                 self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -679,12 +702,30 @@ class FindingCoverage:
                             continue
 
                 except Exception as e:
-                    print('Exception: ', e)
-                    retry_at_end_singleton = RetryAtEndCache.get_instance()
-                    retry_at_end_singleton.add_data_id_to_retry(
-                        self=retry_at_end_singleton, data_id=data.get_id())
-                    time.sleep(7)
-                    driver.quit()
-                    login = Login()
-                    (driver, a) = login.login()
-                    continue
+                    try:
+                        WebDriverWait(driver, 1).until(EC.presence_of_element_located(
+                            (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@class='subContent']//b[contains(text(), 'Your session has expired due to inactivity.')]")))
+                        driver.find_element(
+                            By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@class='subContent']//b[contains(text(), 'Your session has expired due to inactivity.')]")
+                        dismiss_btn = driver.find_element(
+                            By.XPATH, "//div[@class='blockUI blockMsg blockPage']//input[@type='button' and @id='timeout_ok']")
+                        a.move_to_element(dismiss_btn).click().perform()
+                        (driver, a) = pause_until_loaded(driver, a)
+                        driver.quit()
+                        login = Login()
+                        (driver, a) = login.login()
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
+                        continue
+                    except NoSuchElementException:
+                        print('Exception: ', e)
+                        retry_at_end_singleton = RetryAtEndCache.get_instance()
+                        retry_at_end_singleton.add_data_id_to_retry(
+                            self=retry_at_end_singleton, data_id=data.get_id())
+                        time.sleep(7)
+                        driver.quit()
+                        login = Login()
+                        (driver, a) = login.login()
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
+                        continue

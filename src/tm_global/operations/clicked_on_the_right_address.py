@@ -2,6 +2,7 @@ import time
 from src.tm_global.operations.get_coverage_result import get_coverage_result
 
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
 from src.tm_global.operations.pause_until_loaded import pause_until_loaded
 from src.tm_global.operations.filter_all_columns import filter_all_columns
@@ -9,6 +10,10 @@ from src.tm_global.operations.click_on_selected_row import click_on_selected_row
 from src.tm_global.operations.duplicate_in_new_tab import duplicate_in_new_tab
 from src.tm_global.operations.close_duplicated_tab import close_duplicated_tab
 from src.tm_global.operations.verify_to_click_on_row import verify_to_click_on_row
+from src.tm_global.operations.restart_filter_process import restart_filter_process
+from src.tm_global.singleton.selected_table_row import SelectedTableRow
+from src.tm_global.singleton.current_db_row import CurrentDBRow
+from src.tm_global.operations.attempt_to_update_address_info import attempt_to_update_address_information
 
 
 def coverage_search_the_right_address(driver, a, address):
@@ -38,13 +43,24 @@ def coverage_search_the_right_address(driver, a, address):
         to_click_on_row = verify_to_click_on_row(driver, a, selected_row_num)
         print('to click on row', to_click_on_row)
         if to_click_on_row:
-            (driver, a) = duplicate_in_new_tab(driver, a, root_tab_url)
-            (driver, a) = filter_all_columns(driver, a, address)
-            (driver, a) = click_on_selected_row(
-                driver, a, selected_row_num)
-            results.append(get_coverage_result(driver, a))
-            (driver, a) = close_duplicated_tab(driver, a)
+            try:
+                (driver, a) = duplicate_in_new_tab(driver, a, root_tab_url)
+                (driver, a) = filter_all_columns(driver, a, address)
+                (driver, a) = click_on_selected_row(
+                    driver, a, selected_row_num)
+                # (driver, a) = attempt_to_update_address_information(driver, a)
+                results = get_coverage_result(driver, a)
+                (driver, a) = close_duplicated_tab(driver, a)
 
-    print('results', results)
+                selected_table_row_instance = SelectedTableRow.get_instance()
+
+                selected_table_row_instance.set_result_remark(
+                    self=selected_table_row_instance, result_remark=results[1])
+
+            except NoSuchElementException:
+                (driver, a) = restart_filter_process(
+                    driver, a, selected_row_num, address)
+                results = get_coverage_result(driver, a)
+                (driver, a) = close_duplicated_tab(driver, a)
 
     return (driver, a)

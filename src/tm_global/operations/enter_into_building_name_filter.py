@@ -10,35 +10,37 @@ from src.tm_global.operations.pause_until_loaded import pause_until_loaded
 from src.tm_global.singleton.selected_table_row import SelectedTableRow
 
 
-def enter_into_lot_number_filter(driver, a):
+def enter_into_building_name_filter(driver, a):
     """
-    if there are no results after we filter, we take away the unit number filter.
+    if there are no results after we filter, we take away the filter.
     """
     current_db_row = CurrentDBRow.get_instance()
-    lot_number = current_db_row.get_house_unit_lotno(self=current_db_row)
+    building_name = current_db_row.get_building(self=current_db_row)
+
     try:
+
         WebDriverWait(driver, 1).until(EC.presence_of_element_located(
-            (By.XPATH, "//td[@style='padding: 1px !important; border-color: transparent !important']//input[@type='text' and @id='house_unit_lot']")))
-        lot_num_filter_field = driver.find_element(
-            By.XPATH, "//td[@style='padding: 1px !important; border-color: transparent !important']//input[@type='text' and @id='house_unit_lot']")
-        lot_num_filter_field.clear()
-        lot_num_filter_field.send_keys(lot_number)
+            (By.XPATH, "//td[@style='padding: 1px !important; border-color: transparent !important']//input[@type='text' and @id='building_name']")))
+        building_name_filter_field = driver.find_element(
+            By.XPATH, "//td[@style='padding: 1px !important; border-color: transparent !important']//input[@type='text' and @id='building_name']")
+        building_name_filter_field.clear()
+        building_name_filter_field.send_keys(building_name)
         (driver, a) = pause_until_loaded(driver, a)
         try:
             driver.find_element(
                 By.XPATH, "//td[@class='dataTables_empty' and contains(text(), 'No matching records found')]")
-            lot_num_filter_field.clear()
+
+            building_name_filter_field.clear()
             (driver, a) = pause_until_loaded(driver, a)
             selected_table_row_instance = SelectedTableRow.get_instance()
-            selected_table_row_instance.set_used_lot_num_as_filter(
-                self=selected_table_row_instance, used_lot_num_as_filter=False)
+            selected_table_row_instance.set_used_building_name_as_filter(
+                self=selected_table_row_instance, used_building_name_as_filter=False)
 
         except NoSuchElementException:
-            print("lot num filter used")
             selected_table_row_instance = SelectedTableRow.get_instance()
-            selected_table_row_instance.set_used_lot_num_as_filter(
-                self=selected_table_row_instance, used_lot_num_as_filter=True)
+            selected_table_row_instance.set_used_building_name_as_filter(
+                self=selected_table_row_instance, used_building_name_as_filter=True)
         finally:
             return (driver, a)
     except TimeoutException:
-        raise Exception('Lot number filter field did not pop up.')
+        raise Exception('Building name filter field did not pop up.')

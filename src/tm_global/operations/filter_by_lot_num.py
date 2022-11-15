@@ -8,7 +8,10 @@ def filter_by_lot_number(driver, a):
     current_db_row = CurrentDBRow.get_instance()
     lot_number = current_db_row.get_house_unit_lotno(self=current_db_row)
     if lot_number != '' and lot_number is not None:
-        (driver, a) = enter_into_lot_number_filter(driver, a)
+        try:
+            (driver, a) = enter_into_lot_number_filter(driver, a)
+        except Exception('Lot number filter field did not pop up.'):
+            raise Exception('Lot number filter field did not pop up.')
         (driver, a) = pause_until_loaded(driver, a)
 
     return (driver, a)

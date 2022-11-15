@@ -1,16 +1,9 @@
 from abc import ABCMeta, abstractstaticmethod
 import re
+import time
 
 
 class ICurrentDBRow(metaclass=ABCMeta):
-
-    @abstractstaticmethod
-    def set_accepted_states_list():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def set_accepted_street_types_list():
-        """ to implement in child class """
 
     @abstractstaticmethod
     def set_id():
@@ -90,14 +83,6 @@ class ICurrentDBRow(metaclass=ABCMeta):
 
     @abstractstaticmethod
     def set_updated_at():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def get_accepted_states_list():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def get_accepted_street_types_list():
         """ to implement in child class """
 
     @abstractstaticmethod
@@ -192,18 +177,15 @@ class CurrentDBRow(ICurrentDBRow):
     @staticmethod
     def get_instance():
         if CurrentDBRow.__instance is None:
-            CurrentDBRow(
-                accepted_states_list=None, accepted_street_types_list=None)
+            CurrentDBRow()
         return CurrentDBRow.__instance
 
-    def __init__(self, accepted_states_list=None, accepted_street_types_list=None):
+    def __init__(self):
         if CurrentDBRow.__instance is not None:
             raise Exception(
                 "CurrentDBRow instance cannot be instantiated more than once!")
         else:
             CurrentDBRow.__instance = self
-            self.accepted_states_list = accepted_states_list
-            self.accepted_street_types_list = accepted_street_types_list
             self.current_row_id = None
             self.current_row_unit_no = None
             self.current_row_floor = None
@@ -224,14 +206,6 @@ class CurrentDBRow(ICurrentDBRow):
             self.current_row_is_active = None
             self.current_row_created_at = None
             self.current_row_updated_at = None
-
-    @staticmethod
-    def set_accepted_states_list(self, accepted_states_list):
-        self.accepted_states_list = accepted_states_list
-
-    @staticmethod
-    def set_accepted_street_types_list(self, accepted_street_types_list):
-        self.accepted_street_types_list = accepted_street_types_list
 
     @staticmethod
     def set_id(self, current_row_id):
@@ -306,7 +280,7 @@ class CurrentDBRow(ICurrentDBRow):
 
     @staticmethod
     def set_search_level_flag(self, current_row_search_level_flag):
-        if current_row_search_level_flag == 'None' or current_row_search_level_flag is None or current_row_search_level_flag != 1:
+        if current_row_search_level_flag == 'None' or current_row_search_level_flag is None or current_row_search_level_flag == '' or current_row_search_level_flag != 1:
             self.current_row_search_level_flag = 0
         else:
             self.current_row_search_level_flag = current_row_search_level_flag
@@ -350,14 +324,6 @@ class CurrentDBRow(ICurrentDBRow):
     @staticmethod
     def set_updated_at(self, current_row_updated_at):
         self.current_row_updated_at = current_row_updated_at
-
-    @staticmethod
-    def get_accepted_states_list(self):
-        return self.accepted_states_list
-
-    @staticmethod
-    def get_accepted_street_types_list(self):
-        return self.accepted_street_types_list
 
     @staticmethod
     def get_input_header_data(self):
@@ -490,3 +456,26 @@ class CurrentDBRow(ICurrentDBRow):
             "Postcode: " + input_postcode
 
         return address_string
+
+    @staticmethod
+    def reset_all_values(self):
+        self.current_row_id = None
+        self.current_row_unit_no = None
+        self.current_row_floor = None
+        self.current_row_building = None
+        self.current_row_street = None
+        self.current_row_section = None
+        self.current_row_city = None
+        self.current_row_state = None
+        self.current_row_postcode = None
+        self.current_row_search_level_flag = None
+        self.current_row_source = None
+        self.current_row_source_id = None
+        self.current_row_salesman = None
+        self.current_row_notify_email = None
+        self.current_row_notify_mobile = None
+        self.current_row_result_type = None
+        self.current_row_result_remark = None
+        self.current_row_is_active = None
+        self.current_row_created_at = None
+        self.current_row_updated_at = None

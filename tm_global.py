@@ -1,28 +1,82 @@
+import threading
 import time
 from src.tm_global.singleton.num_of_iterations import NumOfIterations
-
+from src.tm_global.singleton.data_id_range import DataIdRange
 # from src.tm_global.operations.thread_asgn import ThreadAsgn
-from src.tm_global.operations.tm_global_driver_setup import tm_global_driver_setup
+from src.tm_global.operations.driver_setup import tm_global_driver_setup
 from src.tm_global.operations.tm_global_login import TMGlobalLogin
 from src.tm_global.operations.retry_problematic_addresses import retry_problematic_address
 
 from selenium.webdriver import ActionChains
 
 from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import ElementNotInteractableException
 
 from src.tm_global.operations.go_to_coverage_search_page import to_coverage_search_page
-from src.tm_global.operations.set_accepted_params import set_accepted_params
 from src.tm_global.db_read_write.db_read_address import read_from_db
 from src.tm_global.coverage_check.coverage_check import finding_coverage
 from src.tm_global.operations.pause_until_loaded import pause_until_loaded
-from src.tm_global.operations.write_results_to_db import write_results_to_db
+from src.tm_global.db_read_write.db_get_largest_id import get_max_id_from_db
+from src.tm_global.db_read_write.db_get_smallest_id import get_min_id_from_db
 
+
+# class TMGlobalThreadAsgn:
+#     def __init__(self, ids_to_start_from=get_min_id_from_db(), ids_to_end_at=get_max_id_from_db()):
+#         self.ids_to_start_from = ids_to_start_from
+#         self.ids_to_end_at = ids_to_end_at
+#         data_id_range = DataIdRange.get_instance()
+#         data_id_range.set_start_id(
+#             self=data_id_range, start_id=int(ids_to_start_from))
+#         data_id_range.set_end_id(self=data_id_range,
+#                                  end_id=int(ids_to_end_at))
+
+#     def main_thread(self, thread_ids_to_start_from=get_min_id_from_db(), thread_ids_to_end_at=get_max_id_from_db(), thread_name=None):
+#         tm_global(thread_ids_to_start_from, thread_ids_to_end_at, thread_name)
+
+#     def start_threads(self):
+#         threading.Thread(target=self.main_thread).start()
+
+#         if self.ids_to_end_at - self.ids_to_start_from < 4:
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from, self.ids_to_end_at, "thread-1")).start()
+
+#         elif (self.ids_to_end_at - self.ids_to_start_from) % 4 == 0:
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from, self.ids_to_start_from + int(self.ids_to_end_at / 4), "thread-1")).start()
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from + int(self.ids_to_end_at / 4), self.ids_to_start_from + int(self.ids_to_end_at / 2), "thread-2")).start()
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from + int(self.ids_to_end_at / 2), self.ids_to_start_from + int(self.ids_to_end_at * 3 / 4), "thread-3")).start()
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from + int(self.ids_to_end_at * 3 / 4), self.ids_to_end_at, "thread-4")).start()
+
+#         elif (self.ids_to_end_at - self.ids_to_start_from) % 3 == 0:
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from, self.ids_to_start_from + int(self.ids_to_end_at / 3), "thread-1")).start()
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from + int(self.ids_to_end_at / 3), self.ids_to_start_from + int(self.ids_to_end_at * 2 / 3), "thread-2")).start()
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from + int(self.ids_to_end_at * 2 / 3), self.ids_to_end_at, "thread-3")).start()
+
+#         elif (self.ids_to_end_at - self.ids_to_start_from) % 2 == 0:
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from, self.ids_to_start_from + int(self.ids_to_end_at / 2), "thread-1")).start()
+#             threading.Thread(target=self.main_thread, args=(
+#                 self.ids_to_start_from + int(self.ids_to_end_at / 2), self.ids_to_end_at, "thread-2")).start()
+
+
+# def tm_global(thread_ids_to_start_from, thread_ids_to_end_at, thread_name):
+
+#     data_id_range_instance = DataIdRange.get_instance()
+#     data_id_range_instance.set_start_id(
+#         self=data_id_range_instance, start_id=int(thread_ids_to_start_from))
+#     data_id_range_instance.set_end_id(self=data_id_range_instance,
+#                                       end_id=int(thread_ids_to_end_at))
 
 def tm_global():
 
     # Step 1: read from database.
     read_from_db()
-    set_accepted_params()
 
     # Step 2: set up Chrome browser instance for Selenium.
     driver = tm_global_driver_setup()
@@ -44,15 +98,18 @@ def tm_global():
 
     (driver, a) = to_coverage_search_page(driver, a)
 
-    # Step 3: coverage check.
-    finding_coverage(driver, a)
+    try:
+        # Step 3: coverage check.
+        finding_coverage(driver, a)
+    except ElementNotInteractableException:
+        print('element not interactable exception')
+        time.sleep(5000)
 
     # retrying problematic id-s.
     retry_problematic_address()
 
     # Step 4: write to database.
     # write_results_to_db()
-
 
     # we are at the coverage search page now.
     # finding_coverage = FindingCoverage()
@@ -65,6 +122,8 @@ if __name__ == '__main__':
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
     tm_global()
+    # thread_asgn = TMGlobalThreadAsgn()
+    # thread_asgn.start_threads()
 
     # x = threading.Thread(target=func)
     # x.start()
