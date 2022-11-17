@@ -18,7 +18,7 @@ def verify_to_click_on_row(driver, a, selected_row_num):
     all_columns_match_bool = compare_all_column_data(
         driver, a, selected_row_num)
 
-    if not lot_num_match_bool and current_db_row_singleton.get_search_level_flag(self=current_db_row_singleton):
+    if lot_num_match_bool == False and current_db_row_singleton.get_search_level_flag(self=current_db_row_singleton):
         set_building_or_street_section_name_found_lotno_not_found()
         selected_table_row_instance = SelectedTableRow.get_instance()
         selected_table_row_instance.set_result_remark(

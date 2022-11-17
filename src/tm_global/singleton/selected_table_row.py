@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractstaticmethod
+import time
 
 
 class ISelectedTableRow(metaclass=ABCMeta):
@@ -280,8 +281,10 @@ class SelectedTableRow(ISelectedTableRow):
             self.result_remark = 'Not Serviceable - Port Full'
         elif result_remark == 'THE ADDRESS FOUND IS WITHIN THE SERVICEABLE AREA BUT REQUIRE NEW INFRA DEVELOPMENT. PLEASE BE INFORMED ANY CANCELLATION RELATED TO NEW INFRA IS SUBJECT TO CANCELLATION FEES.':
             self.result_remark = 'Within Servicable Area, Require New Infra Development'
-        
+        elif result_remark == 'No results found using building name, street name, or section name.':
+            self.result_remark = 'No results found using building name, street name, or section name.'
         else:
+            time.sleep(5)
             print("NEW RESULT REMARK", result_remark)
             # if result_remark == 'No matching lot number results, and Lot Number match bool = 1.'
         #     self.set_result_type(

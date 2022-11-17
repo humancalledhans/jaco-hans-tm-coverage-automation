@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import ElementNotInteractableException
 from selenium.webdriver.support import expected_conditions as EC
 
 from src.tm_global.operations.pause_until_loaded import pause_until_loaded
@@ -12,7 +13,7 @@ def attempt_to_update_address_information(driver, a):
 
     (driver, a) = pause_until_loaded(driver, a)
     try:
-        overlay_content = WebDriverWait(driver, 0.5).until(EC.element_to_be_clickable(
+        overlay_content = WebDriverWait(driver, 1).until(EC.element_to_be_clickable(
             (By.XPATH, "//div[@class='modal-content']")))
 
         a.move_to_element(overlay_content).click().perform()
@@ -32,4 +33,10 @@ def attempt_to_update_address_information(driver, a):
         return (driver, a)
 
     except NoSuchElementException:
+        return (driver, a)
+
+    except TimeoutException:
+        return (driver, a)
+
+    except ElementNotInteractableException:
         return (driver, a)

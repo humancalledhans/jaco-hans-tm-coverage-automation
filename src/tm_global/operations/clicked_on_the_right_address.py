@@ -48,7 +48,7 @@ def coverage_search_the_right_address(driver, a, address):
                 (driver, a) = filter_all_columns(driver, a, address)
                 (driver, a) = click_on_selected_row(
                     driver, a, selected_row_num)
-                # (driver, a) = attempt_to_update_address_information(driver, a)
+                (driver, a) = attempt_to_update_address_information(driver, a)
                 results = get_coverage_result(driver, a)
                 (driver, a) = close_duplicated_tab(driver, a)
 
