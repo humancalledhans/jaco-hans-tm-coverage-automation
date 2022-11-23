@@ -27,7 +27,9 @@ def try_to_search_the_full_address(driver, a):
 
         num_of_results = get_num_of_results(driver, a)
 
-        if num_of_results > 0 and verified_that_all_the_results_are_same(driver, a):
+        # if num_of_results > 0 and verified_that_all_the_results_are_same(driver, a):
+        # TESTED AS ON 18 NOVEMBER 2022. SHOULD NOT VERIFY THAT ALL RESULTS ARE THE SAME.
+        if num_of_results > 0:
             selected_table_row_instance = SelectedTableRow.get_instance()
             selected_table_row_instance.set_part_of_address_used(
                 self=selected_table_row_instance, part_of_address_used='Lot Num & Street Name')

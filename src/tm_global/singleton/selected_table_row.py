@@ -283,6 +283,8 @@ class SelectedTableRow(ISelectedTableRow):
             self.result_remark = 'Within Servicable Area, Require New Infra Development'
         elif result_remark == 'No results found using building name, street name, or section name.':
             self.result_remark = 'No results found using building name, street name, or section name.'
+        elif result_remark == 'Sorry, the address in our database is incomplete based on your inputs. Please try searching again.':
+            self.result_remark = 'Incomplete Address.'
         else:
             time.sleep(5)
             print("NEW RESULT REMARK", result_remark)
@@ -413,7 +415,7 @@ class SelectedTableRow(ISelectedTableRow):
         #     "State: " + input_state + '\n' + \
         #     "Postcode: " + input_postcode
 
-        return address_string
+        return address_string.strip()
 
     @staticmethod
     def get_result_remark(self):

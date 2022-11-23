@@ -1,5 +1,5 @@
 # login('DPSL9701', 'Djns513!!', driver)
-
+import random
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -37,16 +37,13 @@ class TMGlobalLogin:
 
                 try:
                     (driver, a) = click_on_login_button(driver, a)
-                    logged_in = True
+                    (driver, a) = pause_until_loaded(driver, a)
+                    WebDriverWait(driver, 2).until(EC.presence_of_element_located(
+                        (By.XPATH, "//p[@class='f-red pt-3 pb-3']")))
+                    time.sleep(random.randint(1, 5))
 
                 except TimeoutException:
-                    try:
-                        WebDriverWait(driver, 3).until(EC.presence_of_element_located(
-                            (By.XPATH, "//p[@class='f-red pt-3 pb-3' and contains(text(),'The user credentials were incorrect.')]")))
-                    except TimeoutException:
-                        print("UNABLE TO LOGIN.")
-
-                logged_in = True
+                    logged_in = True
 
             except TimeoutException:
                 count += 1

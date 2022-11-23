@@ -34,4 +34,4 @@ def retry_problematic_address():
             (driver, a) = to_coverage_search_page(driver, a)
 
             # Step 3: coverage check.
-            (driver, a) = finding_coverage(driver, a)
+            finding_coverage(driver, a)

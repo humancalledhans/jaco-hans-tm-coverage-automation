@@ -48,6 +48,8 @@ def finding_coverage(driver, a):
 
         read_from_db()
 
+        time.sleep(5000)
+
         for data in all_the_data.get_all_the_data_list(self=all_the_data):
             print("CURRENT ROW ID: ", data.get_id())
             # driver should be at https://wholesalepremium.tm.com.my/coverage-search/address
@@ -62,9 +64,9 @@ def finding_coverage(driver, a):
 
             except Exception as e:
                 current_db_row = CurrentDBRow.get_instance()
-                print("ERROR ID:", current_db_row.get_id(
-                    self=current_db_row))
-                print("error at select state page (enter address page)")
+                # print("ERROR ID:", current_db_row.get_id(
+                # self=current_db_row))
+                # print("error at select state page (enter address page)")
                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                 retry_at_end_singleton.add_data_id_to_retry(
                     self=retry_at_end_singleton, data_id=data.get_id())
@@ -110,7 +112,7 @@ def finding_coverage(driver, a):
                 (driver, a) = filter_by_section_name(driver, a)
                 (driver, a) = filter_by_lot_number(driver, a)
             except Exception:
-                print("error at some excepion her/? by lot number page")
+                # print("error at some excepion her/? by lot number page")
                 # # setup driver again.
                 # driver = tm_global_driver_setup()
                 # driver.get(

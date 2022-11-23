@@ -7,7 +7,7 @@ from selenium.webdriver.chrome.options import Options
 def tm_global_driver_setup():
     s = Service(ChromeDriverManager().install())
     options = Options()
-    options.headless = True
+    options.headless = False
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--force-device-scale-factor=1')
     options.add_argument("--no-sandbox")

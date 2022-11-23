@@ -5,6 +5,8 @@ import pytz
 from src.tm_global.db_read_write.db_secrets import get_db_password
 from src.tm_global.singleton.selected_table_row import SelectedTableRow
 from src.tm_global.singleton.current_db_row import CurrentDBRow
+from src.tm_global.notifications.email_msg import send_email
+from src.tm_global.notifications.telegram_msg import send_message
 
 
 def write_results_to_db():
@@ -75,6 +77,35 @@ def write_results_to_db():
 
     cursor.close()
     cnx.close()
+
+    if result_remark == 'Within Serviceable Area.':
+        current_row_notify_email = current_db_row_instance.get_notify_email(
+            self=current_db_row_instance)
+        current_row_notify_mobile = current_db_row_instance.get_notify_mobile(
+            self=current_db_row_instance)
+
+        if current_row_notify_mobile is not None and current_row_notify_mobile.lower() != "null":
+            if len(current_row_notify_mobile) > 0:
+                send_message(msg="\nIs within serviceable area!")
+        if current_row_notify_email is not None and current_row_notify_email.lower() != "null":
+            if len(current_row_notify_email) > 0:
+                send_email(
+                    "\nIs within serviceable area!", current_row_notify_email)
+
+    elif result_remark == 'Within Servicable Area, Require New Infra Development':
+        current_row_notify_email = current_db_row_instance.get_notify_email(
+            self=current_db_row_instance)
+        current_row_notify_mobile = current_db_row_instance.get_notify_mobile(
+            self=current_db_row_instance)
+
+        if current_row_notify_mobile is not None and current_row_notify_mobile.lower() != "null":
+            if len(current_row_notify_mobile) > 0:
+                send_message(
+                    msg="\nWithin serviceable area, require New Infra development")
+        if current_row_notify_email is not None and current_row_notify_email.lower() != "null":
+            if len(current_row_notify_email) > 0:
+                send_email(
+                    "\nWithin serviceable area, require New Infra development", current_row_notify_email)
 
     # if result_type == 1 or result_type == 2 or result_type == 3:
 

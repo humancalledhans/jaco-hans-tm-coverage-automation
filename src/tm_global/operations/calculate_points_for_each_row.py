@@ -81,8 +81,9 @@ def calculate_points_for_each_row(driver, a, result):
         return (0, None)
 
     # street name needs to be matching.
-    if current_row_street.strip().upper() != table_street.strip().upper():
-        return (0, None)
+    if current_row_street is not None:
+        if current_row_street.strip().upper() != table_street.strip().upper():
+            return (0, None)
 
     if len(table_postcode) > 0:
         while table_postcode[0] == '0':
