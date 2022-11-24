@@ -6,9 +6,13 @@ from src.tm_global.operations.pause_until_loaded import pause_until_loaded
 from selenium.webdriver.common.by import By
 
 from src.tm_global.operations.get_num_of_results import get_num_of_results
-from src.tm_global.operations.return_to_coverage_search_page import return_to_coverage_search_page
+from src.tm_global.operations.return_to_coverage_search_page import (
+    return_to_coverage_search_page,
+)
 from src.tm_global.operations.reset_for_next_search import reset_for_next_search
 from src.tm_global.singleton.selected_table_row import SelectedTableRow
+
+keyword_search_string = ""
 
 
 def try_using_building_name(driver, a):
@@ -20,11 +24,10 @@ def try_using_building_name(driver, a):
     if building_name is not None:
         building_name = building_name.strip()
 
-    if building_name != '' and building_name is not None and len(building_name) > 3:
-        keyword_search_string = building_name
+    if building_name != "" and building_name is not None and len(building_name) > 3:
+        keyword_search_string = keyword_search_string + " " + building_name
 
-        (driver, a) = enter_into_keyword_field(
-            driver, a, keyword_search_string)
+        (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
         (driver, a) = click_on_search_button(driver, a)
 
@@ -47,11 +50,11 @@ def try_using_street(driver, a):
     if street is not None:
         street = street.strip()
 
-    if street != '' and street is not None and len(street) > 3:
-        keyword_search_string = street
+    if street != "" and street is not None and len(street) > 3:
+        # append a space + the street name to the keyword search string
+        keyword_search_string = keyword_search_string + " " + street
 
-        (driver, a) = enter_into_keyword_field(
-            driver, a, keyword_search_string)
+        (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
         (driver, a) = click_on_search_button(driver, a)
 
@@ -73,11 +76,10 @@ def try_using_section(driver, a):
     if section is not None:
         section = section.strip()
 
-    if section != '' and section is not None and len(section) > 3:
+    if section != "" and section is not None and len(section) > 3:
         keyword_search_string = section
 
-        (driver, a) = enter_into_keyword_field(
-            driver, a, keyword_search_string)
+        (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
         (driver, a) = click_on_search_button(driver, a)
 
@@ -94,40 +96,62 @@ def try_using_section(driver, a):
 def enter_right_keyword(driver, a):
 
     # step 1: check if there is a building name.
-    (driver, a, num_of_results_from_section) = try_using_section(driver, a)
+    keyword_search_string = ""
+    (section_driver, section_a, num_of_results_from_section) = try_using_section(
+        driver, a
+    )
     if num_of_results_from_section > 0:
+        # step 2: no results using building name. check if there is a street name.
+        (street_driver, street_a) = reset_for_next_search(section_driver, section_a)
+        (street_driver, street_a, num_of_results_from_street_name) = try_using_street(
+            street_driver, street_a
+        )
+
+        if num_of_results_from_street_name > 0:
+            # step 3: no results using building name and street name. try using section name.
+            (building_driver, building_a) = reset_for_next_search(
+                street_driver, street_a
+            )
+            (
+                building_driver,
+                building_a,
+                num_of_results_from_building_name,
+            ) = try_using_building_name(building_driver, building_a)
+
+            if num_of_results_from_building_name > 0:
+                # print('building name results: ' +
+                #   str(num_of_results_from_building_name))
+                selected_table_row_instance = SelectedTableRow.get_instance()
+                selected_table_row_instance.set_part_of_address_used(
+                    self=selected_table_row_instance,
+                    part_of_address_used="Building Name",
+                )
+
+                return (building_driver, building_a)
+            (street_driver, street_a) = reset_for_next_search(
+                building_driver, building_a
+            )
+            (
+                street_driver,
+                street_a,
+                num_of_results_from_street_name,
+            ) = try_using_street(street_driver, street_a)
+            # print('street name results: ' + str(num_of_results_from_street_name))
+            selected_table_row_instance = SelectedTableRow.get_instance()
+            selected_table_row_instance.set_part_of_address_used(
+                self=selected_table_row_instance, part_of_address_used="Street Name"
+            )
+            return (street_driver, street_a)
+        (section_driver, section_a) = reset_for_next_search(street_driver, street_a)
+        (section_driver, section_a, num_of_results_from_section) = try_using_section(
+            section_driver, section_a
+        )
         # print('section name results: ' + str(num_of_results_from_section))
         selected_table_row_instance = SelectedTableRow.get_instance()
         selected_table_row_instance.set_part_of_address_used(
             self=selected_table_row_instance, part_of_address_used="Section Name"
         )
-        return (driver, a)
-
-    # step 2: no results using building name. check if there is a street name.
-    (driver, a) = reset_for_next_search(driver, a)
-    (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
-
-    if num_of_results_from_street_name > 0:
-        # print('street name results: ' + str(num_of_results_from_street_name))
-        selected_table_row_instance = SelectedTableRow.get_instance()
-        selected_table_row_instance.set_part_of_address_used(
-            self=selected_table_row_instance, part_of_address_used="Street Name"
-        )
-        return (driver, a)
-
-    # step 3: no results using building name and street name. try using section name.
-    (driver, a) = reset_for_next_search(driver, a)
-    (driver, a, num_of_results_from_building_name) = try_using_building_name(driver, a)
-
-    if num_of_results_from_building_name > 0:
-        # print('building name results: ' +
-        #   str(num_of_results_from_building_name))
-        selected_table_row_instance = SelectedTableRow.get_instance()
-        selected_table_row_instance.set_part_of_address_used(
-            self=selected_table_row_instance, part_of_address_used="Building Name"
-        )
-
-        return (driver, a)
+        return (section_driver, section_a)
 
     else:
         current_db_row = CurrentDBRow.get_instance()
