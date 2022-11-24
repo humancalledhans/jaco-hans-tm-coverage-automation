@@ -105,6 +105,8 @@ def finding_coverage(driver, a):
                     time.sleep(5000)
 
             try:
+                (driver, a) = filter_by_section_name(driver, a)
+                (driver, a) = filter_by_street_name(driver, a)
                 (driver, a) = filter_by_building_name(driver, a)
                 (driver, a) = filter_by_street_name(driver, a)
                 (driver, a) = filter_by_section_name(driver, a)
