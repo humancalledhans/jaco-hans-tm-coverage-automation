@@ -98,7 +98,7 @@ def enter_right_keyword(driver, a):
 
     if num_of_results_from_building_name > 0:
         # print('building name results: ' +
-            #   str(num_of_results_from_building_name))
+        #   str(num_of_results_from_building_name))
         selected_table_row_instance = SelectedTableRow.get_instance()
         selected_table_row_instance.set_part_of_address_used(
             self=selected_table_row_instance, part_of_address_used='Building Name')

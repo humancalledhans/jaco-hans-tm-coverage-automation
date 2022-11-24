@@ -26,6 +26,7 @@ def enter_into_building_name_filter(driver, a):
         building_name_filter_field.clear()
         building_name_filter_field.send_keys(building_name)
         (driver, a) = pause_until_loaded(driver, a)
+
         try:
             driver.find_element(
                 By.XPATH, "//td[@class='dataTables_empty' and contains(text(), 'No matching records found')]")

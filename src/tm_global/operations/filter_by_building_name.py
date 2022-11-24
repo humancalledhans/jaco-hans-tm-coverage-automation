@@ -4,7 +4,7 @@ from src.tm_global.operations.enter_into_building_name_filter import enter_into_
 
 
 def filter_by_building_name(driver, a):
-    # filter by street name
+    # filter by building name
     current_db_row = CurrentDBRow.get_instance()
     building_name = current_db_row.get_building(self=current_db_row)
     if building_name != '' and len(building_name) > 3 and building_name is not None:

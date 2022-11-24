@@ -48,7 +48,6 @@ def finding_coverage(driver, a):
 
         read_from_db()
 
-        time.sleep(5000)
 
         for data in all_the_data.get_all_the_data_list(self=all_the_data):
             print("CURRENT ROW ID: ", data.get_id())
@@ -84,7 +83,6 @@ def finding_coverage(driver, a):
             except Exception as e:
                 print("hans, exception at the new try to search full address code.")
                 print(e)
-                time.sleep(400)
 
             if not searched_using_full_address:
                 try:

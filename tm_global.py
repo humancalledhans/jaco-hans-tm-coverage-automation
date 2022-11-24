@@ -138,13 +138,14 @@ class TMGlobalThreadAsgn:
         #                      self.ids_to_end_at//number_of_threads * num_of_instance+1, f"thread-{num_of_instance}")).start()
 
 
-def tm_global(thread_ids_to_start_from, thread_ids_to_end_at, thread_name):
+# def tm_global(thread_ids_to_start_from, thread_ids_to_end_at, thread_name):
+def tm_global():
 
-    data_id_range_instance = DataIdRange.get_instance()
-    data_id_range_instance.set_start_id(
-        self=data_id_range_instance, start_id=int(thread_ids_to_start_from))
-    data_id_range_instance.set_end_id(self=data_id_range_instance,
-                                      end_id=int(thread_ids_to_end_at))
+    # data_id_range_instance = DataIdRange.get_instance()
+    # data_id_range_instance.set_start_id(
+    #     self=data_id_range_instance, start_id=int(thread_ids_to_start_from))
+    # data_id_range_instance.set_end_id(self=data_id_range_instance,
+    #                                   end_id=int(thread_ids_to_end_at))
 
 
 # def tm_global():
@@ -184,6 +185,7 @@ def tm_global(thread_ids_to_start_from, thread_ids_to_end_at, thread_name):
     # Step 4: write to database.
     # write_results_to_db()
 
+
     # we are at the coverage search page now.
     # finding_coverage = FindingCoverage()
     # set_accepted_params()
@@ -194,9 +196,9 @@ if __name__ == '__main__':
     num_of_iterations = 1  # jaco, change this line.
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
-    # tm_global()
-    thread_asgn = TMGlobalThreadAsgn()
-    thread_asgn.start_threads()
+    tm_global()
+    # thread_asgn = TMGlobalThreadAsgn()
+    # thread_asgn.start_threads()
 
     # x = threading.Thread(target=func)
     # x.start()
