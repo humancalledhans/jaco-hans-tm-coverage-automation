@@ -93,7 +93,7 @@ def try_using_section(driver, a):
 
 def enter_right_keyword(driver, a):
 
-    # step 1: check if there is a building name.
+    # step 1: try using section name.
     (driver, a, num_of_results_from_section) = try_using_section(driver, a)
     if num_of_results_from_section > 0:
         # print('section name results: ' + str(num_of_results_from_section))
@@ -103,7 +103,7 @@ def enter_right_keyword(driver, a):
         )
         return (driver, a)
 
-    # step 2: no results using building name. check if there is a street name.
+    # step 2: no results using section name. check if there is a street name.
     (driver, a) = reset_for_next_search(driver, a)
     (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
 
@@ -115,7 +115,7 @@ def enter_right_keyword(driver, a):
         )
         return (driver, a)
 
-    # step 3: no results using building name and street name. try using section name.
+    # step 3: no results using section name and street name. trying with building name.
     (driver, a) = reset_for_next_search(driver, a)
     (driver, a, num_of_results_from_building_name) = try_using_building_name(driver, a)
 
