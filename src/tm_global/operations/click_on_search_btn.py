@@ -8,6 +8,7 @@ from src.tm_global.operations.pause_until_loaded import pause_until_loaded
 def click_on_search_button(driver, a):
 
     if driver.current_url == 'https://wholesalepremium.tm.com.my/coverage-search/result':
+        print('already on result page')
         return (driver, a)
     else:
         try:

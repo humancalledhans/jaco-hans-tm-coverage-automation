@@ -28,8 +28,7 @@ def try_using_building_name(driver, a):
         global keyword_search_string
         keyword_search_string = keyword_search_string + " " + building_name
 
-        (driver, a) = enter_into_keyword_field(
-            driver, a, keyword_search_string)
+        (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
         (driver, a) = click_on_search_button(driver, a)
 
@@ -57,8 +56,7 @@ def try_using_street(driver, a):
         global keyword_search_string
         keyword_search_string = keyword_search_string + " " + street
 
-        (driver, a) = enter_into_keyword_field(
-            driver, a, keyword_search_string)
+        (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
         (driver, a) = click_on_search_button(driver, a)
 
@@ -84,8 +82,7 @@ def try_using_section(driver, a):
         global keyword_search_string
         keyword_search_string = section
 
-        (driver, a) = enter_into_keyword_field(
-            driver, a, keyword_search_string)
+        (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
         (driver, a) = click_on_search_button(driver, a)
 
@@ -108,8 +105,7 @@ def enter_right_keyword(driver, a):
     )
     if num_of_results_from_section > 0:
         # step 2: no results using building name. check if there is a street name.
-        (street_driver, street_a) = reset_for_next_search(
-            section_driver, section_a)
+        (street_driver, street_a) = reset_for_next_search(section_driver, section_a)
         (street_driver, street_a, num_of_results_from_street_name) = try_using_street(
             street_driver, street_a
         )

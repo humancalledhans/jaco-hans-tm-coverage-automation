@@ -4,22 +4,21 @@ from src.tm_global.db_read_write.db_get_smallest_id import get_min_id_from_db
 
 
 class IDataIdRange(metaclass=ABCMeta):
+    @abstractstaticmethod
+    def set_start_id():
+        """to implement in child class"""
 
     @abstractstaticmethod
     def set_start_id():
-        """ to implement in child class """
-
-    @abstractstaticmethod
-    def set_start_id():
-        """ to implement in child class """
+        """to implement in child class"""
 
     @abstractstaticmethod
     def get_start_id():
-        """ to implement in child class """
+        """to implement in child class"""
 
     @abstractstaticmethod
     def get_end_id():
-        """ to implement in child class """
+        """to implement in child class"""
 
 
 class DataIdRange(IDataIdRange):
@@ -33,11 +32,12 @@ class DataIdRange(IDataIdRange):
         return DataIdRange.__instance
 
     def __init__(self, start_id=get_min_id_from_db(), end_id=get_max_id_from_db()):
-        # def __init__(self, start_id=get_max_id_from_db()//8 *7 , end_id=get_max_id_from_db() // 8 * 8):
-        # def __init__(self, start_id=1373, end_id=1373):
+    # def __init__(self, start_id=get_max_id_from_db()//8 *7 , end_id=get_max_id_from_db() // 8 * 8):
+    # def __init__(self, start_id=1378, end_id=1378):
         if DataIdRange.__instance != None:
             raise Exception(
-                "DataIdRange instance cannot be instantiated more than once!")
+                "DataIdRange instance cannot be instantiated more than once!"
+            )
         else:
             self.start_id = start_id
             self.end_id = end_id
