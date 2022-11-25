@@ -4,7 +4,9 @@ from selenium.common.exceptions import NoSuchElementException
 
 from src.tm_global.operations.driver_setup import tm_global_driver_setup
 from src.tm_global.operations.pause_until_loaded import pause_until_loaded
-from src.tm_global.operations.set_current_db_row_singleton import set_current_db_row_singleton
+from src.tm_global.operations.set_current_db_row_singleton import (
+    set_current_db_row_singleton,
+)
 from src.tm_global.singleton.all_the_data import AllTheData
 from src.tm_global.singleton.data_id_range import DataIdRange
 from src.tm_global.singleton.num_of_iterations import NumOfIterations
@@ -12,20 +14,30 @@ from src.tm_global.singleton.cvg_task import CVGTask
 from src.tm_global.db_read_write.db_read_address import read_from_db
 from src.tm_global.operations.select_state import select_state
 from src.tm_global.operations.set_up_input_keyword import enter_right_keyword
-from src.tm_global.operations.return_to_coverage_search_page import return_to_coverage_search_page
+from src.tm_global.operations.return_to_coverage_search_page import (
+    return_to_coverage_search_page,
+)
 from src.tm_global.singleton.current_db_row import CurrentDBRow
 from src.tm_global.operations.filter_by_lot_num import filter_by_lot_number
-from src.tm_global.operations.choose_best_from_all_results import choose_best_match_from_all_results
+from src.tm_global.operations.choose_best_from_all_results import (
+    choose_best_match_from_all_results,
+)
 from src.tm_global.singleton.retry_at_end import RetryAtEndCache
 from src.tm_global.db_read_write.write_results_to_db import write_results_to_db
 from src.tm_global.operations.filter_by_street_name import filter_by_street_name
 from src.tm_global.operations.filter_by_building_name import filter_by_building_name
 from src.tm_global.operations.filter_by_section_name import filter_by_section_name
-from src.tm_global.operations.reset_singleton_values_for_next_address import reset_singleton_values_for_next_address
+from src.tm_global.operations.reset_singleton_values_for_next_address import (
+    reset_singleton_values_for_next_address,
+)
 from src.tm_global.singleton.selected_table_row import SelectedTableRow
 from src.tm_global.singleton.lot_num_match_bool import LotNumMatchBool
-from src.tm_global.operations.set_lot_num_or_building_name_match_if_appropriate import set_lot_num_or_building_name_match_if_appropriate
-from src.tm_global.operations.search_the_exact_db_address import try_to_search_the_full_address
+from src.tm_global.operations.set_lot_num_or_building_name_match_if_appropriate import (
+    set_lot_num_or_building_name_match_if_appropriate,
+)
+from src.tm_global.operations.search_the_exact_db_address import (
+    try_to_search_the_full_address,
+)
 
 
 def finding_coverage(driver, a):
@@ -40,14 +52,14 @@ def finding_coverage(driver, a):
     # initialise cvg_task
     cvg_task = CVGTask.get_instance()
     cvg_task.set_total_number_of_addresses_to_check(
-        num_of_iterations * (data_range_end - data_range_start) + 1)
+        num_of_iterations * (data_range_end - data_range_start) + 1
+    )
 
     for _ in range(num_of_iterations):
         all_the_data = AllTheData.get_instance()
         all_the_data.reset_all_data(self=all_the_data)
 
         read_from_db()
-
 
         for data in all_the_data.get_all_the_data_list(self=all_the_data):
             print("CURRENT ROW ID: ", data.get_id())
@@ -68,7 +80,8 @@ def finding_coverage(driver, a):
                 # print("error at select state page (enter address page)")
                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                 retry_at_end_singleton.add_data_id_to_retry(
-                    self=retry_at_end_singleton, data_id=data.get_id())
+                    self=retry_at_end_singleton, data_id=data.get_id()
+                )
                 (driver, a) = return_to_coverage_search_page(driver, a)
                 reset_singleton_values_for_next_address()
                 continue
@@ -76,40 +89,47 @@ def finding_coverage(driver, a):
             # print('sleeping.')
             # time.sleep(5000)
             # try:
+            # try:
+            #     (
+            #         driver,
+            #         a,
+            #         searched_using_full_address,
+            #     ) = try_to_search_the_full_address(driver, a)
+
+            # except Exception as e:
+            #     print("hans, exception at the new try to search full address code.")
+            #     print(e)
+
+            # if not searched_using_full_address:
             try:
-                (driver, a, searched_using_full_address) = try_to_search_the_full_address(
-                    driver, a)
+                enter_right_keyword_res = enter_right_keyword(driver, a)
+                if (
+                    enter_right_keyword_res
+                    != "No results found using building name, street name, or section name."
+                ):
+                    (driver, a) = enter_right_keyword_res
 
-            except Exception as e:
-                print("hans, exception at the new try to search full address code.")
-                print(e)
+                else:
+                    print(
+                        "no results found using building name, street name, or section name."
+                    )
+                    selected_table_row_instance = SelectedTableRow.get_instance()
+                    selected_table_row_instance.set_result_remark(
+                        self=selected_table_row_instance,
+                        result_remark="No results found using building name, street name, or section name.",
+                    )
+                    (driver, a) = return_to_coverage_search_page(driver, a)
+                    # https://wholesalepremium.tm.com.my/coverage-search/result
+                    continue
 
-            if not searched_using_full_address:
-                try:
-                    enter_right_keyword_res = enter_right_keyword(driver, a)
-                    if enter_right_keyword_res != "No results found using building name, street name, or section name.":
-                        (driver, a) = enter_right_keyword_res
-
-                    else:
-                        print(
-                            "no results found using building name, street name, or section name.")
-                        selected_table_row_instance = SelectedTableRow.get_instance()
-                        selected_table_row_instance.set_result_remark(
-                            self=selected_table_row_instance, result_remark="No results found using building name, street name, or section name.")
-                        (driver, a) = return_to_coverage_search_page(driver, a)
-                        # https://wholesalepremium.tm.com.my/coverage-search/result
-                        continue
-
-                except NoSuchElementException:
-                    print('unable to find keyword field')
-                    time.sleep(5000)
+            except NoSuchElementException:
+                print("unable to find keyword field")
+                time.sleep(5000)
 
             try:
                 (driver, a) = filter_by_section_name(driver, a)
                 (driver, a) = filter_by_street_name(driver, a)
                 (driver, a) = filter_by_building_name(driver, a)
-                (driver, a) = filter_by_street_name(driver, a)
-                (driver, a) = filter_by_section_name(driver, a)
                 (driver, a) = filter_by_lot_number(driver, a)
             except Exception:
                 # print("error at some excepion her/? by lot number page")
@@ -121,7 +141,8 @@ def finding_coverage(driver, a):
                 # (driver, a) = pause_until_loaded(driver, a)
                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                 retry_at_end_singleton.add_data_id_to_retry(
-                    self=retry_at_end_singleton, data_id=data.get_id())
+                    self=retry_at_end_singleton, data_id=data.get_id()
+                )
                 time.sleep(7)
                 (driver, a) = return_to_coverage_search_page(driver, a)
                 reset_singleton_values_for_next_address()
