@@ -68,6 +68,10 @@ def finding_coverage(driver, a):
                 continue
 
             set_current_db_row_singleton(data)
+            current_db_row = CurrentDBRow.get_instance()
+            print("search level flag", current_db_row.get_search_level_flag(self=current_db_row))
+
+
 
             try:
                 # select state.

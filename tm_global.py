@@ -147,8 +147,7 @@ def tm_global():
     # data_id_range_instance.set_end_id(self=data_id_range_instance,
     #                                   end_id=int(thread_ids_to_end_at))
 
-
-# def tm_global():
+    # def tm_global():
 
     # Step 1: read from database.
 

