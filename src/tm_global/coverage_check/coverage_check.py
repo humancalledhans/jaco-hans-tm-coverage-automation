@@ -124,7 +124,7 @@ def finding_coverage(driver, a):
 
             except NoSuchElementException:
                 print("unable to find keyword field")
-                time.sleep(5000)
+                # time.sleep(5000)
 
             try:
                 (driver, a) = filter_by_section_name(driver, a)
@@ -147,8 +147,6 @@ def finding_coverage(driver, a):
                 (driver, a) = return_to_coverage_search_page(driver, a)
                 reset_singleton_values_for_next_address()
                 continue
-
-            choose_best_match_from_all_results(driver, a)
 
             # except Exception as e:
             #     current_db_row = CurrentDBRow.get_instance()
@@ -180,6 +178,7 @@ def finding_coverage(driver, a):
             # filter_iterate_and_notify(driver, a)
 
             set_lot_num_or_building_name_match_if_appropriate()
+            choose_best_match_from_all_results(driver, a)
 
             write_results_to_db()
             reset_singleton_values_for_next_address()
