@@ -102,59 +102,33 @@ def enter_right_keyword(driver, a):
     keyword_search_string = ""
     (driver, a, num_of_results_from_section) = try_using_section(driver, a)
     if num_of_results_from_section > 0:
-        return result_using_street(driver, a)
+        return get_best_result(driver, a)
     current_db_row = CurrentDBRow.get_instance()
     print(current_db_row.get_id(self=current_db_row))
     print()
     return "No results found using building name, street name, or section name."
 
 
-# TODO Rename this here and in `enter_right_keyword`
-def result_using_street(driver, a):
-    # independent copy of driver and a
-    (section_driver, section_a) = (driver, a)
-    # step 2: no results using building name. check if there is a street name.
+def get_best_result(driver, a):
     (driver, a) = reset_for_next_search(driver, a)
     (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
-
-    # return (driver, a)
-
-    # # step 2: no results using section name. check if there is a street name.
-    # (driver, a) = reset_for_next_search(driver, a)
-    # (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
-
-    if num_of_results_from_street_name > 0:
-        return result_using_building(driver, a)
+    if num_of_results_from_street_name <= 0:
     (driver, a) = reset_for_next_search(driver, a)
     (driver, a, num_of_results_from_section) = try_using_section(driver, a)
-
-    return set_results("Section Name", section_driver, section_a)
-
-
-# TODO Rename this here and in `enter_right_keyword`
-def result_using_building(driver, a):
-    # independent copy of driver and a
-    (street_driver, street_a) = (driver, a)
-    # step 3: no results using building name and street name. try using section name.
+        return set_results("Section Name", driver, a)
     (driver, a) = reset_for_next_search(driver, a)
     (
         driver,
         a,
         num_of_results_from_building_name,
     ) = try_using_building_name(driver, a)
-
     if num_of_results_from_building_name > 0:
         return set_results("Building Name", driver, a)
     (driver, a) = reset_for_next_search(driver, a)
-    (
-        driver,
-        a,
-        num_of_results_from_street_name,
-    ) = try_using_street(driver, a)
-    return set_results("Street Name", street_driver, street_a)
+    (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
+    return set_results("Street Name", driver, a)
 
 
-# TODO Rename this here and in `enter_right_keyword`
 def set_results(part_of_address_used, driver, a):
     # print('building name results: ' +
     #   str(num_of_results_from_building_name))
