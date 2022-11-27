@@ -118,31 +118,32 @@ def enter_right_keyword(driver, a):
     keyword_search_string = ""
     (driver, a, num_of_results_from_section) = try_using_section(driver, a)
     if num_of_results_from_section > 0:
-        return get_best_result(driver, a)
+        # if section returns results, add street name to be more specific
+        (driver, a) = reset_for_next_search(driver, a)
+        (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
+        if num_of_results_from_street_name <= 0:
+            # if section + street returns no result, revert back to section and return it
+            (driver, a) = reset_for_next_search(driver, a)
+            (driver, a, num_of_results_from_section) = try_using_section(driver, a)
+            return set_results("Section Name", driver, a)
+        # else add building name to be more specific
+        (driver, a) = reset_for_next_search(driver, a)
+        (
+            driver,
+            a,
+            num_of_results_from_building_name,
+        ) = try_using_building_name(driver, a)
+        if num_of_results_from_building_name > 0:
+            # if section + street + building returns results, return it
+            return set_results("Building Name", driver, a)
+        # else revert back to section + street and return it
+        (driver, a) = reset_for_next_search(driver, a)
+        (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
+        return set_results("Street Name", driver, a)
     current_db_row = CurrentDBRow.get_instance()
     print(current_db_row.get_id(self=current_db_row))
     print()
     return "No results found using building name, street name, or section name."
-
-
-def get_best_result(driver, a):
-    (driver, a) = reset_for_next_search(driver, a)
-    (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
-    if num_of_results_from_street_name <= 0:
-        (driver, a) = reset_for_next_search(driver, a)
-        (driver, a, num_of_results_from_section) = try_using_section(driver, a)
-        return set_results("Section Name", driver, a)
-    (driver, a) = reset_for_next_search(driver, a)
-    (
-        driver,
-        a,
-        num_of_results_from_building_name,
-    ) = try_using_building_name(driver, a)
-    if num_of_results_from_building_name > 0:
-        return set_results("Building Name", driver, a)
-    (driver, a) = reset_for_next_search(driver, a)
-    (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
-    return set_results("Street Name", driver, a)
 
 
 def set_results(part_of_address_used, driver, a):
