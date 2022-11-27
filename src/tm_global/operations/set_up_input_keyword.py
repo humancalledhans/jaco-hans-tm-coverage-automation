@@ -13,6 +13,9 @@ from src.tm_global.operations.reset_for_next_search import reset_for_next_search
 from src.tm_global.singleton.selected_table_row import SelectedTableRow
 
 keyword_search_string = ""
+keyword_search_section = ""
+keyword_search_street = ""
+keyword_search_building = ""
 
 
 def try_using_building_name(driver, a):
@@ -25,8 +28,16 @@ def try_using_building_name(driver, a):
         building_name = building_name.strip()
 
     if building_name != "" and building_name is not None and len(building_name) > 3:
+        global keyword_search_building
+        keyword_search_building = building_name
         global keyword_search_string
-        keyword_search_string = keyword_search_string + " " + building_name
+        keyword_search_string = (
+            keyword_search_section
+            + " "
+            + keyword_search_street
+            + " "
+            + keyword_search_building
+        )
 
         (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
@@ -53,8 +64,10 @@ def try_using_street(driver, a):
 
     if street != "" and street is not None and len(street) > 3:
         # append a space + the street name to the keyword search string
+        global keyword_search_street
+        keyword_search_street = street
         global keyword_search_string
-        keyword_search_string = keyword_search_string + " " + street
+        keyword_search_string = keyword_search_section + " " + keyword_search_street
 
         (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
@@ -79,8 +92,10 @@ def try_using_section(driver, a):
         section = section.strip()
 
     if section != "" and section is not None and len(section) > 3:
+        global keyword_search_section
+        keyword_search_section = section
         global keyword_search_string
-        keyword_search_string = section
+        keyword_search_string = keyword_search_section
 
         (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
 
@@ -99,6 +114,7 @@ def try_using_section(driver, a):
 def enter_right_keyword(driver, a):
 
     # step 1: check if there is a building name.
+    global keyword_search_string
     keyword_search_string = ""
     (driver, a, num_of_results_from_section) = try_using_section(driver, a)
     if num_of_results_from_section > 0:
@@ -113,8 +129,8 @@ def get_best_result(driver, a):
     (driver, a) = reset_for_next_search(driver, a)
     (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
     if num_of_results_from_street_name <= 0:
-    (driver, a) = reset_for_next_search(driver, a)
-    (driver, a, num_of_results_from_section) = try_using_section(driver, a)
+        (driver, a) = reset_for_next_search(driver, a)
+        (driver, a, num_of_results_from_section) = try_using_section(driver, a)
         return set_results("Section Name", driver, a)
     (driver, a) = reset_for_next_search(driver, a)
     (
