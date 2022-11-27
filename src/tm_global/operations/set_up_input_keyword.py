@@ -100,64 +100,67 @@ def enter_right_keyword(driver, a):
 
     # step 1: check if there is a building name.
     keyword_search_string = ""
-    (section_driver, section_a, num_of_results_from_section) = try_using_section(
-        driver, a
-    )
+    (driver, a, num_of_results_from_section) = try_using_section(driver, a)
     if num_of_results_from_section > 0:
-        # step 2: no results using building name. check if there is a street name.
-        (street_driver, street_a) = reset_for_next_search(section_driver, section_a)
-        (street_driver, street_a, num_of_results_from_street_name) = try_using_street(
-            street_driver, street_a
-        )
+        return result_using_street(driver, a)
+    current_db_row = CurrentDBRow.get_instance()
+    print(current_db_row.get_id(self=current_db_row))
+    print()
+    return "No results found using building name, street name, or section name."
 
-        if num_of_results_from_street_name > 0:
-            # step 3: no results using building name and street name. try using section name.
-            (building_driver, building_a) = reset_for_next_search(
-                street_driver, street_a
-            )
-            (
-                building_driver,
-                building_a,
-                num_of_results_from_building_name,
-            ) = try_using_building_name(building_driver, building_a)
 
-            if num_of_results_from_building_name > 0:
-                # print('building name results: ' +
-                #   str(num_of_results_from_building_name))
-                selected_table_row_instance = SelectedTableRow.get_instance()
-                selected_table_row_instance.set_part_of_address_used(
-                    self=selected_table_row_instance,
-                    part_of_address_used="Building Name",
-                )
+# TODO Rename this here and in `enter_right_keyword`
+def result_using_street(driver, a):
+    # independent copy of driver and a
+    (section_driver, section_a) = (driver, a)
+    # step 2: no results using building name. check if there is a street name.
+    (driver, a) = reset_for_next_search(driver, a)
+    (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
 
-                return (building_driver, building_a)
-            (street_driver, street_a) = reset_for_next_search(
-                building_driver, building_a
-            )
-            (
-                street_driver,
-                street_a,
-                num_of_results_from_street_name,
-            ) = try_using_street(street_driver, street_a)
-            # print('street name results: ' + str(num_of_results_from_street_name))
-            selected_table_row_instance = SelectedTableRow.get_instance()
-            selected_table_row_instance.set_part_of_address_used(
-                self=selected_table_row_instance, part_of_address_used="Street Name"
-            )
-            return (street_driver, street_a)
-        (section_driver, section_a) = reset_for_next_search(street_driver, street_a)
-        (section_driver, section_a, num_of_results_from_section) = try_using_section(
-            section_driver, section_a
-        )
-        # print('section name results: ' + str(num_of_results_from_section))
-        selected_table_row_instance = SelectedTableRow.get_instance()
-        selected_table_row_instance.set_part_of_address_used(
-            self=selected_table_row_instance, part_of_address_used="Section Name"
-        )
-        return (section_driver, section_a)
+    # return (driver, a)
 
-    else:
-        current_db_row = CurrentDBRow.get_instance()
-        print(current_db_row.get_id(self=current_db_row))
-        print()
-        return "No results found using building name, street name, or section name."
+    # # step 2: no results using section name. check if there is a street name.
+    # (driver, a) = reset_for_next_search(driver, a)
+    # (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
+
+    if num_of_results_from_street_name > 0:
+        return result_using_building(driver, a)
+    (driver, a) = reset_for_next_search(driver, a)
+    (driver, a, num_of_results_from_section) = try_using_section(driver, a)
+
+    return set_results("Section Name", section_driver, section_a)
+
+
+# TODO Rename this here and in `enter_right_keyword`
+def result_using_building(driver, a):
+    # independent copy of driver and a
+    (street_driver, street_a) = (driver, a)
+    # step 3: no results using building name and street name. try using section name.
+    (driver, a) = reset_for_next_search(driver, a)
+    (
+        driver,
+        a,
+        num_of_results_from_building_name,
+    ) = try_using_building_name(driver, a)
+
+    if num_of_results_from_building_name > 0:
+        return set_results("Building Name", driver, a)
+    (driver, a) = reset_for_next_search(driver, a)
+    (
+        driver,
+        a,
+        num_of_results_from_street_name,
+    ) = try_using_street(driver, a)
+    return set_results("Street Name", street_driver, street_a)
+
+
+# TODO Rename this here and in `enter_right_keyword`
+def set_results(part_of_address_used, driver, a):
+    # print('building name results: ' +
+    #   str(num_of_results_from_building_name))
+    selected_table_row_instance = SelectedTableRow.get_instance()
+    selected_table_row_instance.set_part_of_address_used(
+        self=selected_table_row_instance, part_of_address_used=part_of_address_used
+    )
+
+    return (driver, a)
