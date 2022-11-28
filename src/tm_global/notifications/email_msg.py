@@ -42,7 +42,7 @@ Postcode: %s
 
 
 def send_email(text, email_to):
-    print('send email method called')
+    # print('send email method called')
     # print("EMAIL_TO................", email_to)
     gmail_user = 'botourssp@gmail.com'
     gmail_password = 'jshmktlmwgeginnx'
