@@ -16,6 +16,42 @@ keyword_search_string = ""
 keyword_search_section = ""
 keyword_search_street = ""
 keyword_search_building = ""
+keyword_search_lot_number = ""
+
+
+def try_using_lot_number(driver, a):
+
+    current_db_row = CurrentDBRow.get_instance()
+
+    lot_number = current_db_row.get_house_unit_lotno(self=current_db_row)
+
+    if lot_number is None or lot_number == "":
+        return (driver, a, 0)
+
+    lot_number = lot_number.strip()
+
+    global keyword_search_lot_number
+    keyword_search_lot_number = lot_number
+    global keyword_search_string
+    keyword_search_string = (
+        keyword_search_section
+        + " "
+        + keyword_search_street
+        + " "
+        + keyword_search_building
+        + " "
+        + keyword_search_lot_number
+    )
+
+    (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
+
+    (driver, a) = click_on_search_button(driver, a)
+
+    (driver, a) = pause_until_loaded(driver, a)
+
+    num_of_results = get_num_of_results(driver, a)
+
+    return (driver, a, num_of_results)
 
 
 def try_using_building_name(driver, a):
@@ -117,7 +153,7 @@ def enter_right_keyword(driver, a):
     global keyword_search_string
     keyword_search_string = ""
     (driver, a, num_of_results_from_section) = try_using_section(driver, a)
-    if num_of_results_from_section > 0:
+    if num_of_results_from_section > 0 or keyword_search_section == "":
         # if section returns results, add street name to be more specific
         (driver, a) = reset_for_next_search(driver, a)
         (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
@@ -134,8 +170,17 @@ def enter_right_keyword(driver, a):
             num_of_results_from_building_name,
         ) = try_using_building_name(driver, a)
         if num_of_results_from_building_name > 0:
-            # if section + street + building returns results, return it
-            return set_results("Building Name", driver, a)
+            # if section + street + building returns results, add lot num to be more specific
+            (driver, a) = reset_for_next_search(driver, a)
+            (driver, a, num_of_results_from_lot_num) = try_using_lot_number(driver, a)
+            if num_of_results_from_lot_num <= 0:
+                # if section + street + building + lot num returns no result, revert back to section + street + building and return it
+                (driver, a) = reset_for_next_search(driver, a)
+                (driver, a, num_of_results_from_section) = try_using_building_name(
+                    driver, a
+                )
+                return set_results("Building Name", driver, a)
+            return set_results("Lot Number", driver, a)
         # else revert back to section + street and return it
         (driver, a) = reset_for_next_search(driver, a)
         (driver, a, num_of_results_from_street_name) = try_using_street(driver, a)
