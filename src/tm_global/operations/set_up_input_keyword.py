@@ -60,9 +60,16 @@ def enter_right_keyword(driver, a):
         lot_number,
     ]
 
+    flag = False
+    first_non_none = 0
+
     for i in range(len(keyword_search_string_list)):
         if keyword_search_string_list[i] == "" or keyword_search_string_list[i] is None:
             continue
+
+        if flag == False:
+            first_non_none = i
+            flag = True
 
         keyword_search_string = " ".join(
             [x for x in keyword_search_string_list[: i + 1] if x]
@@ -77,7 +84,7 @@ def enter_right_keyword(driver, a):
             return set_results(keyword_search_string_name[i], driver, a)
 
         if num_of_results <= 0:
-            if i == 0:
+            if i == first_non_none:
                 break
             (driver, a) = reset_for_next_search(driver, a)
             keyword_search_string = " ".join(
@@ -94,7 +101,7 @@ def enter_right_keyword(driver, a):
     current_db_row = CurrentDBRow.get_instance()
     print(current_db_row.get_id(self=current_db_row))
     print()
-    return "No results found"
+    return "No results found."
 
 
 def set_results(part_of_address_used, driver, a):
