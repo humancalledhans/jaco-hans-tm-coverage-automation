@@ -53,7 +53,7 @@ def enter_right_keyword(driver, a):
 
     keyword_search_string_list = [
         city,
-        postcode,
+        f"{int(postcode):05}",
         section,
         street,
         building_name,
