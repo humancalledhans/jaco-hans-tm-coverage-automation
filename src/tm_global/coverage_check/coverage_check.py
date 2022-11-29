@@ -27,6 +27,8 @@ from src.tm_global.db_read_write.write_results_to_db import write_results_to_db
 from src.tm_global.operations.filter_by_street_name import filter_by_street_name
 from src.tm_global.operations.filter_by_building_name import filter_by_building_name
 from src.tm_global.operations.filter_by_section_name import filter_by_section_name
+from src.tm_global.operations.filter_by_city_name import filter_by_city_name
+from src.tm_global.operations.filter_by_postcode import filter_by_postcode
 from src.tm_global.operations.reset_singleton_values_for_next_address import (
     reset_singleton_values_for_next_address,
 )
@@ -103,20 +105,15 @@ def finding_coverage(driver, a):
             # if not searched_using_full_address:
             try:
                 enter_right_keyword_res = enter_right_keyword(driver, a)
-                if (
-                    enter_right_keyword_res
-                    != "No results found using building name, street name, or section name."
-                ):
+                if enter_right_keyword_res != "No results found.":
                     (driver, a) = enter_right_keyword_res
 
                 else:
-                    print(
-                        "no results found using building name, street name, or section name."
-                    )
+                    print("No results found.")
                     selected_table_row_instance = SelectedTableRow.get_instance()
                     selected_table_row_instance.set_result_remark(
                         self=selected_table_row_instance,
-                        result_remark="No results found using building name, street name, or section name.",
+                        result_remark="No results found.",
                     )
                     (driver, a) = return_to_coverage_search_page(driver, a)
                     # https://wholesalepremium.tm.com.my/coverage-search/result
@@ -127,10 +124,12 @@ def finding_coverage(driver, a):
                 # time.sleep(5000)
 
             try:
-                (driver, a) = filter_by_section_name(driver, a)
-                (driver, a) = filter_by_street_name(driver, a)
-                (driver, a) = filter_by_building_name(driver, a)
                 (driver, a) = filter_by_lot_number(driver, a)
+                (driver, a) = filter_by_building_name(driver, a)
+                (driver, a) = filter_by_street_name(driver, a)
+                (driver, a) = filter_by_section_name(driver, a)
+                (driver, a) = filter_by_city_name(driver, a)
+                (driver, a) = filter_by_postcode(driver, a)
             except Exception:
                 # print("error at some excepion her/? by lot number page")
                 # # setup driver again.
@@ -176,7 +175,6 @@ def finding_coverage(driver, a):
             # (driver, a) = iterate_through_all_results(driver, a)
 
             # filter_iterate_and_notify(driver, a)
-
             set_lot_num_or_building_name_match_if_appropriate()
             choose_best_match_from_all_results(driver, a)
 
