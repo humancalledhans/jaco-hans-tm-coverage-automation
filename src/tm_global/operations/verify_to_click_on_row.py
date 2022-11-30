@@ -22,7 +22,7 @@ def verify_to_click_on_row(driver, a, selected_row_num):
         set_building_or_street_section_name_found_lotno_not_found()
         selected_table_row_instance = SelectedTableRow.get_instance()
         selected_table_row_instance.set_result_remark(
-            self=selected_table_row_instance, result_remark="No results found using building name, street name, or section name.")
+            self=selected_table_row_instance, result_remark="No results found.")
         return False
 
     elif not all_columns_match_bool:
