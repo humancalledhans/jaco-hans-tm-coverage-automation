@@ -10,11 +10,11 @@ Reproduce the virtual enviornment using the following commands (or similar):
 
 2. Create a virtual environment
 
-    `python3 -m venv tm-coverage-venv`
+    `py -3 -m venv tm-coverage-venv`
 
 3. Activate it
 
-    `source prj/venv/bin/activate`
+    `source tm-coverage-venv/Scripts/activatee`
 
 4. Run the pip install
 
