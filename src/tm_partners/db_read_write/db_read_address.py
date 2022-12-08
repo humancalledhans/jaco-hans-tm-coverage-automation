@@ -26,7 +26,7 @@ def read_from_db():
         query = f"SELECT * FROM cvg_db WHERE id = {start_id}"
     else:
         # query = f"SELECT * FROM cvg_db WHERE is_active = 1 ORDER BY created_at DESC"
-        query = f"SELECT * FROM cvg_db ORDER BY created_at DESC"
+        query = f"SELECT * FROM cvg_db WHERE id >= {start_id} AND id <= {end_id} ORDER BY id DESC"
         # query = f"SELECT * FROM cvg_db ORDER BY created_at ASC"
     cursor.execute(query)
     result = cursor.fetchall()

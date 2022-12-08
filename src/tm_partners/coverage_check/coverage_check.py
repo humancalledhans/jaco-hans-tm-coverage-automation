@@ -70,11 +70,6 @@ class FindingCoverage:
             all_the_data = AllTheData.get_instance()
             all_the_data.reset_all_data(self=all_the_data)
 
-            if data_range_start != data_range_end:
-                data_id_range = DataIdRange.get_instance()
-                data_id_range.set_end_id(
-                    self=data_id_range, end_id=get_max_id_from_db())
-
             read_from_db()
 
             all_the_data_list = all_the_data.get_all_the_data_list(
@@ -84,10 +79,133 @@ class FindingCoverage:
             cvg_task = CVGTask.get_instance()
             cvg_task.set_total_number_of_addresses_to_check(len(all_the_data_list))
 
-            for input_address in all_the_data_list:
-                all_the_data = AllTheData.get_instance()
-                all_the_data.reset_all_data(self=all_the_data)
+            for address_to_search in all_the_data_list:
 
-                read_from_db()
+                set_current_db_row(address_to_search)
+                current_db_row = CurrentDBRow.get_instance()
+                
+                print("Searching coverage for ID:", current_db_row.get_id(self=current_db_row))
+                print(current_db_row.get_address(self=current_db_row))
 
-                print("CURRENT ID: ", input_address.get_id())
+                # TODO: Preprocess the input to get all variations by token
+                self._get_address_keywords_to_search(current_db_row)
+                # TODO: Filter by state & address keyword until result is acceptable
+                # Case 1: < 1024
+                # Case 2: == 1024
+                # TODO: Find closest match (don't forget flag)
+                # TODO: Concatenation to get address result
+                # TODO: Check result & store in DB
+
+    def _get_address_keywords_to_search(self, current_db_row:CurrentDBRow):
+        
+        """Generates address keywords to search
+
+        Args:
+            current_db_row: CurrentDBRow object
+
+        Returns:
+            [string]: array of strings to search
+        """
+        address_keywords_to_search = []
+
+        # include tokens that shouldn't have variations
+        address_keywords_to_search.extend(
+            [
+                current_db_row.get_hous_get_variationse_unit_lotno(self=current_db_row),
+                current_db_row.get_city(self=current_db_row),
+                current_db_row.get_postcode(self=current_db_row)
+            ]
+        )
+
+        # include tokens that might have variations
+        building_name_variations = self._get_variations(current_db_row.get_building(self=current_db_row))
+        street_name_variations = self._get_variations(current_db_row.get_street(self=current_db_row))
+        section_variations = self._get_variations(current_db_row.get_section(self=current_db_row))
+        
+        address_keywords_to_search = [
+            *address_keywords_to_search, 
+            *building_name_variations, 
+            *street_name_variations, 
+            *section_variations
+        ] 
+        
+        return address_keywords_to_search
+        
+    def _get_variations(self, token):
+        """Generates possible variations of an address token
+
+        Args:
+            token (string): address token
+
+        Returns:
+            [string]: an array of token variations, empty if token is ''
+        """
+        # map of words and all their possible variations as a list
+        variation_map = {
+            'Commercial': ['Komersial'],
+            'Residency': ['Residensi'],
+            'Tower': ['Menara'],
+            'Complex': ['Kompleks'],
+            'Bagian': ['BHG'],
+            'Bukit': ['BKT'],
+            'Jabatan': ['JAB'],
+            'Jalan': ['JLN'],
+            'Kawasan': ['KAW'],
+            'Kementerian': ['KEM'],
+            'Ladang': ['LDG'],
+            'Lembaga': ['LEM'],
+            'Lorong': ['LRG'],
+            'Padang': ['PDG'],
+            'Persiaran': ['PSN'],
+            'Sungai': ['SG'],
+            'Simpang': ['SPG'],
+            'Tanjung': ['TG'],
+            'Teluk': ['TK'],
+            'Taman': ['TMN'],
+            'Jalan': ['JLN'],
+            'Komersial': ['Commercial'],
+            'Residensi': ['Residency'],
+            'Menara': ['Tower'],
+            'Kompleks': ['Complex'],
+            'BHG': ['Bagian'],
+            'BKT': ['Bukit'],
+            'JAB': ['Jabatan'],
+            'JLN': ['Jalan'],
+            'KAW': ['Kawasan'],
+            'KEM': ['Kementerian'],
+            'LDG': ['Ladang'],
+            'LEM': ['Lembaga'],
+            'LRG': ['Lorong'],
+            'PDG': ['Padang'],
+            'PSN': ['Persiaran'],
+            'SG': ['Sungai'],
+            'SPG': ['Simpang'],
+            'TG': ['Tanjung'],
+            'TK': ['Teluk'],
+            'TMN': ['Taman'],
+            'JLN': ['Jalan'],
+            'Block': ['Blok', 'Blk'],
+            'Blok': ['Block', 'Blk'],
+            'Blk': ['Block', 'Blok'],
+            'Appartment': ['Apt', 'Appt'],
+            'Apt': ['Appartment', 'Appt'],
+            'Appt': ['Appartment', 'Apt'],
+            'Kampung': ['Kampong', 'KG'],
+            'Kampong': ['Kampung', 'KG'],
+            'KG': ['Kampung', 'Kampong'],
+            'Leboh': ['Lebuh', 'LBH'],
+            'Lebuh': ['Leboh', 'LBH'],
+            'LBH': ['Leboh', 'Lebuh'],
+            'Condominium': ['Kondo', 'Condo', 'Kondominium'],
+            'Kondo': ['Condominium', 'Condo', 'Kondominium'],
+            'Condo': ['Condominium', 'Kondo', 'Kondominium'],
+            'Kondominium': ['Condominium', 'Condo', 'Kondo'],
+        }
+
+        # token doesn't exist
+        if not token:
+            return []
+
+        # TODO: generate variations
+
+        return [token]
