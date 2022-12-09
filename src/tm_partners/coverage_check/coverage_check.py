@@ -87,8 +87,9 @@ class FindingCoverage:
                 print("Searching coverage for ID:", current_db_row.get_id(self=current_db_row))
                 print(current_db_row.get_address(self=current_db_row))
 
-                # TODO: Preprocess the input to get all variations by token
-                self._get_address_keywords_to_search(current_db_row)
+                # Preprocess the input to get all variations by token
+                address_keywords_to_search = self._get_address_keywords_to_search(current_db_row)
+                
                 # TODO: Filter by state & address keyword until result is acceptable
                 # Case 1: < 1024
                 # Case 2: == 1024
@@ -111,7 +112,7 @@ class FindingCoverage:
         # include tokens that shouldn't have variations
         address_keywords_to_search.extend(
             [
-                current_db_row.get_hous_get_variationse_unit_lotno(self=current_db_row),
+                current_db_row.get_house_unit_lotno(self=current_db_row),
                 current_db_row.get_city(self=current_db_row),
                 current_db_row.get_postcode(self=current_db_row)
             ]
@@ -123,15 +124,15 @@ class FindingCoverage:
         section_variations = self._get_variations(current_db_row.get_section(self=current_db_row))
         
         address_keywords_to_search = [
-            *address_keywords_to_search, 
+            *address_keywords_to_search,
             *building_name_variations, 
             *street_name_variations, 
             *section_variations
-        ] 
+        ]
         
         return address_keywords_to_search
         
-    def _get_variations(self, token):
+    def _get_variations(self, token:str):
         """Generates possible variations of an address token
 
         Args:
@@ -142,70 +143,84 @@ class FindingCoverage:
         """
         # map of words and all their possible variations as a list
         variation_map = {
-            'Commercial': ['Komersial'],
-            'Residency': ['Residensi'],
-            'Tower': ['Menara'],
-            'Complex': ['Kompleks'],
-            'Bagian': ['BHG'],
-            'Bukit': ['BKT'],
-            'Jabatan': ['JAB'],
-            'Jalan': ['JLN'],
-            'Kawasan': ['KAW'],
-            'Kementerian': ['KEM'],
-            'Ladang': ['LDG'],
-            'Lembaga': ['LEM'],
-            'Lorong': ['LRG'],
-            'Padang': ['PDG'],
-            'Persiaran': ['PSN'],
-            'Sungai': ['SG'],
-            'Simpang': ['SPG'],
-            'Tanjung': ['TG'],
-            'Teluk': ['TK'],
-            'Taman': ['TMN'],
-            'Jalan': ['JLN'],
-            'Komersial': ['Commercial'],
-            'Residensi': ['Residency'],
-            'Menara': ['Tower'],
-            'Kompleks': ['Complex'],
-            'BHG': ['Bagian'],
-            'BKT': ['Bukit'],
-            'JAB': ['Jabatan'],
-            'JLN': ['Jalan'],
-            'KAW': ['Kawasan'],
-            'KEM': ['Kementerian'],
-            'LDG': ['Ladang'],
-            'LEM': ['Lembaga'],
-            'LRG': ['Lorong'],
-            'PDG': ['Padang'],
-            'PSN': ['Persiaran'],
-            'SG': ['Sungai'],
-            'SPG': ['Simpang'],
-            'TG': ['Tanjung'],
-            'TK': ['Teluk'],
-            'TMN': ['Taman'],
-            'JLN': ['Jalan'],
-            'Block': ['Blok', 'Blk'],
-            'Blok': ['Block', 'Blk'],
-            'Blk': ['Block', 'Blok'],
-            'Appartment': ['Apt', 'Appt'],
-            'Apt': ['Appartment', 'Appt'],
-            'Appt': ['Appartment', 'Apt'],
-            'Kampung': ['Kampong', 'KG'],
-            'Kampong': ['Kampung', 'KG'],
-            'KG': ['Kampung', 'Kampong'],
-            'Leboh': ['Lebuh', 'LBH'],
-            'Lebuh': ['Leboh', 'LBH'],
-            'LBH': ['Leboh', 'Lebuh'],
-            'Condominium': ['Kondo', 'Condo', 'Kondominium'],
-            'Kondo': ['Condominium', 'Condo', 'Kondominium'],
-            'Condo': ['Condominium', 'Kondo', 'Kondominium'],
-            'Kondominium': ['Condominium', 'Condo', 'Kondo'],
+            'COMMERCIAL': ['KOMERSIAL'],
+            'RESIDENCY': ['RESIDENSI'],
+            'TOWER': ['MENARA'],
+            'COMPLEX': ['KOMPLEKS'],
+            'BAGIAN': ['BHG'],
+            'BUKIT': ['BKT'],
+            'JABATAN': ['JAB'],
+            'JALAN': ['JLN'],
+            'KAWASAN': ['KAW'],
+            'KEMENTERIAN': ['KEM'],
+            'LADANG': ['LDG'],
+            'LEMBAGA': ['LEM'],
+            'LORONG': ['LRG'],
+            'PADANG': ['PDG'],
+            'PERSIARAN': ['PSN'],
+            'SUNGAI': ['SG'],
+            'SIMPANG': ['SPG'],
+            'TANJUNG': ['TG'],
+            'TELUK': ['TK'],
+            'TAMAN': ['TMN'],
+            'JALAN': ['JLN'],
+            'KOMERSIAL': ['COMMERCIAL'],
+            'RESIDENSI': ['RESIDENCY'],
+            'MENARA': ['TOWER'],
+            'KOMPLEKS': ['COMPLEX'],
+            'BHG': ['BAGIAN'],
+            'BKT': ['BUKIT'],
+            'JAB': ['JABATAN'],
+            'JLN': ['JALAN'],
+            'KAW': ['KAWASAN'],
+            'KEM': ['KEMENTERIAN'],
+            'LDG': ['LADANG'],
+            'LEM': ['LEMBAGA'],
+            'LRG': ['LORONG'],
+            'PDG': ['PADANG'],
+            'PSN': ['PERSIARAN'],
+            'SG': ['SUNGAI'],
+            'SPG': ['SIMPANG'],
+            'TG': ['TANJUNG'],
+            'TK': ['TELUK'],
+            'TMN': ['TAMAN'],
+            'JLN': ['JALAN'],
+            'BLOCK': ['BLOK', 'BLK'],
+            'BLOK': ['BLOCK', 'BLK'],
+            'BLK': ['BLOCK', 'BLOK'],
+            'APPARTMENT': ['APT', 'APPT'],
+            'APT': ['APPARTMENT', 'APPT'],
+            'APPT': ['APPARTMENT', 'APT'],
+            'KAMPUNG': ['KAMPONG', 'KG'],
+            'KAMPONG': ['KAMPUNG', 'KG'],
+            'KG': ['KAMPUNG', 'KAMPONG'],
+            'LEBOH': ['LEBUH', 'LBH'],
+            'LEBUH': ['LEBOH', 'LBH'],
+            'LBH': ['LEBOH', 'LEBUH'],
+            'CONDOMINIUM': ['KONDO', 'CONDO', 'KONDOMINIUM'],
+            'KONDO': ['CONDOMINIUM', 'CONDO', 'KONDOMINIUM'],
+            'CONDO': ['CONDOMINIUM', 'KONDO', 'KONDOMINIUM'],
+            'KONDOMINIUM': ['CONDOMINIUM', 'CONDO', 'KONDO'],
         }
 
         # token doesn't exist
         if not token:
             return []
 
-        # TODO: generate variations
+        # generate string with variations
+        possible_variations = [token]
+        token_list = token.split(' ')
+        # processing each word in the token
+        for i, word in enumerate(token_list):
+            # if a variation exists
+            if word in variation_map:
+                # freeze the state before modification to avoid duplicates
+                possible_variations_state_before_mod = [s for s in possible_variations]
+                for variation in variation_map[word]:
+                    # modify each existing search keyword to include the newly identified variation
+                    for possibilities in possible_variations_state_before_mod:
+                        new_keyword = possibilities.split(' ')
+                        new_keyword[i] = variation
+                        possible_variations.append(' '.join(new_keyword)) # list -> string
 
-        return [token]
+        return possible_variations
