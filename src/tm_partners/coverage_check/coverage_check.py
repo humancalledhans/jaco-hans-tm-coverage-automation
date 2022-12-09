@@ -93,6 +93,42 @@ class FindingCoverage:
                 # TODO: Filter by state & address keyword until result is acceptable
                 # Case 1: < 1024
                 # Case 2: == 1024
+                state_token = current_db_row.get_state(self=current_db_row).upper().strip()
+
+                for address_keyword in address_keywords_to_search:
+                    
+                    # don't search if the address_keyword is too short
+                    if address_keyword < 3:
+                        continue
+
+                    current_search_success = False
+                    while not current_search_success:
+                        print("Searching for keyword:", address_keyword)
+
+                        # select state from dropdown
+                        (driver, a) = pause_until_loaded(driver, a)
+                        (driver, a) = select_state(driver, a, state_token)
+
+                        # enter keyword to search
+                        (driver, a) = enter_into_keyword_field(
+                        driver, a, address_keyword)
+                        (driver, a) = click_search_btn(driver, a)
+                        (driver, a, did_captcha_interfere) = detect_and_solve_captcha(driver, a, True)
+
+                        # wait for the results table to pop up.
+                        try:
+                            (driver, a) = pause_until_loaded(driver, a)
+                            (driver, a) = wait_for_results_table(driver, a)
+                        except TimeoutException:
+                            (driver, a, did_captcha_interfere) = detect_and_solve_captcha(driver, a, True)
+
+                        # redoing the search due to captcha interference
+                        if not did_captcha_interfere:
+                            current_search_success = True
+                        
+                        # TODO: use the realtime filtering to narrow down by city and postcode
+                        # TODO: store the results in an array
+
                 # TODO: Find closest match (don't forget flag)
                 # TODO: Concatenation to get address result
                 # TODO: Check result & store in DB

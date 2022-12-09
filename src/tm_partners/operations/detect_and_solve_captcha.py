@@ -13,13 +13,16 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-def detect_and_solve_captcha(driver, a):
+def detect_and_solve_captcha(driver, a, return_captcha_existence_flag=False):
     to_proceed = False
+    captcha_exists = False
+
     while to_proceed == False:
         try:
             (driver, a) = pause_until_loaded(driver, a)
             captcha_to_solve = WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
                 (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@id='layover' and @align='center']//form[@name='Netui_Form_4' and @id='Netui_Form_4']//img[@src='jcaptchaCustom.jpg' and @border='1']")))
+            captcha_exists = True
             captcha_code = solve_captcha(
                 captcha_elem_to_solve=captcha_to_solve, driver=driver)
             # print("HERE2")
@@ -44,4 +47,8 @@ def detect_and_solve_captcha(driver, a):
             # print(
             #     "Retrying step FIVE - going back and comparing each address...")
             to_proceed = True
-    return (driver, a)
+    
+    if return_captcha_existence_flag:
+        return (driver, a, captcha_exists)
+    else:
+        return (driver, a)
