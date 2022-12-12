@@ -290,8 +290,37 @@
 # for x in possible_keywords: 
 # 	print(x)
 
-def test():
-	return 1, 2, 3
+# def test():
+# 	return 1, 2, 3
 
-x, y = test()
-print(x , y)
+# x, y = test()
+# print(x , y)
+
+import difflib as dl
+from thefuzz import fuzz
+import textdistance as td
+
+test_input = [
+	['Short Form', 'JALAN BUKIT BROGA HILL', 'JLN BKT BROGA HILL'],
+	['Spelling Variation', 'KAMPUNG BILATER SOON', 'KAMPONG BILATRE SOON'],
+	['Placement of Symbols', 'C/11-02', 'C-11-02'],
+	['Ordering of Words', 'TAMAN PELANGI INDAH RUMAH PANGSA', 'RUMAH PANGSA TAMAN PELANGI INDAH'],
+	['Substrings Match', 'RUMAH PANGSA TAMAN PELANGI INDAH', 'RUMAH PANGSA ZON 1F3 BLOK U TAMAN PELANGI INDAH']
+]
+
+for test in test_input:
+	category, a1, a2 = test
+
+	fuzz_res = round(fuzz.token_set_ratio(a1, a2)/100, 2)
+	dl_res = round(dl.SequenceMatcher(a=a1, b=a2).ratio(), 2) # determine the ratio of identical characters in the two strings
+	td_lev_res = td.levenshtein.distance(a1, a2) #edit distance
+	td_jaro_wrinkler_res = round(td.jaro_winkler.normalized_similarity(a1, a2), 2) # typos likely to occur later in the string
+	td_mra_res = round(td.mra.normalized_similarity(a1, a2), 2) # phonetic similarity
+
+	print(category)
+	print('TheFuzz: ' + str(fuzz_res))
+	print('Difflib Sequence Matcher: ' + str(dl_res))
+	print('TextDistance Levenshtein: ' + str(td_lev_res))
+	print('TextDistance Jaro Wrinkler: ' + str(td_jaro_wrinkler_res))
+	print('TextDistance MRA: ' + str(td_mra_res))
+	print('--------------')

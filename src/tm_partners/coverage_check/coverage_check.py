@@ -80,6 +80,7 @@ class FindingCoverage:
             cvg_task.set_total_number_of_addresses_to_check(len(all_the_data_list))
 
             for address_to_search in all_the_data_list:
+                search_results_agg = []
 
                 set_current_db_row(address_to_search)
                 current_db_row = CurrentDBRow.get_instance()
@@ -98,9 +99,10 @@ class FindingCoverage:
                 for address_keyword in address_keywords_to_search:
                     
                     # don't search if the address_keyword is too short
-                    if address_keyword < 3:
+                    if len(address_keyword) < 3:
                         continue
 
+                    # only happens when captcha pops up
                     current_search_success = False
                     while not current_search_success:
                         print("Searching for keyword:", address_keyword)
@@ -128,6 +130,24 @@ class FindingCoverage:
                         
                         # TODO: use the realtime filtering to narrow down by city and postcode
                         # TODO: store the results in an array
+                        table_rows = driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']")
+                        for row in table_rows:
+                            row_data = []
+                            row_cells = row.find_elements(By.TAG_NAME, "td")
+                            for cell in row_cells:
+                                row_data.append(cell.text)
+                            search_results_agg.append({
+                                'unit_no': row_data[0],
+                                'street': row_data[1] + ' ' + row_data[2],
+                                'section': row_data[3],
+                                'floor': row_data[4],
+                                'building': row_data[5],
+                                'city': row_data[6],
+                                'state': row_data[7],
+                                'postcode': row_data[8],
+                            })
+                            print(len(search_results_agg))
+                        
 
                 # TODO: Find closest match (don't forget flag)
                 # TODO: Concatenation to get address result
