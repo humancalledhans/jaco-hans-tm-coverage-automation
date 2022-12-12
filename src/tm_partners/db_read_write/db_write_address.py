@@ -314,6 +314,8 @@ def write_or_edit_result(id, result_type, result_text):
     address_remark = selected_table_row_instance.get_address(
         self=selected_table_row_instance)
     address_remark = ''
+
+    
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)
     print("RESULT TEXT: ", result_text)
