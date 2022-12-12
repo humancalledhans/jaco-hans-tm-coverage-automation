@@ -1,3 +1,4 @@
+from thefuzz import fuzz
 from src.tm_partners.singleton.current_db_row import CurrentDBRow
 
 
@@ -91,17 +92,9 @@ def return_points_for_row(table_row_data, table_header_data) -> bool:
         # any other scenarios where we should get best match, but we don't?
 
         # need to count the max number of matches for each address.
-        max_points = 0
+        max_points = 2
 
-        if table_house_unit_lotno is not None and table_house_unit_lotno != '' and table_house_unit_lotno != '-':
-            max_points += 1
-        if table_street is not None and table_street != '' and table_street != '-':
-            max_points += 1
-        if table_section is not None and table_section != '' and table_section != '-':
-            max_points += 1
         if table_floor_no is not None and table_floor_no != '' and table_floor_no != '-':
-            max_points += 1
-        if table_building_name is not None and table_building_name != '' and table_building_name != '-':
             max_points += 1
         if table_city is not None and table_city != '' and table_city != '-':
             max_points += 1
@@ -127,34 +120,57 @@ def return_points_for_row(table_row_data, table_header_data) -> bool:
 
         lotNumAndStreetAndPostcodeNoMatchBool = True
 
-        if input_house_unit_lotno is not None and input_house_unit_lotno != '':
-            if input_house_unit_lotno == table_house_unit_lotno:
-                accumulated_points = accumulated_points + 1
-            else:
-                lotNumAndStreetAndPostcodeNoMatchBool = False
-                if ',' in input_house_unit_lotno.strip():
-                    for lotNum in input_house_unit_lotno.strip().split(','):
-                        if lotNum == table_house_unit_lotno.strip():
-                            accumulated_points = accumulated_points + 1
-                            break
-                elif ' ' in input_house_unit_lotno.strip():
-                    for lotNum in input_house_unit_lotno.strip().split(' '):
-                        if lotNum == table_house_unit_lotno.strip():
-                            accumulated_points = accumulated_points + 1
-                            break
-        if input_street is not None and input_street != '':
-            if input_street.upper().strip() == table_street.upper().strip():
-                accumulated_points = accumulated_points + 1
-            else:
-                lotNumAndStreetAndPostcodeNoMatchBool = False
-        if input_section is not None and input_section != '':
-            if input_section.upper().strip().strip() == table_section.upper().strip().strip():
-                accumulated_points = accumulated_points + 1
+        # if input_house_unit_lotno is not None and input_house_unit_lotno != '':
+        #     if input_house_unit_lotno == table_house_unit_lotno:
+        #         accumulated_points = accumulated_points + 1
+        #     else:
+        #         lotNumAndStreetAndPostcodeNoMatchBool = False
+        #         if ',' in input_house_unit_lotno.strip():
+        #             for lotNum in input_house_unit_lotno.strip().split(','):
+        #                 if lotNum == table_house_unit_lotno.strip():
+        #                     accumulated_points = accumulated_points + 1
+        #                     break
+        #         elif ' ' in input_house_unit_lotno.strip():
+        #             for lotNum in input_house_unit_lotno.strip().split(' '):
+        #                 if lotNum == table_house_unit_lotno.strip():
+        #                     accumulated_points = accumulated_points + 1
+        #                     break
+        # if input_street is not None and input_street != '':
+        #     if input_street.upper().strip() == table_street.upper().strip():
+        #         accumulated_points = accumulated_points + 1
+        #     else:
+        #         lotNumAndStreetAndPostcodeNoMatchBool = False
+        # if input_section is not None and input_section != '':
+        #     if input_section.upper().strip().strip() == table_section.upper().strip().strip():
+        #         accumulated_points = accumulated_points + 1
+        # if input_building_name is not None and input_building_name != '':
+        #     if input_building_name.upper().strip().strip() == table_building_name.upper().strip().strip():
+        #         accumulated_points = accumulated_points + 1
+
+        input_lot_building_street_section = ' '.join([input_house_unit_lotno, input_building_name, input_street, input_section])
+        table_lot_building_street_section = ' '.join([table_house_unit_lotno, table_building_name, table_street, table_section])
+        fuzzy_score = fuzz.token_set_ratio(input_lot_building_street_section, table_lot_building_street_section)
+        if fuzzy_score == 100:
+            # exact match
+            accumulated_points += 2
+        elif fuzzy_score > 85:
+            # similar
+            accumulated_points += 1
+
+        # updating lotNumAndStreetAndPostcodeNoMatchBool
+        is_condition_met = (
+                (input_house_unit_lotno is not None and input_house_unit_lotno != '') and 
+                input_house_unit_lotno != table_house_unit_lotno
+            ) or (
+                (input_street is not None and input_street != '') and 
+                input_street.upper().strip() != table_street.upper().strip()
+            )
+        if is_condition_met:
+            lotNumAndStreetAndPostcodeNoMatchBool = False
+
+        # exact matches expected
         if input_floor_no is not None and input_floor_no != '':
             if input_floor_no == table_floor_no:
-                accumulated_points = accumulated_points + 1
-        if input_building_name is not None and input_building_name != '':
-            if input_building_name.upper().strip().strip() == table_building_name.upper().strip().strip():
                 accumulated_points = accumulated_points + 1
         if input_city is not None and input_city != '':
             if input_city.upper().strip().strip() == table_city.upper().strip().strip():
