@@ -346,32 +346,34 @@ class FindingCoverage:
             (driver, a, number_of_results) = try_diff_xpath_for_results_table(
                 driver, a)
 
-            # too many results
-            if number_of_results > 50:
-                # using the filters
-                (driver, a) = filter_street(driver, a)
-                (driver, a) = filter_section(driver, a)
-                (driver, a) = filter_city(driver, a)
+                                if number_of_results > 50:
+                                    if lot_no_detail_flag == 0:
+                                        (driver, a) = filter_unit_num(driver, a)
+                                        # making sure the filtered resutls pop out, before we proceed.
+                                        try:
+                                            (driver, a) = waiting_for_results_table(
+                                                driver, a)
+                                        except TimeoutException:
 
-                # IDEA: If flag is 0, try to filter by unit and evaluate the results.
-                # If no results, remove the unit filter and evaluate.
-                if lot_no_detail_flag == 0:
-                    (driver, a) = filter_unit_num(driver, a)
-                    
-                    # making sure the filtered resutls pop out, before we proceed.
-                    # NOTE: in this try/except block, we are setting the correct x_code_path, because it can be diff due to filtering applied
-                    try:
-                        (driver, a) = waiting_for_results_table(
-                            driver, a)
-                        x_code_path = "//tr[@class='odd' or @class='even'][not(@style)]"
-                    
-                    except TimeoutException:
-                        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
-                        if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
-                            try:
-                                # this would be the correct xpath, as we have filtered using the lot number.
-                                number_of_results = len(driver.find_elements(
-                                    By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+                                            if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                                                try:
+                                                    (driver, a) = replace_keywords(
+                                                        driver, a, keyword_search_string)
+
+                                                    try:
+                                                        (driver, a) = waiting_for_results_table(
+                                                            driver, a)
+                                                    except TimeoutException:
+
+                                                        (driver, a) = click_search_btn(
+                                                            driver, a)
+
+                                                        (driver, a) = detect_and_solve_captcha(
+                                                            driver, a)
+
+                                                    # this would be the correct xpath, as we have filtered using the lot number.
+                                                    number_of_results = len(driver.find_elements(
+                                                        By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
 
                                 if number_of_results == 0:
                                     # clear the unit filter

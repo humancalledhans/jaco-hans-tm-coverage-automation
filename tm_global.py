@@ -48,6 +48,8 @@ class TMGlobalThreadAsgn:
 
         print("num of ids to check", number_of_ids_to_check)
 
+        print("num of ids to check", number_of_ids_to_check)
+
         # split the ids to check into equal parts for each thread.
         # add remainder to the last thread.
         ids_to_check_per_thread = number_of_ids_to_check // number_of_threads
