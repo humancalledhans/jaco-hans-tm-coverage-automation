@@ -22,6 +22,7 @@ from src.tm_partners.operations.search_using_street import search_using_street_t
 from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 from src.tm_partners.operations.click_search_btn import click_search_btn
 from src.tm_partners.operations.iterate_through_all_and_notify import iterate_through_all_and_notify
+from src.tm_partners.operations.set_selected_table_row import set_selected_table_row
 
 from src.tm_partners.singleton.num_of_iterations import NumOfIterations
 from src.tm_partners.singleton.cvg_task import CVGTask
@@ -611,6 +612,10 @@ class FindingCoverage:
                                     # search using the lot number. iterate and output best match.
 
                                     if number_of_results == 1:
+                                        # setting the selected table row
+                                        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='datagrid-even'][not(@style)]"
+                                        set_selected_table_row(driver, a, x_code_path, 0)
+
                                         (driver, a) = check_coverage_and_notify(
                                             table_row_num=0, driver=driver, a=a, filtered=False)
                                         (driver, a) = bridge_to_actual_op(
