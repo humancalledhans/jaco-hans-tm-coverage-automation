@@ -311,11 +311,10 @@ def write_from_csv_to_db():
 def write_or_edit_result(id, result_type, result_text):
 
     selected_table_row_instance = SelectedTableRow.get_instance()
-    address_remark = selected_table_row_instance.get_address(
-        self=selected_table_row_instance)
-    address_remark = ''
+    current_db_row_instance = CurrentDBRow.get_instance()
 
-    
+    address_remark = selected_table_row_instance.get_address(
+
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)
     print("RESULT TEXT: ", result_text)
@@ -330,7 +329,7 @@ def write_or_edit_result(id, result_type, result_text):
 
     edit_stmt = f"""
     UPDATE cvg_db
-    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}'
+    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}'
     WHERE id = {id};
     """
     current_db_row = CurrentDBRow.get_instance()
