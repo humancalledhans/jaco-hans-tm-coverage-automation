@@ -307,6 +307,15 @@ def write_from_csv_to_db():
             cnx.close()
             cursor.close()
 
+# class InvalidSingletonError(Exception):
+#     """Custom exception raised for errors with singleton declarations
+
+#     Args:
+#         message (str): the message to be displayed
+#     """
+#     def __init__(self, message="A singleton instance seems to be problematic."):
+#         self.message = message
+#         super().__init__(self.message)
 
 def write_or_edit_result(id, result_type, result_text):
 
@@ -315,6 +324,11 @@ def write_or_edit_result(id, result_type, result_text):
 
     address_remark = selected_table_row_instance.get_address(
         self=selected_table_row_instance).strip()
+
+    # enforcing the table row address to exist if result exists
+    is_address_expected = result_type != 8
+    if is_address_expected and len(address_remark) == 0:
+        raise ValueError("SelectedTableRow instance is expected to be set!")
 
     # adding the common parts of the address to address_remark
     if len(address_remark) != 0:
