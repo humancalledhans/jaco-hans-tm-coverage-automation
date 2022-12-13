@@ -36,6 +36,7 @@ class Login:
             try:
                 driver = driver_setup()
                 driver.get('https://partners.unifi.my/HSBBPartnerPortal/HSBBPartnerPortal.portal?_nfpb=true&_pageLabel=login_portal&_nfls=false#wlp_HSBBPartnerPortal_portal_HelpCustomer/')
+                driver.maximize_window()
                 a = ActionChains(driver)
                 (driver, a) = pause_until_loaded(driver, a)
                 (driver, a) = enter_username_and_password(
