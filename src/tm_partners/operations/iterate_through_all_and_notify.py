@@ -45,6 +45,11 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
     if filtered == False:
         if (len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"))) == 1:
             # for when there's only one result.
+            
+            # setting the selected table row
+            x_code_path = "//table[@id='resultAddressGrid']//tr[@class='datagrid-odd' or @class='datagrid-even']"
+            set_selected_table_row(driver, a, x_code_path, 0)
+
             (driver, a) = check_coverage_and_notify(
                 table_row_num=0, driver=driver, a=a, filtered=False)
             (driver, a) = bridge_to_actual_op(driver, a)
