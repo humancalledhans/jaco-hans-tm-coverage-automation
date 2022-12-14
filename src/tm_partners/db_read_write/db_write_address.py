@@ -136,27 +136,38 @@ Postcode: %s
 
 
 def send_email(text, email_to):
-    gmail_user = 'botourssp@gmail.com'
-    gmail_password = 'jshmktlmwgeginnx'
+    selected_table_row_instance = SelectedTableRow.get_instance()
 
-    if len(email_to) > 0:
-        email_to_list = email_to.split(',')
+    address_chosen = selected_table_row_instance.get_address(
+        self=selected_table_row_instance).replace(
+        "  ", " ").replace("   ", " ")
 
-        for email in email_to_list:
-            email_to = email.strip()
-            sent_from = gmail_user
-            to = email_to
-            subject = 'Coverage Automation Notification'
-            body = setup_notification_text(text)
+    current_db_row = CurrentDBRow.get_instance()
+    address_from_db = current_db_row.get_address_with_headers(self=current_db_row).replace(
+        "  ", " ").replace("   ", " ")
 
-            try:
-                smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-                smtp_server.ehlo()
-                smtp_server.login(gmail_user, gmail_password)
-                smtp_server.sendmail(sent_from, to, body)
-                smtp_server.close()
-            except Exception as ex:
-                break
+    if address_chosen == address_from_db:
+        gmail_user = 'botourssp@gmail.com'
+        gmail_password = 'jshmktlmwgeginnx'
+
+        if len(email_to) > 0:
+            email_to_list = email_to.split(',')
+
+            for email in email_to_list:
+                email_to = email.strip()
+                sent_from = gmail_user
+                to = email_to
+                subject = 'Coverage Automation Notification'
+                body = setup_notification_text(text)
+
+                try:
+                    smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                    smtp_server.ehlo()
+                    smtp_server.login(gmail_user, gmail_password)
+                    smtp_server.sendmail(sent_from, to, body)
+                    smtp_server.close()
+                except Exception as ex:
+                    break
 
 
 def get_db_password():
@@ -395,8 +406,7 @@ def write_or_edit_result(id, result_type, result_text):
         if selected_table_row_postcode == current_db_row_postcode:
             overlapping_tokens += ' ' + current_db_row_postcode
 
-
-        overlapping_tokens = overlapping_tokens.strip()
+        overlapping_tokens = overlapping_tokens.strip().strip()
 
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)
@@ -417,7 +427,7 @@ def write_or_edit_result(id, result_type, result_text):
     WHERE id = {id};
     """
     current_db_row = CurrentDBRow.get_instance()
-    # print("RESULTS UPDATED!\n", "id: ", id, "\naddress: ", current_db_row.get_address(self=current_db_row), "\nresult_type: ",
+    # print("RESULTS UPDATED!\n", "id: ", id, "\naddress: ", current_db_row.get_address_with_headers(self=current_db_row), "\nresult_type: ",
     #   result_type, "\nresult_text: ", result_text)
 
     cursor.execute(edit_stmt)

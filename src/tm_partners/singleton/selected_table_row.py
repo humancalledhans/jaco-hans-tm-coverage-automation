@@ -43,6 +43,10 @@ class ISelectedTableRow(metaclass=ABCMeta):
     def set_postcode():
         """ to implement in child class """
 
+    @abstractstaticmethod
+    def set_fuzzy_score():
+        """ to implement in child class """
+
 
 class SelectedTableRow(ISelectedTableRow):
 
@@ -97,59 +101,63 @@ class SelectedTableRow(ISelectedTableRow):
 
     @staticmethod
     def set_street_type(self, selected_table_row_street_type):
-        if selected_table_row_street_type == 'None' or selected_table_row_street_type is None or len(selected_table_row_street_type) == 0:
+        if selected_table_row_street_type == 'None' or selected_table_row_street_type is None or len(selected_table_row_street_type) == 0 or selected_table_row_street_type.strip() == '-':
             self.street_type = ''
         else:
             self.street_type = selected_table_row_street_type
 
     @staticmethod
     def set_street_name(self, selected_table_row_street_name):
-        if selected_table_row_street_name == 'None' or selected_table_row_street_name is None or len(selected_table_row_street_name) == 0:
+        if selected_table_row_street_name == 'None' or selected_table_row_street_name is None or len(selected_table_row_street_name) == 0 or selected_table_row_street_name.strip() == '-':
             self.street_type = ''
         else:
             self.street_type = selected_table_row_street_name
 
     @staticmethod
     def set_section(self, selected_table_row_section):
-        if selected_table_row_section == 'None' or selected_table_row_section is None or len(selected_table_row_section) == 0:
+        if selected_table_row_section == 'None' or selected_table_row_section is None or len(selected_table_row_section) == 0 or selected_table_row_section.strip() == '-':
             self.section = ''
         else:
             self.section = selected_table_row_section
 
     @staticmethod
     def set_floor(self, selected_table_row_floor):
-        if selected_table_row_floor == 'None' or selected_table_row_floor is None or len(selected_table_row_floor) == 0:
+        if selected_table_row_floor == 'None' or selected_table_row_floor is None or len(selected_table_row_floor) == 0 or selected_table_row_floor.strip() == '-':
             self.floor = ''
         else:
             self.floor = selected_table_row_floor
 
     @staticmethod
     def set_building(self, selected_table_row_building):
-        if selected_table_row_building == 'None' or selected_table_row_building is None or len(selected_table_row_building) == 0:
+        if selected_table_row_building == 'None' or selected_table_row_building is None or len(selected_table_row_building) == 0 or selected_table_row_building.strip() == '-':
             self.building = ''
         else:
             self.building = selected_table_row_building
 
     @staticmethod
     def set_city(self, selected_table_row_city):
-        if selected_table_row_city == 'None' or selected_table_row_city is None or len(selected_table_row_city) == 0:
+        if selected_table_row_city == 'None' or selected_table_row_city is None or len(selected_table_row_city) == 0 or selected_table_row_city.strip() == '-':
             self.city = ''
         else:
             self.city = selected_table_row_city
 
     @staticmethod
     def set_state(self, selected_table_row_state):
-        if selected_table_row_state == 'None' or selected_table_row_state is None or len(selected_table_row_state) == 0:
+        if selected_table_row_state == 'None' or selected_table_row_state is None or len(selected_table_row_state) == 0 or selected_table_row_state.strip() == '-':
             self.state = ''
         else:
             self.state = selected_table_row_state
 
     @staticmethod
     def set_postcode(self, selected_table_row_postcode):
-        if selected_table_row_postcode == 'None' or selected_table_row_postcode is None or len(selected_table_row_postcode) == 0:
+        if selected_table_row_postcode == 'None' or selected_table_row_postcode is None or len(selected_table_row_postcode) == 0 or selected_table_row_postcode.strip() == '-':
             self.postcode = ''
         else:
             self.postcode = selected_table_row_postcode
+
+    @staticmethod
+    def set_fuzzy_score(self, fuzzy_score):
+        self.fuzzy_score = fuzzy_score
 
     @staticmethod
     def get_unit_no(self):
@@ -186,6 +194,10 @@ class SelectedTableRow(ISelectedTableRow):
     @staticmethod
     def get_postcode(self):
         return self.postcode
+
+    @staticmethod
+    def get_fuzzy_score(self):
+        return self.fuzzy_score
 
     @staticmethod
     def get_address(self):
@@ -230,4 +242,4 @@ class SelectedTableRow(ISelectedTableRow):
             input_building_name + ' ' + input_city + ' ' + \
             input_state + ' ' + input_postcode
 
-        return address_string.strip()
+        return address_string.strip().replace("  ", " ").replace("  ", " ")

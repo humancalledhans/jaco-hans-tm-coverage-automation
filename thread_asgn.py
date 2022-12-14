@@ -10,8 +10,8 @@ from src.tm_partners.operations.retry_problematic_ids import retry_problematic_i
 
 class ThreadAsgn:
     def __init__(self, ids_to_start_from=get_min_id_from_db(), ids_to_end_at=get_max_id_from_db()):
-    # def __init__(self, ids_to_start_from=1251, ids_to_end_at=1251):
-        
+    # def __init__(self, ids_to_start_from=1381, ids_to_end_at=1381):
+
         # ensuring start id < end id
         if ids_to_start_from > ids_to_end_at:
             ids_to_start_from, ids_to_end_at = ids_to_end_at, ids_to_start_from

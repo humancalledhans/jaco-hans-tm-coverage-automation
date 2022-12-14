@@ -1,9 +1,11 @@
 import time
+from thefuzz import fuzz
 from src.tm_partners.singleton.selected_table_row import SelectedTableRow
 from selenium.webdriver.common.by import By
+from src.tm_partners.singleton.current_db_row import CurrentDBRow
 
 
-def set_selected_table_row(driver, a, x_code_path, selected_table_row):
+def set_selected_table_row(driver, a, x_code_path, selected_table_row, fuzzy_score=-1):
 
     table_row_data_list = driver.find_elements(
         By.XPATH, f"({x_code_path})[{selected_table_row+1}]//td[@class='datagrid']")
@@ -43,6 +45,17 @@ def set_selected_table_row(driver, a, x_code_path, selected_table_row):
         while table_postcode[0] == '0':
             table_postcode = table_postcode[1:]
 
+    if fuzzy_score == -1:
+        current_db_row = CurrentDBRow.get_instance()
+        db_address = current_db_row.get_address_without_headers(
+            self=current_db_row).replace(" ", "")
+        table_address = f"{table_unit_num}{table_street_type}{table_street_name}{table_section}{table_floor_no}{table_building_name}{table_city}{table_state}{table_postcode}".replace(
+            " ", "").replace("-", "")
+        print("db_adress selc", db_address)
+        print("table_adress selc", table_address)
+        fuzzy_score = fuzz.token_set_ratio(
+            db_address, table_address)
+
     selected_table_row = SelectedTableRow.get_instance()
     selected_table_row.set_unit_no(selected_table_row, table_unit_num)
     selected_table_row.set_street_type(selected_table_row, table_street_type)
@@ -53,3 +66,4 @@ def set_selected_table_row(driver, a, x_code_path, selected_table_row):
     selected_table_row.set_city(selected_table_row, table_city)
     selected_table_row.set_state(selected_table_row, table_state)
     selected_table_row.set_postcode(selected_table_row, table_postcode)
+    selected_table_row.set_fuzzy_score(selected_table_row, fuzzy_score)
