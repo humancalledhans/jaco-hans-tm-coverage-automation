@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from src.tm_partners.coverage_check.check_coverage_and_notify_actual import check_coverage_and_notify_actual
+from src.tm_partners.coverage_check.reset_singletons import reset_singletons 
 from src.tm_partners.operations.enter_into_keyword_field import enter_into_keyword_field
 from src.tm_partners.operations.waiting_for_results_table import waiting_for_results_table
 from src.tm_partners.operations.try_diff_xpath_for_results_table import try_diff_xpath_for_results_table
@@ -23,7 +24,6 @@ from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 from src.tm_partners.operations.click_search_btn import click_search_btn
 from src.tm_partners.operations.iterate_through_all_and_notify import iterate_through_all_and_notify
 from src.tm_partners.operations.set_selected_table_row import set_selected_table_row
-from src.tm_partners.operations.reset_selected_table_row import reset_selected_table_row
 
 from src.tm_partners.singleton.num_of_iterations import NumOfIterations
 from src.tm_partners.singleton.cvg_task import CVGTask
@@ -90,8 +90,8 @@ class FindingCoverage:
 
                     print("CURRENT RUNNING ID: ", data.get_id())
 
+                    reset_singletons()
                     set_current_db_row(data)
-                    reset_selected_table_row()
 
                     current_db_row = CurrentDBRow.get_instance()
                     current_row_id = current_db_row.get_id(
