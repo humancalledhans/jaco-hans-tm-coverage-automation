@@ -71,6 +71,7 @@ if __name__ == '__main__':
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
     thread_asgn = ThreadAsgn(1370, 1370)
+    thread_asgn = ThreadAsgn(1378, 1379)
     thread_asgn.start_threads()
 
     # x = threading.Thread(target=func)
