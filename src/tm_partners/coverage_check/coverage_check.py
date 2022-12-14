@@ -224,6 +224,7 @@ class FindingCoverage:
                                             (driver, a) = waiting_for_results_table(
                                                 driver, a)
                                         except TimeoutException:
+
                                             if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
                                                 try:
                                                     (driver, a) = replace_keywords(
@@ -305,6 +306,7 @@ class FindingCoverage:
                                             (driver, a) = waiting_for_results_table(
                                                 driver, a)
                                         except TimeoutException:
+
                                             if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
                                                 write_or_edit_result(
                                                     id=current_row_id, result_type=8, result_text="No results.")

@@ -1,5 +1,6 @@
 # login('DPSL9701', 'Djns513!!', driver)
 
+import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -19,11 +20,11 @@ from src.tm_partners.operations.set_accepted_params import set_accepted_params
 class Login:
 
     def __init__(self):
-        self.username = 'DPPJ1901'
-        self.password = 'Dsync110!!'
+        # self.username = 'DPPJ1901'
+        # self.password = 'Dsync110!!'
 
-        # self.username = 'DPSL3601'
-        # self.password = 'Dptama201!'
+        self.username = 'DPSL3601'
+        self.password = 'Dptama201!'
 
     def login(self):
 
