@@ -338,7 +338,7 @@ def write_or_edit_result(id, result_type, result_text):
         self=selected_table_row_instance)
 
     # enforcing the table row address to exist if result exists
-    is_address_expected = result_type != 8
+    is_address_expected = result_type != 8 and result_type != 2 and result_type != 3
     if is_address_expected and len(address_remark) == 0:
         raise ValueError("SelectedTableRow instance is expected to be set!")
 
