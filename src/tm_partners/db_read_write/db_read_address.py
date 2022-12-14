@@ -22,6 +22,9 @@ def read_from_db():
         self=data_id_range)
     end_id = data_id_range.get_end_id(self=data_id_range)
 
+    print('start id', start_id)
+    print('end id', end_id)
+
     if start_id == end_id:
         query = f"SELECT * FROM cvg_db WHERE id = {start_id}"
     else:

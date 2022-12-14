@@ -317,6 +317,7 @@ def write_from_csv_to_db():
 #         self.message = message
 #         super().__init__(self.message)
 
+
 def write_or_edit_result(id, result_type, result_text):
 
     selected_table_row_instance = SelectedTableRow.get_instance()
@@ -334,49 +335,67 @@ def write_or_edit_result(id, result_type, result_text):
     overlapping_tokens = ''
     if len(address_remark) != 0:
 
-        selected_table_row_unit = selected_table_row_instance.get_unit_no(self=selected_table_row_instance)
-        current_db_row_unit = current_db_row_instance.get_house_unit_lotno(self=current_db_row_instance)
+        selected_table_row_unit = selected_table_row_instance.get_unit_no(
+            self=selected_table_row_instance)
+        current_db_row_unit = current_db_row_instance.get_house_unit_lotno(
+            self=current_db_row_instance)
         if selected_table_row_unit == current_db_row_unit:
             overlapping_tokens += current_db_row_unit
-        
-        selected_table_row_floor = selected_table_row_instance.get_floor(self=selected_table_row_instance)
-        current_db_row_floor = current_db_row_instance.get_floor(self=current_db_row_instance)
+
+        selected_table_row_floor = selected_table_row_instance.get_floor(
+            self=selected_table_row_instance)
+        current_db_row_floor = current_db_row_instance.get_floor(
+            self=current_db_row_instance)
         if selected_table_row_floor == current_db_row_floor:
             overlapping_tokens += ' ' + current_db_row_floor
-        
-        selected_table_row_building = selected_table_row_instance.get_building(self=selected_table_row_instance)
-        current_db_row_building = current_db_row_instance.get_building(self=current_db_row_instance)
+
+        selected_table_row_building = selected_table_row_instance.get_building(
+            self=selected_table_row_instance)
+        current_db_row_building = current_db_row_instance.get_building(
+            self=current_db_row_instance)
         if selected_table_row_building == current_db_row_building:
             overlapping_tokens += ' ' + current_db_row_building
-        
+
         try:
-            selected_table_row_street = selected_table_row_instance.get_street_type(self=selected_table_row_instance) + ' ' + selected_table_row_instance.get_street_name(self=selected_table_row_instance)
+            selected_table_row_street = selected_table_row_instance.get_street_type(
+                self=selected_table_row_instance) + ' ' + selected_table_row_instance.get_street_name(self=selected_table_row_instance)
         except:
-            selected_table_row_street = selected_table_row_instance.get_street_type(self=selected_table_row_instance)
-        current_db_row_street = current_db_row_instance.get_street(self=current_db_row_instance)
+            selected_table_row_street = selected_table_row_instance.get_street_type(
+                self=selected_table_row_instance)
+        current_db_row_street = current_db_row_instance.get_street(
+            self=current_db_row_instance)
         if selected_table_row_street == current_db_row_street:
             overlapping_tokens += ' ' + current_db_row_street
-        
-        selected_table_row_section = selected_table_row_instance.get_section(self=selected_table_row_instance)
-        current_db_row_section = current_db_row_instance.get_section(self=current_db_row_instance)
+
+        selected_table_row_section = selected_table_row_instance.get_section(
+            self=selected_table_row_instance)
+        current_db_row_section = current_db_row_instance.get_section(
+            self=current_db_row_instance)
         if selected_table_row_section == current_db_row_section:
             overlapping_tokens += ' ' + current_db_row_section
-        
-        selected_table_row_city = selected_table_row_instance.get_city(self=selected_table_row_instance)
-        current_db_row_city = current_db_row_instance.get_city(self=current_db_row_instance)
+
+        selected_table_row_city = selected_table_row_instance.get_city(
+            self=selected_table_row_instance)
+        current_db_row_city = current_db_row_instance.get_city(
+            self=current_db_row_instance)
         if selected_table_row_city == current_db_row_city:
             overlapping_tokens += ' ' + current_db_row_city
-        
-        selected_table_row_state = selected_table_row_instance.get_state(self=selected_table_row_instance)
-        current_db_row_state = current_db_row_instance.get_state(self=current_db_row_instance)
+
+        selected_table_row_state = selected_table_row_instance.get_state(
+            self=selected_table_row_instance)
+        current_db_row_state = current_db_row_instance.get_state(
+            self=current_db_row_instance)
         if selected_table_row_state == current_db_row_state:
             overlapping_tokens += ' ' + current_db_row_state
-        
-        selected_table_row_postcode = selected_table_row_instance.get_postcode(self=selected_table_row_instance)
-        current_db_row_postcode = current_db_row_instance.get_postcode(self=current_db_row_instance)
+
+        selected_table_row_postcode = selected_table_row_instance.get_postcode(
+            self=selected_table_row_instance)
+        current_db_row_postcode = current_db_row_instance.get_postcode(
+            self=current_db_row_instance)
         if selected_table_row_postcode == current_db_row_postcode:
             overlapping_tokens += ' ' + current_db_row_postcode
-    
+
+
         overlapping_tokens = overlapping_tokens.strip()
 
     print("ID: ", id)
