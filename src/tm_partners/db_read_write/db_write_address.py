@@ -331,8 +331,8 @@ def write_or_edit_result(id, result_type, result_text):
         raise ValueError("SelectedTableRow instance is expected to be set!")
 
     # adding the common parts of the address to address_remark
+    overlapping_tokens = ''
     if len(address_remark) != 0:
-        overlapping_tokens = ''
 
         selected_table_row_unit = selected_table_row_instance.get_unit_no(self=selected_table_row_instance)
         current_db_row_unit = current_db_row_instance.get_house_unit_lotno(self=current_db_row_instance)
@@ -376,7 +376,8 @@ def write_or_edit_result(id, result_type, result_text):
         current_db_row_postcode = current_db_row_instance.get_postcode(self=current_db_row_instance)
         if selected_table_row_postcode == current_db_row_postcode:
             overlapping_tokens += ' ' + current_db_row_postcode
-    overlapping_tokens = overlapping_tokens.strip()
+    
+        overlapping_tokens = overlapping_tokens.strip()
 
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)

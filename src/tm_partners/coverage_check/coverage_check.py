@@ -23,6 +23,7 @@ from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 from src.tm_partners.operations.click_search_btn import click_search_btn
 from src.tm_partners.operations.iterate_through_all_and_notify import iterate_through_all_and_notify
 from src.tm_partners.operations.set_selected_table_row import set_selected_table_row
+from src.tm_partners.operations.reset_selected_table_row import reset_selected_table_row
 
 from src.tm_partners.singleton.num_of_iterations import NumOfIterations
 from src.tm_partners.singleton.cvg_task import CVGTask
@@ -90,6 +91,7 @@ class FindingCoverage:
                     print("CURRENT RUNNING ID: ", data.get_id())
 
                     set_current_db_row(data)
+                    reset_selected_table_row()
 
                     current_db_row = CurrentDBRow.get_instance()
                     current_row_id = current_db_row.get_id(
