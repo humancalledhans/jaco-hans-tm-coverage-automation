@@ -323,7 +323,7 @@ def write_or_edit_result(id, result_type, result_text):
     current_db_row_instance = CurrentDBRow.get_instance()
 
     address_remark = selected_table_row_instance.get_address(
-        self=selected_table_row_instance).strip()
+        self=selected_table_row_instance)
 
     # enforcing the table row address to exist if result exists
     is_address_expected = result_type != 8
@@ -393,7 +393,7 @@ def write_or_edit_result(id, result_type, result_text):
 
     edit_stmt = f"""
     UPDATE cvg_db
-    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}, overlapping_tokens = '{overlapping_tokens}'
+    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}', overlapping_tokens = '{overlapping_tokens}'
     WHERE id = {id};
     """
     current_db_row = CurrentDBRow.get_instance()

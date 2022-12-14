@@ -66,16 +66,10 @@ class FindingCoverage:
 
             all_the_data = AllTheData.get_instance()
             all_the_data.reset_all_data(self=all_the_data)
-
-            if data_range_start != data_range_end:
-                data_id_range = DataIdRange.get_instance()
-                data_id_range.set_end_id(
-                    self=data_id_range, end_id=get_max_id_from_db())
-
             read_from_db()
-
             all_the_data_list = all_the_data.get_all_the_data_list(
                 self=all_the_data)
+
             # initialise cvg_task
             cvg_task = CVGTask.get_instance()
             cvg_task.set_total_number_of_addresses_to_check(
@@ -83,10 +77,6 @@ class FindingCoverage:
 
             for data in all_the_data_list:
                 try:
-                    all_the_data = AllTheData.get_instance()
-                    all_the_data.reset_all_data(self=all_the_data)
-
-                    read_from_db()
 
                     print("CURRENT ID: ", data.get_id())
 

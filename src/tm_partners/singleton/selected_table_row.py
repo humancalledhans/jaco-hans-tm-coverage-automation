@@ -227,7 +227,7 @@ class SelectedTableRow(ISelectedTableRow):
 
         address_string = input_house_unit_lotno + ' ' + input_street \
             + ' ' + input_section + ' ' + input_floor_no + ' ' + \
-            input_building_name + ' ' + input_city + \
+            input_building_name + ' ' + input_city + ' ' + \
             input_state + ' ' + input_postcode
 
-        return address_string
+        return address_string.strip()
