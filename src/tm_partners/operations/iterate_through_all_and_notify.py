@@ -132,7 +132,7 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
         table_row_data = []
         for table_data in table_row_data_list:
             table_row_data.append(table_data.text)
-        (points, lotNumAndStreetAndPostcodeNoMatchBool) = return_points_for_row(
+        (points, lotNumAndStreetAndPostcodeNumMatchBool) = return_points_for_row(
             table_row_data=table_row_data, table_header_data=table_header_data)
 
         # print("POINTS: ", points, "TABLEROW_NUM: ", table_row_num)
@@ -140,7 +140,7 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
         # else if the boolean value if 0, we just get the highest points.
         # print("POINTS: ", points)
         # print("LOT NUM AND STREET AND POSTCODE NO MATCH BOOL",
-        #   lotNumAndStreetAndPostcodeNoMatchBool)
+        #   lotNumAndStreetAndPostcodeNumMatchBool)
 
         if points == 'BEST MATCH':
             points_list = []
@@ -155,11 +155,13 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
 
             address_used = address_used.strip()
             points_list.append(
-                (table_row_num, points, lotNumAndStreetAndPostcodeNoMatchBool))
+                (table_row_num, points, lotNumAndStreetAndPostcodeNumMatchBool))
     if len(best_match_row_num_list) > 0:
 
+        # print("BEST MATCH ROW NUM LIST: ", best_match_row_num_list)
+
         set_selected_table_row(driver, a, x_code_path,
-                               best_match_row_num_list[0])
+                               best_match_row_num_list[0], 100)
 
         possible_multiple_best_match_operation(
             driver, a, best_match_row_num_list, filtered)
@@ -171,7 +173,8 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
 
         max_point_tuple = points_list[0]
 
-        set_selected_table_row(driver, a, x_code_path, max_point_tuple[0])
+        set_selected_table_row(driver, a, x_code_path,
+                               max_point_tuple[0], max_point_tuple[1])
 
         if lot_no_detail_flag == 0:
             # print("WENT INTO LOT_NO_DETAIL_FLAG == 0")
@@ -232,7 +235,7 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
                 max_point_tuple = points_list[0]
 
                 set_selected_table_row(
-                    driver, a, x_code_path, max_point_tuple[0])
+                    driver, a, x_code_path, max_point_tuple[0], max_point_tuple[1])
 
                 (driver, a) = check_coverage_and_notify(
                     table_row_num=max_point_tuple[0], driver=driver, a=a, filtered=filtered)

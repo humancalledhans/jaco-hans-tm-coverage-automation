@@ -448,7 +448,7 @@ class CurrentDBRow(ICurrentDBRow):
         return self.current_row_updated_at
 
     @staticmethod
-    def get_address(self):
+    def get_address_with_headers(self):
         input_house_unit_lotno = self.get_house_unit_lotno(
             self=self)
         input_street = self.get_street(self=self)
@@ -478,12 +478,48 @@ class CurrentDBRow(ICurrentDBRow):
             input_postcode = ''
 
         address_string = "House/Unit/Lot No. " + input_house_unit_lotno + '\n' + \
-"Street: " + input_street + '\n' + \
-"Section: " + input_section + '\n' + \
-"Floor No: " + input_floor_no + '\n' + \
-"Building Name: " + input_building_name + '\n' + \
-"City: " + input_city + '\n' + \
-"State: " + input_state + '\n' + \
-"Postcode: " + input_postcode
+            "Street: " + input_street + '\n' + \
+            "Section: " + input_section + '\n' + \
+            "Floor No: " + input_floor_no + '\n' + \
+            "Building Name: " + input_building_name + '\n' + \
+            "City: " + input_city + '\n' + \
+            "State: " + input_state + '\n' + \
+            "Postcode: " + input_postcode
 
         return address_string
+
+    @staticmethod
+    def get_address_without_headers(self):
+        input_house_unit_lotno = self.get_house_unit_lotno(
+            self=self)
+        input_street = self.get_street(self=self)
+        input_section = self.get_section(self=self)
+        input_floor_no = self.get_floor(self=self)
+        input_building_name = self.get_building(
+            self=self)
+        input_city = self.get_city(self=self)
+        input_state = self.get_state(self=self)
+        input_postcode = self.get_postcode(self=self)
+
+        if input_house_unit_lotno is None:
+            input_house_unit_lotno = ''
+        if input_street is None:
+            input_street = ''
+        if input_section is None:
+            input_section = ''
+        if input_floor_no is None:
+            input_floor_no = ''
+        if input_building_name is None:
+            input_building_name = ''
+        if input_city is None:
+            input_city = ''
+        if input_state is None:
+            input_state = ''
+        if input_postcode is None:
+            input_postcode = ''
+
+        address_string = input_house_unit_lotno + " " + input_street + " " + input_section + " " + \
+            input_floor_no + " " + input_building_name + " " + \
+            input_city + " " + input_state + " " + input_postcode
+
+        return address_string.replace("  ", " ").replace("  ", " ")

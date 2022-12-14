@@ -97,7 +97,7 @@ class FindingCoverage:
                     current_row_id = current_db_row.get_id(
                         self=current_db_row)
 
-                    print("\n", current_db_row.get_address(
+                    print("\n", current_db_row.get_address_with_headers(
                         self=current_db_row))
 
                     # STEP ONE: select state.
@@ -608,7 +608,8 @@ class FindingCoverage:
                                     if number_of_results == 1:
                                         # setting the selected table row
                                         x_code_path = "//table[@id='resultAddressGrid']//tr[@class='datagrid-even'][not(@style)]"
-                                        set_selected_table_row(driver, a, x_code_path, 0)
+                                        set_selected_table_row(
+                                            driver, a, x_code_path, 0, max_point_tuple[1])
 
                                         (driver, a) = check_coverage_and_notify(
                                             table_row_num=0, driver=driver, a=a, filtered=False)
