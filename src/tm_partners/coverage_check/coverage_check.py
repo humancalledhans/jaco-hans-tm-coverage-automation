@@ -87,7 +87,6 @@ class FindingCoverage:
 
                     read_from_db()
 
-                    print("CURRENT ID: ", data.get_id())
 
                     # if data.get_is_active() == 0:
                     #     continue
