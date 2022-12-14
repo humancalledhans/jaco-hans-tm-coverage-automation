@@ -27,13 +27,14 @@ def return_points_for_row(table_row_data, table_header_data) -> bool:
 
     else:
         db_address = current_db_row.get_address_without_headers(
-            self=current_db_row).replace(" ", "")
+            self=current_db_row)
 
         table_address = ""
         for data in table_row_data:
-            table_address += data.replace(" ", "")
+            if data is not None and data != '' and data != ' ' and data != '-' and len(data) > 0:
+                table_address += data.strip() + " "
 
-        table_address = table_address.replace("-", "")
+        table_address = table_address.replace("  ", " ").replace("  ", " ")
 
         print("db address", db_address)
         print("table address", table_address)
