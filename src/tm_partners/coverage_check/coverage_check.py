@@ -22,6 +22,7 @@ from src.tm_partners.operations.search_using_street import search_using_street_t
 from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 from src.tm_partners.operations.click_search_btn import click_search_btn
 from src.tm_partners.operations.iterate_through_all_and_notify import iterate_through_all_and_notify
+from src.tm_partners.operations.set_selected_table_row import set_selected_table_row
 
 from src.tm_partners.singleton.num_of_iterations import NumOfIterations
 from src.tm_partners.singleton.cvg_task import CVGTask
@@ -65,16 +66,10 @@ class FindingCoverage:
 
             all_the_data = AllTheData.get_instance()
             all_the_data.reset_all_data(self=all_the_data)
-
-            if data_range_start != data_range_end:
-                data_id_range = DataIdRange.get_instance()
-                data_id_range.set_end_id(
-                    self=data_id_range, end_id=get_max_id_from_db())
-
             read_from_db()
-
             all_the_data_list = all_the_data.get_all_the_data_list(
                 self=all_the_data)
+
             # initialise cvg_task
             cvg_task = CVGTask.get_instance()
             cvg_task.set_total_number_of_addresses_to_check(
@@ -82,10 +77,6 @@ class FindingCoverage:
 
             for data in all_the_data_list:
                 try:
-                    all_the_data = AllTheData.get_instance()
-                    all_the_data.reset_all_data(self=all_the_data)
-
-                    read_from_db()
 
                     print("CURRENT ID: ", data.get_id())
 
@@ -613,6 +604,10 @@ class FindingCoverage:
                                     # search using the lot number. iterate and output best match.
 
                                     if number_of_results == 1:
+                                        # setting the selected table row
+                                        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='datagrid-even'][not(@style)]"
+                                        set_selected_table_row(driver, a, x_code_path, 0)
+
                                         (driver, a) = check_coverage_and_notify(
                                             table_row_num=0, driver=driver, a=a, filtered=False)
                                         (driver, a) = bridge_to_actual_op(

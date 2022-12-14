@@ -11,6 +11,11 @@ from src.tm_partners.operations.retry_problematic_ids import retry_problematic_i
 class ThreadAsgn:
     def __init__(self, ids_to_start_from=get_min_id_from_db(), ids_to_end_at=get_max_id_from_db()):
     # def __init__(self, ids_to_start_from=1251, ids_to_end_at=1251):
+        
+        # ensuring start id < end id
+        if ids_to_start_from > ids_to_end_at:
+            ids_to_start_from, ids_to_end_at = ids_to_end_at, ids_to_start_from
+
         self.ids_to_start_from = ids_to_start_from
         self.ids_to_end_at = ids_to_end_at
         data_id_range = DataIdRange.get_instance()
@@ -65,7 +70,7 @@ if __name__ == '__main__':
     num_of_iterations = 1  # jaco, change this line.
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
-    thread_asgn = ThreadAsgn(1330, 1380)
+    thread_asgn = ThreadAsgn(1373, 1373)
     thread_asgn.start_threads()
 
     # x = threading.Thread(target=func)

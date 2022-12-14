@@ -307,6 +307,15 @@ def write_from_csv_to_db():
             cnx.close()
             cursor.close()
 
+# class InvalidSingletonError(Exception):
+#     """Custom exception raised for errors with singleton declarations
+
+#     Args:
+#         message (str): the message to be displayed
+#     """
+#     def __init__(self, message="A singleton instance seems to be problematic."):
+#         self.message = message
+#         super().__init__(self.message)
 
 def write_or_edit_result(id, result_type, result_text):
 
@@ -314,11 +323,66 @@ def write_or_edit_result(id, result_type, result_text):
     current_db_row_instance = CurrentDBRow.get_instance()
 
     address_remark = selected_table_row_instance.get_address(
+        self=selected_table_row_instance)
+
+    # enforcing the table row address to exist if result exists
+    is_address_expected = result_type != 8
+    if is_address_expected and len(address_remark) == 0:
+        raise ValueError("SelectedTableRow instance is expected to be set!")
+
+    # adding the common parts of the address to address_remark
+    if len(address_remark) != 0:
+        overlapping_tokens = ''
+
+        selected_table_row_unit = selected_table_row_instance.get_unit_no(self=selected_table_row_instance)
+        current_db_row_unit = current_db_row_instance.get_house_unit_lotno(self=current_db_row_instance)
+        if selected_table_row_unit == current_db_row_unit:
+            overlapping_tokens += current_db_row_unit
+        
+        selected_table_row_floor = selected_table_row_instance.get_floor(self=selected_table_row_instance)
+        current_db_row_floor = current_db_row_instance.get_floor(self=current_db_row_instance)
+        if selected_table_row_floor == current_db_row_floor:
+            overlapping_tokens += ' ' + current_db_row_floor
+        
+        selected_table_row_building = selected_table_row_instance.get_building(self=selected_table_row_instance)
+        current_db_row_building = current_db_row_instance.get_building(self=current_db_row_instance)
+        if selected_table_row_building == current_db_row_building:
+            overlapping_tokens += ' ' + current_db_row_building
+        
+        try:
+            selected_table_row_street = selected_table_row_instance.get_street_type(self=selected_table_row_instance) + ' ' + selected_table_row_instance.get_street_name(self=selected_table_row_instance)
+        except:
+            selected_table_row_street = selected_table_row_instance.get_street_type(self=selected_table_row_instance)
+        current_db_row_street = current_db_row_instance.get_street(self=current_db_row_instance)
+        if selected_table_row_street == current_db_row_street:
+            overlapping_tokens += ' ' + current_db_row_street
+        
+        selected_table_row_section = selected_table_row_instance.get_section(self=selected_table_row_instance)
+        current_db_row_section = current_db_row_instance.get_section(self=current_db_row_instance)
+        if selected_table_row_section == current_db_row_section:
+            overlapping_tokens += ' ' + current_db_row_section
+        
+        selected_table_row_city = selected_table_row_instance.get_city(self=selected_table_row_instance)
+        current_db_row_city = current_db_row_instance.get_city(self=current_db_row_instance)
+        if selected_table_row_city == current_db_row_city:
+            overlapping_tokens += ' ' + current_db_row_city
+        
+        selected_table_row_state = selected_table_row_instance.get_state(self=selected_table_row_instance)
+        current_db_row_state = current_db_row_instance.get_state(self=current_db_row_instance)
+        if selected_table_row_state == current_db_row_state:
+            overlapping_tokens += ' ' + current_db_row_state
+        
+        selected_table_row_postcode = selected_table_row_instance.get_postcode(self=selected_table_row_instance)
+        current_db_row_postcode = current_db_row_instance.get_postcode(self=current_db_row_instance)
+        if selected_table_row_postcode == current_db_row_postcode:
+            overlapping_tokens += ' ' + current_db_row_postcode
+    overlapping_tokens = overlapping_tokens.strip()
 
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)
     print("RESULT TEXT: ", result_text)
     print("ADDRESS REMARK: ", address_remark)
+    print("OVERLAPPING TOKENS: ", overlapping_tokens)
     print("------------")
     cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=get_db_password(),
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
@@ -329,7 +393,7 @@ def write_or_edit_result(id, result_type, result_text):
 
     edit_stmt = f"""
     UPDATE cvg_db
-    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}'
+    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}', overlapping_tokens = '{overlapping_tokens}'
     WHERE id = {id};
     """
     current_db_row = CurrentDBRow.get_instance()
