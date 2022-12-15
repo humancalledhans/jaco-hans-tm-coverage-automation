@@ -1,4 +1,5 @@
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from src.tm_partners.singleton.current_db_row import CurrentDBRow
 
 def filter_section(driver, a):
@@ -30,6 +31,7 @@ def filter_section(driver, a):
     # if the filtering hasn't improved the search
     if number_of_results == 0:
         section_filter_tab.clear()
+        section_filter_tab.send_keys(Keys.BACKSPACE)
 
     return (driver, a)
 
