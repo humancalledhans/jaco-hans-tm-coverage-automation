@@ -14,6 +14,8 @@ from src.tm_partners.operations.try_diff_xpath_for_results_table import try_diff
 from src.tm_partners.operations.replace_keywords import replace_keywords
 from src.tm_partners.operations.filter_unit_num import filter_unit_num
 from src.tm_partners.operations.filter_street import filter_street
+from src.tm_partners.operations.filter_section import filter_section
+from src.tm_partners.operations.filter_city import filter_city
 from src.tm_partners.operations.wait_for_results_table import wait_for_results_table
 from src.tm_partners.operations.detect_and_solve_captcha import detect_and_solve_captcha
 from src.tm_partners.operations.set_accepted_params import set_accepted_params
@@ -527,7 +529,9 @@ class FindingCoverage:
                     driver, a)
 
                 (driver, a) = filter_street(driver, a)
-                
+                (driver, a) = filter_section(driver, a)
+                (driver, a) = filter_city(driver, a)
+
                 # too many results
                 if number_of_results > 50:
                     if lot_no_detail_flag == 0:

@@ -1,11 +1,5 @@
-import time
-import re
 from selenium.webdriver.common.by import By
-
 from src.tm_partners.singleton.current_db_row import CurrentDBRow
-from src.tm_partners.singleton.selected_table_row import SelectedTableRow
-# from src.tm_partners.operations.send_in_correct_unit_num import preprocess_unit_num
-
 
 def filter_street(driver, a):
     """Attempting to improve the search results by filtering by street name
