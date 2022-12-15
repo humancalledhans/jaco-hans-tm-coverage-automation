@@ -67,7 +67,7 @@ class FindingCoverage:
 
             all_the_data = AllTheData.get_instance()
             all_the_data.reset_all_data(self=all_the_data)
-            read_from_db()
+            read_from_db(not_null='BUILDING')
             all_the_data_list = all_the_data.get_all_the_data_list(
                 self=all_the_data)
 
@@ -122,274 +122,11 @@ class FindingCoverage:
                     if building_name is not None:
                         building_name = building_name.strip()
 
-                    if building_name != '' and building_name is not None and len(building_name) > 3:
-
-                        # get the building name, and search the results using that query.
-
-                        keyword_search_string = keyword_search_string + building_name
-                        try:
-                            (driver, a) = enter_into_keyword_field(
-                                driver, a, keyword_search_string)
-
-                            # search_btn_third_col = driver.find_element(
-                            # By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
-                            # a.move_to_element(search_btn_third_col).click().perform()
-                            (driver, a) = click_search_btn(driver, a)
-
-                            (driver, a) = detect_and_solve_captcha(driver, a)
-
-                            # building name is input.
-
-                            # wait for the results table to pop up.
-                            try:
-                                (driver, a) = pause_until_loaded(driver, a)
-                                (driver, a) = wait_for_results_table(driver, a)
-                            except TimeoutException:
-                                (driver, a) = detect_and_solve_captcha(driver, a)
-                            # captcha should be solved now. getting the results...
-                            (driver, a) = pause_until_loaded(driver, a)
-                            try:
-                                (driver, a) = wait_for_results_table(driver, a)
-
-                                (driver, a, number_of_results) = try_diff_xpath_for_results_table(
-                                    driver, a)
-
-                                if number_of_results > 50:
-                                    if lot_no_detail_flag == 0:
-                                        (driver, a) = filter_unit_num(driver, a)
-                                        # making sure the filtered resutls pop out, before we proceed.
-                                        try:
-                                            (driver, a) = waiting_for_results_table(
-                                                driver, a)
-                                        except TimeoutException:
-
-                                            if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
-                                                try:
-                                                    (driver, a) = replace_keywords(
-                                                        driver, a, keyword_search_string)
-
-                                                    try:
-                                                        (driver, a) = waiting_for_results_table(
-                                                            driver, a)
-                                                    except TimeoutException:
-
-                                                        (driver, a) = click_search_btn(
-                                                            driver, a)
-
-                                                        (driver, a) = detect_and_solve_captcha(
-                                                            driver, a)
-
-                                                    # this would be the correct xpath, as we have filtered using the lot number.
-                                                    number_of_results = len(driver.find_elements(
-                                                        By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
-
-                                                    if number_of_results == 0:
-                                                        try:
-                                                            (driver, a) = search_using_street_type_and_name(
-                                                                driver=driver, a=a)
-                                                            (driver, a, number_of_results) = try_diff_xpath_for_results_table(
-                                                                driver, a)
-                                                            if number_of_results == 0:
-                                                                write_or_edit_result(
-                                                                    id=current_row_id, result_type=8, result_text="No results.")
-                                                                go_back_to_coverage_search_page(
-                                                                    driver, a)
-                                                                continue
-
-                                                            else:
-                                                                iterate_through_all_and_notify(
-                                                                    driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
-                                                                continue
-                                                        # (exception from search_using_street_type_and_name)
-                                                        except TimeoutException:
-                                                            retry_at_end_singleton = RetryAtEndCache.get_instance()
-                                                            retry_at_end_singleton.add_data_id_to_retry(
-                                                                self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
-                                                            time.sleep(7)
-                                                            driver.quit()
-                                                            login = Login()
-                                                            (driver,
-                                                             a) = login.login()
-                                                            (driver, a) = input_speed_requested(
-                                                                driver, a, 50)
-                                                            continue
-                                                except NoSuchElementException:
-                                                    print('retry keywords 1')
-                                                    time.sleep(5000)
-                                                    retry_at_end_singleton = RetryAtEndCache.get_instance()
-                                                    retry_at_end_singleton.add_data_id_to_retry(
-                                                        self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
-                                                    time.sleep(7)
-                                                    driver.quit()
-                                                    login = Login()
-                                                    (driver, a) = login.login()
-                                                    (driver, a) = input_speed_requested(
-                                                        driver, a, 50)
-                                                    continue
-
-                                            else:
-                                                iterate_through_all_and_notify(
-                                                    driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
-                                                continue
-
-                                        iterate_through_all_and_notify(
-                                            driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
-                                        continue
-
-                                    elif lot_no_detail_flag == 1:
-                                        (driver, a) = filter_unit_num(driver, a)
-
-                                        # making sure the filtered resutls pop out, before we proceed.
-                                        try:
-                                            (driver, a) = waiting_for_results_table(
-                                                driver, a)
-                                        except TimeoutException:
-
-                                            if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
-                                                write_or_edit_result(
-                                                    id=current_row_id, result_type=8, result_text="No results.")
-                                                go_back_to_coverage_search_page(
-                                                    driver, a)
-                                                continue
-                                            else:
-                                                iterate_through_all_and_notify(
-                                                    driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-                                                continue
-
-                                        # assuming that the number of results have been significantly reduced.
-                                        # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
-                                        iterate_through_all_and_notify(
-                                            driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-                                        continue
-                                    else:
-                                        iterate_through_all_and_notify(
-                                            driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-
-                                elif number_of_results == 0:
-                                    # no results found. so we'll try with the "condominium" instead of the "kondominium" variation things.
-                                    try:
-                                        (driver, a) = replace_keywords(
-                                            driver, a, keyword_search_string)
-
-                                        try:
-                                            (driver, a) = waiting_for_results_table(
-                                                driver, a)
-                                        except TimeoutException:
-                                            (driver, a) = click_search_btn(
-                                                driver, a)
-
-                                            (driver, a) = detect_and_solve_captcha(
-                                                driver, a)
-
-                                        # print(
-                                        #     "NUMBER_OF_RESULTS_AFTER_REPLACING JLN and KONDOMINIUM", number_of_results)
-
-                                        if number_of_results > 0:
-                                            iterate_through_all_and_notify(
-                                                driver, a, filtered=False, lot_no_detail_flag=lot_no_detail_flag, building_name_found=True, street_name_found=False)
-
-                                        else:
-                                            # betul betul takde results.
-                                            # END BLOCK, OUTPUT CASE 8.
-
-                                            try:
-                                                (driver, a) = search_using_street_type_and_name(
-                                                    driver=driver, a=a)
-
-                                                (driver, a, number_of_results) = try_diff_xpath_for_results_table(
-                                                    driver, a)
-
-                                                if number_of_results == 0:
-                                                    write_or_edit_result(
-                                                        id=current_row_id, result_type=8, result_text="No results.")
-                                                    go_back_to_coverage_search_page(
-                                                        driver, a)
-                                                    continue
-
-                                                else:
-                                                    iterate_through_all_and_notify(
-                                                        driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
-                                                    continue
-                                                    # (exception from search_using_street_type_and_name)
-                                            except TimeoutException:
-                                                retry_at_end_singleton = RetryAtEndCache.get_instance()
-                                                retry_at_end_singleton.add_data_id_to_retry(
-                                                    self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
-                                                time.sleep(7)
-                                                driver.quit()
-                                                login = Login()
-                                                (driver, a) = login.login()
-                                                (driver, a) = input_speed_requested(
-                                                    driver, a, 50)
-                                                continue
-                                            except NoSuchElementException:
-                                                print('retry keywords 2')
-                                                time.sleep(5000)
-                                                retry_at_end_singleton = RetryAtEndCache.get_instance()
-                                                retry_at_end_singleton.add_data_id_to_retry(
-                                                    self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
-                                                time.sleep(7)
-                                                driver.quit()
-                                                login = Login()
-                                                (driver, a) = login.login()
-                                                (driver, a) = input_speed_requested(
-                                                    driver, a, 50)
-                                                continue
-                                    except NoSuchElementException:
-                                        print('retry keywords 3')
-                                        time.sleep(5000)
-                                        retry_at_end_singleton = RetryAtEndCache.get_instance()
-                                        retry_at_end_singleton.add_data_id_to_retry(
-                                            self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
-                                        time.sleep(7)
-                                        driver.quit()
-                                        login = Login()
-                                        (driver, a) = login.login()
-                                        (driver, a) = input_speed_requested(
-                                            driver, a, 50)
-                                        continue
-                                else:
-                                    # the block where 1 < num_of_results < 50
-                                    if lot_no_detail_flag == 0:
-                                        iterate_through_all_and_notify(
-                                            driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
-                                        continue
-
-                                    else:
-                                        # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
-                                        iterate_through_all_and_notify(
-                                            driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
-                                        continue
-                            except TimeoutException:
-                                try:
-                                    driver.find_element(
-                                        By.XPATH, "//table[@border='0' and @class='errorDisplay1']//tbody//tr//td//b[contains(text(), 'Sorry, we are unable to proceed at the moment. This error could be due to loss of connection to the server. Please try again later.')]")
-                                    retry_at_end_singleton = RetryAtEndCache.get_instance()
-                                    retry_at_end_singleton.add_data_id_to_retry(
-                                        self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
-                                    time.sleep(7)
-                                    driver.quit()
-                                    login = Login()
-                                    (driver, a) = login.login()
-                                    (driver, a) = input_speed_requested(
-                                        driver, a, 50)
-                                    continue
-                                except NoSuchElementException:
-                                    raise Exception(
-                                        "Results table did not pop up.")
-                        except NoSuchElementException:
-                            print('retry keywords 5')
-                            time.sleep(5000)
-                            retry_at_end_singleton = RetryAtEndCache.get_instance()
-                            retry_at_end_singleton.add_data_id_to_retry(
-                                self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
-                            time.sleep(7)
-                            driver.quit()
-                            login = Login()
-                            (driver, a) = login.login()
-                            (driver, a) = input_speed_requested(
-                                driver, a, 50)
-                            continue
+                    is_building_name_exists = building_name != '' and building_name is not None and len(building_name) > 3
+                    if is_building_name_exists:
+                        self._search_for_building_match(driver, a, building_name)
+                        continue
+                    
                     else:
                         # when building name is empty. do the same but for street, or for section name.
 
@@ -741,3 +478,405 @@ class FindingCoverage:
                 (driver, a) = login.login()
                 (driver, a) = input_speed_requested(driver, a, 50)
                 continue
+
+    def _search_for_building_match(self, driver, a, building_name):
+        """Searching for the best result using building name
+
+        Args:
+            driver: selenium driver
+            a: ActionChains object
+            building_name (str): a valid building name
+
+        Raises:
+            Exception: when result table doesn't show
+        """
+        
+        current_db_row = CurrentDBRow.get_instance()
+        lot_no_detail_flag = current_db_row.get_search_level_flag(
+                        self=current_db_row)
+        current_row_id = current_db_row.get_id(
+                        self=current_db_row)
+        
+
+        keyword_search_string, building_name_variations = self._preprocess_building_name(building_name)
+        try:
+            # building name is input.
+            (driver, a) = enter_into_keyword_field(
+                driver, a, keyword_search_string)
+
+            # search_btn_third_col = driver.find_element(
+            # By.XPATH, "//form[@name='Netui_Form_3']//img[contains(@src, 'btnSearchBlue') and @alt='Search']")
+            # a.move_to_element(search_btn_third_col).click().perform()
+            (driver, a) = click_search_btn(driver, a)
+
+            (driver, a) = detect_and_solve_captcha(driver, a)
+
+            # wait for the results table to pop up.
+            try:
+                (driver, a) = pause_until_loaded(driver, a)
+                (driver, a) = wait_for_results_table(driver, a)
+            except TimeoutException:
+                (driver, a) = detect_and_solve_captcha(driver, a)
+            # captcha should be solved now. getting the results...
+            (driver, a) = pause_until_loaded(driver, a)
+            try:
+                (driver, a) = wait_for_results_table(driver, a)
+
+                (driver, a, number_of_results) = try_diff_xpath_for_results_table(
+                    driver, a)
+
+                # too many results
+                if number_of_results > 50:
+                    if lot_no_detail_flag == 0:
+                        (driver, a) = filter_unit_num(driver, a)
+                        # making sure the filtered resutls pop out, before we proceed.
+                        try:
+                            (driver, a) = waiting_for_results_table(
+                                driver, a)
+                        except TimeoutException:
+
+                            if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                                try:
+                                    (driver, a) = replace_keywords(
+                                        driver, a, keyword_search_string)
+
+                                    try:
+                                        (driver, a) = waiting_for_results_table(
+                                            driver, a)
+                                    except TimeoutException:
+
+                                        (driver, a) = click_search_btn(
+                                            driver, a)
+
+                                        (driver, a) = detect_and_solve_captcha(
+                                            driver, a)
+
+                                    # this would be the correct xpath, as we have filtered using the lot number.
+                                    number_of_results = len(driver.find_elements(
+                                        By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+
+                                    if number_of_results == 0:
+                                        try:
+                                            (driver, a) = search_using_street_type_and_name(
+                                                driver=driver, a=a)
+                                            (driver, a, number_of_results) = try_diff_xpath_for_results_table(
+                                                driver, a)
+                                            if number_of_results == 0:
+                                                write_or_edit_result(
+                                                    id=current_row_id, result_type=8, result_text="No results.")
+                                                go_back_to_coverage_search_page(
+                                                    driver, a)
+                                                return
+
+                                            else:
+                                                iterate_through_all_and_notify(
+                                                    driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                                                return
+                                        # (exception from search_using_street_type_and_name)
+                                        except TimeoutException:
+                                            retry_at_end_singleton = RetryAtEndCache.get_instance()
+                                            retry_at_end_singleton.add_data_id_to_retry(
+                                                self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                                            time.sleep(7)
+                                            driver.quit()
+                                            login = Login()
+                                            (driver,
+                                                a) = login.login()
+                                            (driver, a) = input_speed_requested(
+                                                driver, a, 50)
+                                            return
+                                except NoSuchElementException:
+                                    print('retry keywords 1')
+                                    time.sleep(5000)
+                                    retry_at_end_singleton = RetryAtEndCache.get_instance()
+                                    retry_at_end_singleton.add_data_id_to_retry(
+                                        self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                                    time.sleep(7)
+                                    driver.quit()
+                                    login = Login()
+                                    (driver, a) = login.login()
+                                    (driver, a) = input_speed_requested(
+                                        driver, a, 50)
+                                    return
+
+                            else:
+                                iterate_through_all_and_notify(
+                                    driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                                return
+
+                        iterate_through_all_and_notify(
+                            driver, a, filtered=True, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                        return
+
+                    elif lot_no_detail_flag == 1:
+                        (driver, a) = filter_unit_num(driver, a)
+
+                        # making sure the filtered resutls pop out, before we proceed.
+                        try:
+                            (driver, a) = waiting_for_results_table(
+                                driver, a)
+                        except TimeoutException:
+
+                            if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                                write_or_edit_result(
+                                    id=current_row_id, result_type=8, result_text="No results.")
+                                go_back_to_coverage_search_page(
+                                    driver, a)
+                                return
+                            else:
+                                iterate_through_all_and_notify(
+                                    driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+                                return
+
+                        # assuming that the number of results have been significantly reduced.
+                        # print("END BLOCK! OUTPUT CASE 2 OR 1 PLEASE!")
+                        iterate_through_all_and_notify(
+                            driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+                        return
+                    else:
+                        iterate_through_all_and_notify(
+                            driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+
+                # no results
+                elif number_of_results == 0:
+                    # no results found. so we'll try with the "condominium" instead of the "kondominium" variation things.
+                    try:
+                        (driver, a) = replace_keywords(
+                            driver, a, keyword_search_string)
+
+                        try:
+                            (driver, a) = waiting_for_results_table(
+                                driver, a)
+                        except TimeoutException:
+                            (driver, a) = click_search_btn(
+                                driver, a)
+
+                            (driver, a) = detect_and_solve_captcha(
+                                driver, a)
+
+                        # print(
+                        #     "NUMBER_OF_RESULTS_AFTER_REPLACING JLN and KONDOMINIUM", number_of_results)
+
+                        if number_of_results > 0:
+                            iterate_through_all_and_notify(
+                                driver, a, filtered=False, lot_no_detail_flag=lot_no_detail_flag, building_name_found=True, street_name_found=False)
+
+                        else:
+                            # betul betul takde results.
+                            # END BLOCK, OUTPUT CASE 8.
+
+                            try:
+                                (driver, a) = search_using_street_type_and_name(
+                                    driver=driver, a=a)
+
+                                (driver, a, number_of_results) = try_diff_xpath_for_results_table(
+                                    driver, a)
+
+                                if number_of_results == 0:
+                                    write_or_edit_result(
+                                        id=current_row_id, result_type=8, result_text="No results.")
+                                    go_back_to_coverage_search_page(
+                                        driver, a)
+                                    return
+
+                                else:
+                                    iterate_through_all_and_notify(
+                                        driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=False, street_name_found=True)
+                                    return
+                                    # (exception from search_using_street_type_and_name)
+                            except TimeoutException:
+                                retry_at_end_singleton = RetryAtEndCache.get_instance()
+                                retry_at_end_singleton.add_data_id_to_retry(
+                                    self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                                time.sleep(7)
+                                driver.quit()
+                                login = Login()
+                                (driver, a) = login.login()
+                                (driver, a) = input_speed_requested(
+                                    driver, a, 50)
+                                return
+                            except NoSuchElementException:
+                                print('retry keywords 2')
+                                time.sleep(5000)
+                                retry_at_end_singleton = RetryAtEndCache.get_instance()
+                                retry_at_end_singleton.add_data_id_to_retry(
+                                    self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                                time.sleep(7)
+                                driver.quit()
+                                login = Login()
+                                (driver, a) = login.login()
+                                (driver, a) = input_speed_requested(
+                                    driver, a, 50)
+                                return
+                    except NoSuchElementException:
+                        print('retry keywords 3')
+                        time.sleep(5000)
+                        retry_at_end_singleton = RetryAtEndCache.get_instance()
+                        retry_at_end_singleton.add_data_id_to_retry(
+                            self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                        time.sleep(7)
+                        driver.quit()
+                        login = Login()
+                        (driver, a) = login.login()
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
+                        return
+                
+                # 1 < num_of_results < 50
+                else:
+                    if lot_no_detail_flag == 0:
+                        iterate_through_all_and_notify(
+                            driver, a, filtered=False, lot_no_detail_flag=0, building_name_found=True, street_name_found=False)
+                        return
+
+                    else:
+                        iterate_through_all_and_notify(
+                            driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
+                        return
+            
+            except TimeoutException:
+                try:
+                    driver.find_element(
+                        By.XPATH, "//table[@border='0' and @class='errorDisplay1']//tbody//tr//td//b[contains(text(), 'Sorry, we are unable to proceed at the moment. This error could be due to loss of connection to the server. Please try again later.')]")
+                    retry_at_end_singleton = RetryAtEndCache.get_instance()
+                    retry_at_end_singleton.add_data_id_to_retry(
+                        self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                    time.sleep(7)
+                    driver.quit()
+                    login = Login()
+                    (driver, a) = login.login()
+                    (driver, a) = input_speed_requested(
+                        driver, a, 50)
+                    return
+                except NoSuchElementException:
+                    raise Exception(
+                        "Results table did not pop up.")
+        except NoSuchElementException:
+            print('retry keywords 5')
+            time.sleep(5000)
+            retry_at_end_singleton = RetryAtEndCache.get_instance()
+            retry_at_end_singleton.add_data_id_to_retry(
+                self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+            time.sleep(7)
+            driver.quit()
+            login = Login()
+            (driver, a) = login.login()
+            (driver, a) = input_speed_requested(
+                driver, a, 50)
+            return
+
+    def _preprocess_building_name(self, building_name: str):
+        """Preprocessing the building name by cleaning and generating possible variations
+
+        Args:
+            building_name (str): the building name from the DB
+
+        Returns:
+            str, [str]: a tuple with the clean name and name variations 
+        """ 
+
+        cleaned_building_name = building_name
+        building_name_variations = []
+
+        # clean the building name
+        terms_to_remove = ['FTTH', 'PPR']
+        for term in terms_to_remove:
+            cleaned_building_name = cleaned_building_name.replace(term, '')
+        cleaned_building_name = cleaned_building_name.strip()
+
+        # find name variations
+        building_name_variations = [building_name]
+        building_name_variations.extend(self._get_variations(cleaned_building_name))
+
+        return cleaned_building_name, building_name_variations
+
+    def _get_variations(self, token:str):
+        """Generates possible variations of an address token
+        Args:
+            token (string): address token
+        Returns:
+            [string]: an array of token variations, empty if token is ''
+        """
+        # map of words and all their possible variations as a list
+        variation_map = {
+            'COMMERCIAL': ['KOMERSIAL'],
+            'RESIDENCY': ['RESIDENSI'],
+            'TOWER': ['MENARA'],
+            'COMPLEX': ['KOMPLEKS'],
+            'BAGIAN': ['BHG'],
+            'BUKIT': ['BKT'],
+            'JABATAN': ['JAB'],
+            'JALAN': ['JLN'],
+            'KAWASAN': ['KAW'],
+            'KEMENTERIAN': ['KEM'],
+            'LADANG': ['LDG'],
+            'LEMBAGA': ['LEM'],
+            'LORONG': ['LRG'],
+            'PADANG': ['PDG'],
+            'PERSIARAN': ['PSN'],
+            'SUNGAI': ['SG'],
+            'SIMPANG': ['SPG'],
+            'TANJUNG': ['TG'],
+            'TELUK': ['TK'],
+            'TAMAN': ['TMN'],
+            'JALAN': ['JLN'],
+            'KOMERSIAL': ['COMMERCIAL'],
+            'RESIDENSI': ['RESIDENCY'],
+            'MENARA': ['TOWER'],
+            'KOMPLEKS': ['COMPLEX'],
+            'BHG': ['BAGIAN'],
+            'BKT': ['BUKIT'],
+            'JAB': ['JABATAN'],
+            'JLN': ['JALAN'],
+            'KAW': ['KAWASAN'],
+            'KEM': ['KEMENTERIAN'],
+            'LDG': ['LADANG'],
+            'LEM': ['LEMBAGA'],
+            'LRG': ['LORONG'],
+            'PDG': ['PADANG'],
+            'PSN': ['PERSIARAN'],
+            'SG': ['SUNGAI'],
+            'SPG': ['SIMPANG'],
+            'TG': ['TANJUNG'],
+            'TK': ['TELUK'],
+            'TMN': ['TAMAN'],
+            'JLN': ['JALAN'],
+            'BLOCK': ['BLOK', 'BLK'],
+            'BLOK': ['BLOCK', 'BLK'],
+            'BLK': ['BLOCK', 'BLOK'],
+            'APARTMENT': ['APT', 'APPT'],
+            'APT': ['APARTMENT', 'APPT'],
+            'APPT': ['APARTMENT', 'APT'],
+            'KAMPUNG': ['KAMPONG', 'KG'],
+            'KAMPONG': ['KAMPUNG', 'KG'],
+            'KG': ['KAMPUNG', 'KAMPONG'],
+            'LEBOH': ['LEBUH', 'LBH'],
+            'LEBUH': ['LEBOH', 'LBH'],
+            'LBH': ['LEBOH', 'LEBUH'],
+            'CONDOMINIUM': ['KONDO', 'CONDO', 'KONDOMINIUM'],
+            'KONDO': ['CONDOMINIUM', 'CONDO', 'KONDOMINIUM'],
+            'CONDO': ['CONDOMINIUM', 'KONDO', 'KONDOMINIUM'],
+            'KONDOMINIUM': ['CONDOMINIUM', 'CONDO', 'KONDO'],
+        }
+
+        # token doesn't exist
+        if not token:
+            return []
+
+        # generate string with variations
+        possible_variations = [token]
+        token_list = token.split(' ')
+        # processing each word in the token
+        for i, word in enumerate(token_list):
+            # if a variation exists
+            if word in variation_map:
+                # freeze the state before modification to avoid duplicates
+                possible_variations_state_before_mod = [s for s in possible_variations]
+                for variation in variation_map[word]:
+                    # modify each existing search keyword to include the newly identified variation
+                    for possibilities in possible_variations_state_before_mod:
+                        new_keyword = possibilities.split(' ')
+                        new_keyword[i] = variation
+                        possible_variations.append(' '.join(new_keyword)) # list -> string
+
+        return possible_variations
