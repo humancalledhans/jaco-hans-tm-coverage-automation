@@ -101,71 +101,7 @@ class FindingCoverage:
                         self=current_db_row))
 
                     # STEP ONE: select state.
-                    state = current_db_row.get_state(
-                        self=current_db_row).upper().strip()
-
-                    state_selected = False
-                    while state_selected == False:
-                        try:
-                            (driver, a) = pause_until_loaded(driver, a)
-                            (driver, a) = select_state(driver, a, state)
-                            state_selected = True
-
-                        except NoSuchElementException:  # exception is caused by select_stat
-                            try:
-                                print('select state select budao')
-                                help_new_customer_link = WebDriverWait(driver, 1).until(EC.presence_of_element_located(
-                                    (By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")))
-                                a.move_to_element(
-                                    help_new_customer_link).click().perform()
-                                try:
-                                    (driver, a) = detect_and_solve_captcha(
-                                        driver, a)
-                                    (driver, a) = input_speed_requested(
-                                        driver, a, 50)
-                                    (driver, a) = select_state(
-                                        driver, a, state)
-                                    state_selected = True
-                                except NoSuchElementException:
-                                    (driver, a) = detect_and_solve_captcha(
-                                        driver, a)
-
-                                    retry_at_end_singleton = RetryAtEndCache.get_instance()
-                                    retry_at_end_singleton.add_data_id_to_retry(
-                                        self=retry_at_end_singleton, data_id=data.get_id())
-                                    time.sleep(7)
-                                    driver.quit()
-                                    login = Login()
-                                    (driver, a) = login.login()
-                                    (driver, a) = input_speed_requested(
-                                        driver, a, 50)
-                                    continue
-
-                            except TimeoutException:
-                                (driver, a) = detect_and_solve_captcha(driver, a)
-
-                                retry_at_end_singleton = RetryAtEndCache.get_instance()
-                                retry_at_end_singleton.add_data_id_to_retry(
-                                    self=retry_at_end_singleton, data_id=data.get_id())
-                                time.sleep(7)
-                                driver.quit()
-                                login = Login()
-                                (driver, a) = login.login()
-                                (driver, a) = input_speed_requested(driver, a, 50)
-                                continue
-
-                        except TimeoutException:
-                            (driver, a) = detect_and_solve_captcha(driver, a)
-
-                            retry_at_end_singleton = RetryAtEndCache.get_instance()
-                            retry_at_end_singleton.add_data_id_to_retry(
-                                self=retry_at_end_singleton, data_id=data.get_id())
-                            time.sleep(7)
-                            driver.quit()
-                            login = Login()
-                            (driver, a) = login.login()
-                            (driver, a) = input_speed_requested(driver, a, 50)
-                            continue
+                    self._select_state(driver, a, data)
 
                     # STEP TWO: set up the search string.
                     keyword_search_string = ''
@@ -729,3 +665,79 @@ class FindingCoverage:
                         (driver, a) = input_speed_requested(
                             driver, a, 50)
                         continue
+
+    def _select_state(self, driver, a, data):
+        """Picks the relevant state from the dropdown
+
+        Args:
+            driver: selenium driver
+            a: ActionChains object
+            data: address data to process
+        """
+        current_db_row = CurrentDBRow.get_instance()
+
+        state = current_db_row.get_state(
+            self=current_db_row).upper().strip()
+
+        state_selected = False
+        while state_selected == False:
+            try:
+                (driver, a) = pause_until_loaded(driver, a)
+                (driver, a) = select_state(driver, a, state)
+                state_selected = True
+
+            except NoSuchElementException:  # exception is caused by select_stat
+                try:
+                    print('select state select budao')
+                    help_new_customer_link = WebDriverWait(driver, 1).until(EC.presence_of_element_located(
+                        (By.XPATH, "//div[@class='wlp-bighorn-window-content']//td[@align='right']//a")))
+                    a.move_to_element(
+                        help_new_customer_link).click().perform()
+                    try:
+                        (driver, a) = detect_and_solve_captcha(
+                            driver, a)
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
+                        (driver, a) = select_state(
+                            driver, a, state)
+                        state_selected = True
+                    except NoSuchElementException:
+                        (driver, a) = detect_and_solve_captcha(
+                            driver, a)
+
+                        retry_at_end_singleton = RetryAtEndCache.get_instance()
+                        retry_at_end_singleton.add_data_id_to_retry(
+                            self=retry_at_end_singleton, data_id=data.get_id())
+                        time.sleep(7)
+                        driver.quit()
+                        login = Login()
+                        (driver, a) = login.login()
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
+                        continue
+
+                except TimeoutException:
+                    (driver, a) = detect_and_solve_captcha(driver, a)
+
+                    retry_at_end_singleton = RetryAtEndCache.get_instance()
+                    retry_at_end_singleton.add_data_id_to_retry(
+                        self=retry_at_end_singleton, data_id=data.get_id())
+                    time.sleep(7)
+                    driver.quit()
+                    login = Login()
+                    (driver, a) = login.login()
+                    (driver, a) = input_speed_requested(driver, a, 50)
+                    continue
+
+            except TimeoutException:
+                (driver, a) = detect_and_solve_captcha(driver, a)
+
+                retry_at_end_singleton = RetryAtEndCache.get_instance()
+                retry_at_end_singleton.add_data_id_to_retry(
+                    self=retry_at_end_singleton, data_id=data.get_id())
+                time.sleep(7)
+                driver.quit()
+                login = Login()
+                (driver, a) = login.login()
+                (driver, a) = input_speed_requested(driver, a, 50)
+                continue
