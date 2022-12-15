@@ -36,8 +36,8 @@ def return_points_for_row(table_row_data, table_header_data) -> bool:
 
         table_address = table_address.replace("  ", " ").replace("  ", " ")
 
-        print("db address", db_address)
-        print("table address", table_address)
+        # print("db address", db_address)
+        # print("table address", table_address)
 
         fuzzy_score = fuzz.token_set_ratio(
             db_address, table_address)
