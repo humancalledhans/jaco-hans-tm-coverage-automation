@@ -70,7 +70,7 @@ class FindingCoverage:
 
             all_the_data = AllTheData.get_instance()
             all_the_data.reset_all_data(self=all_the_data)
-            read_from_db(not_null='BUILDING')
+            read_from_db()
             all_the_data_list = all_the_data.get_all_the_data_list(
                 self=all_the_data)
 
