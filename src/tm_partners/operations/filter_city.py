@@ -21,11 +21,7 @@ def filter_city(driver, a):
     city_filter_tab.send_keys(city_clean)
 
     number_of_results = len(driver.find_elements(
-        By.XPATH, "//tr[@class='odd' or @class='even'][@style='']"))
-
-    if number_of_results == 0:
-        number_of_results = len(driver.find_elements(
-            By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+        By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"))
 
     # by now we should have the accurate number_of_results reading
     # if the filtering hasn't improved the search

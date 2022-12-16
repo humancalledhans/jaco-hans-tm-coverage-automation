@@ -18,14 +18,10 @@ def filter_street(driver, a):
     street_clean = _preprocess_street()
     
     street_filter_tab.clear()
-    street_filter_tab.send_keys(street_clean)
+    # street_filter_tab.send_keys(street_clean)
 
     number_of_results = len(driver.find_elements(
-        By.XPATH, "//tr[@class='odd' or @class='even'][@style='']"))
-
-    if number_of_results == 0:
-        number_of_results = len(driver.find_elements(
-            By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+        By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"))
 
     # by now we should have the accurate number_of_results reading
     # if the filtering hasn't improved the search
