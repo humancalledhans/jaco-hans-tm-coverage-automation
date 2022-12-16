@@ -497,8 +497,6 @@ class FindingCoverage:
         current_db_row = CurrentDBRow.get_instance()
         lot_no_detail_flag = current_db_row.get_search_level_flag(
                         self=current_db_row)
-        current_row_id = current_db_row.get_id(
-                        self=current_db_row)
         
 
         _, building_name_variations = self._preprocess_building_name(building_name)
@@ -537,7 +535,7 @@ class FindingCoverage:
             
             # checking if the number of results is acceptable
             number_of_results = len(driver.find_elements(
-                By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+                By.XPATH, "//tr[@class='odd' or @class='even' or @class='datagrid-odd' or @class='datagrid-even'][not(@style)]"))
             if number_of_results == 1024 and keyword_search_string is None:
                 keyword_search_string = building_name_variation
             elif number_of_results != 0:
@@ -546,6 +544,7 @@ class FindingCoverage:
         
         # TODO: handle when building turns no results
         if keyword_search_string is None:
+            self._write_no_result()
             return
 
         # wait for the results table to pop up.
@@ -628,10 +627,7 @@ class FindingCoverage:
                     except TimeoutException:
 
                         if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
-                            write_or_edit_result(
-                                id=current_row_id, result_type=8, result_text="No results.")
-                            go_back_to_coverage_search_page(
-                                driver, a)
+                            self._write_no_result()
                             return
 
                     # assuming that the number of results have been significantly reduced
@@ -871,3 +867,11 @@ class FindingCoverage:
                         possible_variations.append(' '.join(new_keyword)) # list -> string
 
         return possible_variations
+
+    def _write_no_result(self):
+        current_db_row = CurrentDBRow.get_instance()
+        current_row_id = current_db_row.get_id(
+            self=current_db_row)
+
+        write_or_edit_result(
+            id=current_row_id, result_type=8, result_text="No results.")
