@@ -30,7 +30,15 @@ def read_from_db(not_null=''):
     elif not_null != '':
         # query filter exists
         if not_null in ['BUILDING', 'building']:
-            query = f"SELECT * FROM cvg_db WHERE id <= {end_id} and id >= {start_id} and {not_null} IS NOT NULL ORDER BY created_at DESC"
+            query = f"\
+                SELECT * \
+                FROM cvg_db \
+                WHERE \
+                    id <= {end_id} and \
+                    id >= {start_id} and \
+                    {not_null} IS NOT NULL and \
+                    CHAR_LENGTH({not_null}) > 3 \
+                ORDER BY created_at DESC"
         else:
             not_null = ''
             print('Invalid filter requested.')
