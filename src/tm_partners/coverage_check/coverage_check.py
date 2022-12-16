@@ -754,7 +754,6 @@ class FindingCoverage:
                     raise Exception(
                         "Results table did not pop up.")
         
-
     def _preprocess_building_name(self, building_name: str):
         """Preprocessing the building name by cleaning and generating possible variations
 
