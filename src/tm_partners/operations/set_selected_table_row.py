@@ -51,8 +51,8 @@ def set_selected_table_row(driver, a, x_code_path, selected_table_row, fuzzy_sco
             self=current_db_row).replace(" ", "")
         table_address = f"{table_unit_num}{table_street_type}{table_street_name}{table_section}{table_floor_no}{table_building_name}{table_city}{table_state}{table_postcode}".replace(
             " ", "").replace("-", "")
-        print("db_adress selc", db_address)
-        print("table_adress selc", table_address)
+        # print("db_adress selc", db_address)
+        # print("table_adress selc", table_address)
         fuzzy_score = fuzz.token_set_ratio(
             db_address, table_address)
 

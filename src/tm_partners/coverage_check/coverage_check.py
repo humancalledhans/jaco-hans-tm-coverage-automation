@@ -483,7 +483,8 @@ class FindingCoverage:
                 continue
 
     def _search_for_building_match(self, driver, a, building_name):
-        """Searching for the best result using building name
+        """Searching for the best result using building name. No result 
+        will be recorded if a match is not found.
 
         Args:
             driver: selenium driver
@@ -538,11 +539,11 @@ class FindingCoverage:
                 By.XPATH, "//tr[@class='odd' or @class='even' or @class='datagrid-odd' or @class='datagrid-even'][not(@style)]"))
             if number_of_results == 1024 and keyword_search_string is None:
                 keyword_search_string = building_name_variation
-            elif number_of_results != 0:
+            elif 0 < number_of_results < 1024:
                 keyword_search_string = building_name_variation
                 break
         
-        # TODO: handle when building turns no results
+        # handle when building turns no results
         if keyword_search_string is None:
             self._write_no_result()
             return
@@ -575,12 +576,15 @@ class FindingCoverage:
                     (driver, a) = filter_unit_num(driver, a)
                     
                     # making sure the filtered resutls pop out, before we proceed.
+                    # NOTE: in this try/except block, we are setting the correct x_code_path, because it can be diff due to filtering applied
                     try:
                         (driver, a) = waiting_for_results_table(
                             driver, a)
+                        x_code_path = "//tr[@class='odd' or @class='even'][not(@style)]"
                     
                     except TimeoutException:
-                        if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
+                        if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
                             try:
                                 # this would be the correct xpath, as we have filtered using the lot number.
                                 number_of_results = len(driver.find_elements(
@@ -603,9 +607,9 @@ class FindingCoverage:
                                 (driver, a) = input_speed_requested(
                                     driver, a, 50)
                                 return
-
+                        
                     number_of_results = len(driver.find_elements(
-                        By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+                        By.XPATH, x_code_path))
 
                     if number_of_results == 0:
                         # clear the unit filter
@@ -625,10 +629,11 @@ class FindingCoverage:
                         (driver, a) = waiting_for_results_table(
                             driver, a)
                     except TimeoutException:
-
-                        if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
+                    
+                        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]" 
+                        if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
                             self._write_no_result()
-                            return
+                            return  
 
                     # assuming that the number of results have been significantly reduced
                     iterate_through_all_and_notify(
