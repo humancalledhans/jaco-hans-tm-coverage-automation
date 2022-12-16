@@ -683,6 +683,14 @@ class FindingCoverage:
             id=current_row_id, result_type=8, result_text="No results.")
 
     def _search_for_street_or_section_match(self, driver, a, street_or_section_name):
+        """Searching for the best result using street pr section name. No result 
+        will be recorded if a match is not found.
+
+        Args:
+            driver: selenium driver
+            a: ActionChains object
+            building_name (str): a valid street or section name
+        """
         
         # get street_type_and_search() gets the lot no, street type, and street name - puts it tgt and searches.
         # the results table would then be there.
