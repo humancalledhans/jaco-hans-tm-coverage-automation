@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractstaticmethod
 import re
 import time
+import threading
 
 
 class ICurrentDBRow(metaclass=ABCMeta):
@@ -180,36 +181,37 @@ class CurrentDBRow(ICurrentDBRow):
 
     @staticmethod
     def get_instance():
-        if CurrentDBRow.__instance is None:
-            CurrentDBRow()
-        return CurrentDBRow.__instance
+        local = threading.current_thread().__dict__
+        try:
+            instance = local["current_db_row_instance"]
+        except KeyError:
+            local["current_db_row_instance"] = CurrentDBRow()
+            instance = local["current_db_row_instance"]
+        if instance is None:
+            instance = CurrentDBRow()
+        return instance
 
     def __init__(self):
-        if CurrentDBRow.__instance is not None:
-            raise Exception(
-                "CurrentDBRow instance cannot be instantiated more than once!")
-        else:
-            CurrentDBRow.__instance = self
-            self.current_row_id = None
-            self.current_row_unit_no = None
-            self.current_row_floor = None
-            self.current_row_building = None
-            self.current_row_street = None
-            self.current_row_section = None
-            self.current_row_city = None
-            self.current_row_state = None
-            self.current_row_postcode = None
-            self.current_row_search_level_flag = None
-            self.current_row_source = None
-            self.current_row_source_id = None
-            self.current_row_salesman = None
-            self.current_row_notify_email = None
-            self.current_row_notify_mobile = None
-            self.current_row_result_type = None
-            self.current_row_result_remark = None
-            self.current_row_is_active = None
-            self.current_row_created_at = None
-            self.current_row_updated_at = None
+        self.current_row_id = None
+        self.current_row_unit_no = None
+        self.current_row_floor = None
+        self.current_row_building = None
+        self.current_row_street = None
+        self.current_row_section = None
+        self.current_row_city = None
+        self.current_row_state = None
+        self.current_row_postcode = None
+        self.current_row_search_level_flag = None
+        self.current_row_source = None
+        self.current_row_source_id = None
+        self.current_row_salesman = None
+        self.current_row_notify_email = None
+        self.current_row_notify_mobile = None
+        self.current_row_result_type = None
+        self.current_row_result_remark = None
+        self.current_row_is_active = None
+        self.current_row_created_at = None
+        self.current_row_updated_at = None
 
     @staticmethod
     def set_id(self, current_row_id):
