@@ -85,6 +85,10 @@ def tm_global(thread_ids_to_start_from, thread_ids_to_end_at):
 
     # def tm_global():
 
+    local = threading.current_thread().__dict__
+
+    local["data_id_range_instance"] = data_id_range_instance
+
     # Step 1: read from database.
 
     # Step 2: set up Chrome browser instance for Selenium.
