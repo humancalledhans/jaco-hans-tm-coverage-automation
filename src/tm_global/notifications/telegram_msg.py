@@ -13,7 +13,7 @@ def send_message(msg):
         "  ", " ").replace("   ", " ")
 
     current_db_row = CurrentDBRow.get_instance()
-    address_from_db = current_db_row.get_address().replace(
+    address_from_db = current_db_row.get_address(self=current_db_row).replace(
         "  ", " ").replace("   ", " ")
 
     if address_chosen == address_from_db:

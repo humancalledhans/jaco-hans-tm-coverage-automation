@@ -488,7 +488,7 @@ class SelectedTableRow(ISelectedTableRow):
         #     "State: " + input_state + '\n' + \
         #     "Postcode: " + input_postcode
 
-        return address_string.strip()
+        return address_string.strip().replace("-", '').replace("  ", " ").replace("  ", " ")
 
     @staticmethod
     def get_result_remark(self):
