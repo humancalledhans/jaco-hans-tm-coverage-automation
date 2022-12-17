@@ -1,38 +1,36 @@
 from abc import ABCMeta, abstractstaticmethod
+import threading
 
 
 class ILotNumMatchBool(metaclass=ABCMeta):
-
     @abstractstaticmethod
     def set_lotnummatch():
-        """ to implement in child class """
+        """to implement in child class"""
 
     @abstractstaticmethod
     def get_lotnummatch():
-        """ to implement in child class """
+        """to implement in child class"""
 
     @staticmethod
     def reset_lotnummatch():
-        """ to implement in child class """
+        """to implement in child class"""
 
 
 class LotNumMatchBool(ILotNumMatchBool):
-
-    __instance = None
-
     @staticmethod
     def get_instance():
-        if LotNumMatchBool.__instance is None:
-            LotNumMatchBool()
-        return LotNumMatchBool.__instance
+        local = threading.current_thread().__dict__
+        try:
+            instance = local["lot_num_match_bool_instance"]
+        except KeyError:
+            local["lot_num_match_bool_instance"] = LotNumMatchBool()
+            instance = local["lot_num_match_bool_instance"]
+        if instance is None:
+            instance = LotNumMatchBool()
+        return instance
 
     def __init__(self):
-        if LotNumMatchBool.__instance is not None:
-            raise Exception(
-                "LotNumMatchBool instance cannot be instantiated more than once!")
-        else:
-            self.lotnummatch = None
-            LotNumMatchBool.__instance = self
+        self.lotnummatch = None
 
     @staticmethod
     def set_lotnummatch(self, lotnummatch):

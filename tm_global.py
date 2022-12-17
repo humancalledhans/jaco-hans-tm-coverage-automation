@@ -46,10 +46,6 @@ class TMGlobalThreadAsgn:
 
         print("NUM OF INSTANCES", number_of_threads)
 
-        print("num of ids to check", number_of_ids_to_check)
-
-        print("num of ids to check", number_of_ids_to_check)
-
         # split the ids to check into equal parts for each thread.
         # add remainder to the last thread.
         ids_to_check_per_thread = number_of_ids_to_check // number_of_threads
@@ -79,13 +75,13 @@ class TMGlobalThreadAsgn:
 
 def tm_global(thread_ids_to_start_from, thread_ids_to_end_at):
 
-    # data_id_range_instance = DataIdRange.get_instance()
-    # data_id_range_instance.set_start_id(
-    #     self=data_id_range_instance, start_id=int(thread_ids_to_start_from))
-    # data_id_range_instance.set_end_id(self=data_id_range_instance,
-    #                                   end_id=int(thread_ids_to_end_at))
-
-    # def tm_global():
+    data_id_range_instance = DataIdRange.get_instance()
+    data_id_range_instance.set_start_id(
+        self=data_id_range_instance, start_id=int(thread_ids_to_start_from)
+    )
+    data_id_range_instance.set_end_id(
+        self=data_id_range_instance, end_id=int(thread_ids_to_end_at)
+    )
 
     local = threading.current_thread().__dict__
 
@@ -149,10 +145,10 @@ if __name__ == "__main__":
 
     num_of_iterations = 1  # jaco, change this line.
     num_of_iterations_instance = NumOfIterations.get_instance()
-    num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
-    tm_global()
-    # thread_asgn = TMGlobalThreadAsgn()
-    # thread_asgn.start_threads()
+    num_of_iterations_instance.set_num_of_iterations(num_of_iterations)
+
+    thread_asgn = TMGlobalThreadAsgn()
+    thread_asgn.start_threads(number_of_threads=num_of_threads)
 
     # x = threading.Thread(target=func)
     # x.start()

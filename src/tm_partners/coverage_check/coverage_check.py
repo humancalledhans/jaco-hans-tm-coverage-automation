@@ -182,7 +182,6 @@ class FindingCoverage:
 
     def _select_state(self, driver, a, data):
         """Picks the relevant state from the dropdown
-
         Args:
             driver: selenium driver
             a: ActionChains object
@@ -259,12 +258,10 @@ class FindingCoverage:
     def _search_for_building_match(self, driver, a, building_name):
         """Searching for the best result using building name. No result 
         will be recorded if a match is not found.
-
         Args:
             driver: selenium driver
             a: ActionChains object
             building_name (str): a valid building name
-
         Raises:
             Exception: when result table doesn't show
         """
@@ -346,34 +343,32 @@ class FindingCoverage:
             (driver, a, number_of_results) = try_diff_xpath_for_results_table(
                 driver, a)
 
-                                if number_of_results > 50:
-                                    if lot_no_detail_flag == 0:
-                                        (driver, a) = filter_unit_num(driver, a)
-                                        # making sure the filtered resutls pop out, before we proceed.
-                                        try:
-                                            (driver, a) = waiting_for_results_table(
-                                                driver, a)
-                                        except TimeoutException:
+            # too many results
+            if number_of_results > 50:
+                # using the filters
+                (driver, a) = filter_street(driver, a)
+                (driver, a) = filter_section(driver, a)
+                (driver, a) = filter_city(driver, a)
 
-                                            if len(driver.find_elements(By.XPATH, "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]")) == 0:
-                                                try:
-                                                    (driver, a) = replace_keywords(
-                                                        driver, a, keyword_search_string)
-
-                                                    try:
-                                                        (driver, a) = waiting_for_results_table(
-                                                            driver, a)
-                                                    except TimeoutException:
-
-                                                        (driver, a) = click_search_btn(
-                                                            driver, a)
-
-                                                        (driver, a) = detect_and_solve_captcha(
-                                                            driver, a)
-
-                                                    # this would be the correct xpath, as we have filtered using the lot number.
-                                                    number_of_results = len(driver.find_elements(
-                                                        By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
+                # IDEA: If flag is 0, try to filter by unit and evaluate the results.
+                # If no results, remove the unit filter and evaluate.
+                if lot_no_detail_flag == 0:
+                    (driver, a) = filter_unit_num(driver, a)
+                    
+                    # making sure the filtered resutls pop out, before we proceed.
+                    # NOTE: in this try/except block, we are setting the correct x_code_path, because it can be diff due to filtering applied
+                    try:
+                        (driver, a) = waiting_for_results_table(
+                            driver, a)
+                        x_code_path = "//tr[@class='odd' or @class='even'][not(@style)]"
+                    
+                    except TimeoutException:
+                        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
+                        if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
+                            try:
+                                # this would be the correct xpath, as we have filtered using the lot number.
+                                number_of_results = len(driver.find_elements(
+                                    By.XPATH, "//tr[@class='odd' or @class='even'][not(@style)]"))
 
                                 if number_of_results == 0:
                                     # clear the unit filter
@@ -542,10 +537,8 @@ class FindingCoverage:
         
     def _preprocess_building_name(self, building_name: str):
         """Preprocessing the building name by cleaning and generating possible variations
-
         Args:
             building_name (str): the building name from the DB
-
         Returns:
             str, [str]: a tuple with the clean name and name variations 
         """ 
@@ -569,10 +562,8 @@ class FindingCoverage:
     
     def _preprocess_street_section_name(self, street_sec_name: str):
         """Preprocessing the street or section name by cleaning and generating possible variations
-
         Args:
             street_sec_name (str): the building name from the DB
-
         Returns:
             str, [str]: a tuple with the clean name and name variations 
         """ 
@@ -687,7 +678,6 @@ class FindingCoverage:
     def _search_for_street_or_section_match(self, driver, a, street_or_section_name):
         """Searching for the best result using street pr section name. No result 
         will be recorded if a match is not found.
-
         Args:
             driver: selenium driver
             a: ActionChains object
@@ -854,4 +844,3 @@ class FindingCoverage:
                 iterate_through_all_and_notify(
                     driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
                 return
-

@@ -11,24 +11,22 @@ from src.tm_global.operations.return_to_coverage_search_page import (
 )
 from src.tm_global.operations.reset_for_next_search import reset_for_next_search
 from src.tm_global.singleton.selected_table_row import SelectedTableRow
+import threading
 
 # [City, Postcode, Section, Street, Building, Lot Number]
-keyword_search_string_list = ["", "", "", "", "", ""]
-keyword_search_string_name = [
-    "City Name",
-    "Postcode",
-    "Section Name",
-    "Street Name",
-    "Building Name",
-    "Lot Number",
-]
 
 
 def enter_right_keyword(driver, a):
 
-    global keyword_search_string_name
-    global keyword_search_string_list
     keyword_search_string_list = ["", "", "", "", "", ""]
+    keyword_search_string_name = [
+        "City Name",
+        "Postcode",
+        "Section Name",
+        "Street Name",
+        "Building Name",
+        "Lot Number",
+    ]
 
     current_db_row = CurrentDBRow.get_instance()
     city = current_db_row.get_city(self=current_db_row)
@@ -75,7 +73,8 @@ def enter_right_keyword(driver, a):
             [x for x in keyword_search_string_list[: i + 1] if x]
         )
 
-        (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
+        (driver, a) = enter_into_keyword_field(
+            driver, a, keyword_search_string)
         (driver, a) = click_on_search_button(driver, a)
         (driver, a) = pause_until_loaded(driver, a)
         num_of_results = get_num_of_results(driver, a)
@@ -91,7 +90,8 @@ def enter_right_keyword(driver, a):
                 [x for x in keyword_search_string_list[:i] if x]
             )
 
-            (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
+            (driver, a) = enter_into_keyword_field(
+                driver, a, keyword_search_string)
             (driver, a) = click_on_search_button(driver, a)
             (driver, a) = pause_until_loaded(driver, a)
             num_of_results = get_num_of_results(driver, a)
