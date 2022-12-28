@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractstaticmethod
 import re
+import threading
 
 
 class ICurrentDBRow(metaclass=ABCMeta):
@@ -191,39 +192,39 @@ class CurrentDBRow(ICurrentDBRow):
 
     @staticmethod
     def get_instance():
-        if CurrentDBRow.__instance is None:
-            CurrentDBRow(
-                accepted_states_list=None, accepted_street_types_list=None)
-        return CurrentDBRow.__instance
+        local = threading.current_thread().__dict__
+        try:
+            instance = local["current_db_row_instance"]
+        except KeyError:
+            local["current_db_row_instance"] = CurrentDBRow()
+            instance = local["current_db_row_instance"]
+        if instance is None:
+            instance = CurrentDBRow()
+        return instance
 
     def __init__(self, accepted_states_list=None, accepted_street_types_list=None):
-        if CurrentDBRow.__instance is not None:
-            raise Exception(
-                "CurrentDBRow instance cannot be instantiated more than once!")
-        else:
-            CurrentDBRow.__instance = self
-            self.accepted_states_list = accepted_states_list
-            self.accepted_street_types_list = accepted_street_types_list
-            self.current_row_id = None
-            self.current_row_unit_no = None
-            self.current_row_floor = None
-            self.current_row_building = None
-            self.current_row_street = None
-            self.current_row_section = None
-            self.current_row_city = None
-            self.current_row_state = None
-            self.current_row_postcode = None
-            self.current_row_search_level_flag = None
-            self.current_row_source = None
-            self.current_row_source_id = None
-            self.current_row_salesman = None
-            self.current_row_notify_email = None
-            self.current_row_notify_mobile = None
-            self.current_row_result_type = None
-            self.current_row_result_remark = None
-            self.current_row_is_active = None
-            self.current_row_created_at = None
-            self.current_row_updated_at = None
+        self.accepted_states_list = accepted_states_list
+        self.accepted_street_types_list = accepted_street_types_list
+        self.current_row_id = None
+        self.current_row_unit_no = None
+        self.current_row_floor = None
+        self.current_row_building = None
+        self.current_row_street = None
+        self.current_row_section = None
+        self.current_row_city = None
+        self.current_row_state = None
+        self.current_row_postcode = None
+        self.current_row_search_level_flag = None
+        self.current_row_source = None
+        self.current_row_source_id = None
+        self.current_row_salesman = None
+        self.current_row_notify_email = None
+        self.current_row_notify_mobile = None
+        self.current_row_result_type = None
+        self.current_row_result_remark = None
+        self.current_row_is_active = None
+        self.current_row_created_at = None
+        self.current_row_updated_at = None
 
     @staticmethod
     def set_accepted_states_list(self, accepted_states_list):
@@ -449,42 +450,57 @@ class CurrentDBRow(ICurrentDBRow):
 
     @staticmethod
     def get_address_with_headers(self):
-        input_house_unit_lotno = self.get_house_unit_lotno(
-            self=self)
+        input_house_unit_lotno = self.get_house_unit_lotno(self=self)
         input_street = self.get_street(self=self)
         input_section = self.get_section(self=self)
         input_floor_no = self.get_floor(self=self)
-        input_building_name = self.get_building(
-            self=self)
+        input_building_name = self.get_building(self=self)
         input_city = self.get_city(self=self)
         input_state = self.get_state(self=self)
         input_postcode = self.get_postcode(self=self)
 
         if input_house_unit_lotno is None:
-            input_house_unit_lotno = ''
+            input_house_unit_lotno = ""
         if input_street is None:
-            input_street = ''
+            input_street = ""
         if input_section is None:
-            input_section = ''
+            input_section = ""
         if input_floor_no is None:
-            input_floor_no = ''
+            input_floor_no = ""
         if input_building_name is None:
-            input_building_name = ''
+            input_building_name = ""
         if input_city is None:
-            input_city = ''
+            input_city = ""
         if input_state is None:
-            input_state = ''
+            input_state = ""
         if input_postcode is None:
-            input_postcode = ''
+            input_postcode = ""
 
-        address_string = "House/Unit/Lot No. " + input_house_unit_lotno + '\n' + \
-            "Street: " + input_street + '\n' + \
-            "Section: " + input_section + '\n' + \
-            "Floor No: " + input_floor_no + '\n' + \
-            "Building Name: " + input_building_name + '\n' + \
-            "City: " + input_city + '\n' + \
-            "State: " + input_state + '\n' + \
-            "Postcode: " + input_postcode
+        address_string = (
+            "House/Unit/Lot No. "
+            + input_house_unit_lotno
+            + "\n"
+            + "Street: "
+            + input_street
+            + "\n"
+            + "Section: "
+            + input_section
+            + "\n"
+            + "Floor No: "
+            + input_floor_no
+            + "\n"
+            + "Building Name: "
+            + input_building_name
+            + "\n"
+            + "City: "
+            + input_city
+            + "\n"
+            + "State: "
+            + input_state
+            + "\n"
+            + "Postcode: "
+            + input_postcode
+        )
 
         return address_string
 
