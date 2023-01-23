@@ -832,7 +832,8 @@ class FindingCoverage:
                 iterate_through_all_and_notify(
                     driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
                 return
-
+            
+            
         # 1 <= num_of_results < 50
         else:
             if lot_no_detail_flag == 0:
