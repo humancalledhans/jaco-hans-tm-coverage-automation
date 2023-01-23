@@ -452,7 +452,7 @@ def write_or_edit_result(id, result_type, result_text):
             self=current_db_row)
         current_row_is_active = current_db_row.get_is_active(self=current_db_row)
 
-        should_notify_message = len(current_row_notify_mobile) > 0
+        should_notify_message = len(current_row_notify_mobile) > 0 and current_row_is_active == 1
         should_notify_email = len(current_row_notify_email) > 0 and current_row_is_active == 1
 
         # print("CURRENT ROW EMAIL", current_row_notify_email)
