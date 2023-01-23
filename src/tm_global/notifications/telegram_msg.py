@@ -1,32 +1,20 @@
 import requests
 from src.tm_global.db_read_write.db_get_chat_id import get_chat_id
 from src.tm_global.singleton.current_db_row import CurrentDBRow
-from src.tm_partners.singleton.selected_table_row import SelectedTableRow
 
 
 def send_message(msg):
-
-    selected_table_row_instance = SelectedTableRow.get_instance()
-
-    address_chosen = selected_table_row_instance.get_address(
-        self=selected_table_row_instance).replace(
-        "  ", " ").replace("   ", " ")
-
     current_db_row = CurrentDBRow.get_instance()
-    address_from_db = current_db_row.get_address(self=current_db_row).replace(
-        "  ", " ").replace("   ", " ")
+    phone_num_list = current_db_row.get_notify_mobile(
+        self=current_db_row).split(',')
 
-    if address_chosen == address_from_db:
-        phone_num_list = current_db_row.get_notify_mobile(
-            self=current_db_row).split(',')
+    # to take away same phone numbers in a list.
+    phone_num_list = list(set(phone_num_list))
 
-        # to take away same phone numbers in a list.
-        phone_num_list = list(set(phone_num_list))
-
-        try:
-            helper_send_message(msg, phone_num_list=phone_num_list)
-        except Exception as e:
-            print(e)
+    try:
+        helper_send_message(msg, phone_num_list=phone_num_list)
+    except Exception as e:
+        print(e)
 
 
 def helper_send_message(msg, phone_num_list):
