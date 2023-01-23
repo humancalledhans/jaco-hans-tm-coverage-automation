@@ -4,7 +4,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 def enter_username_and_password(driver, a, username, password):
-
     user_name_field = WebDriverWait(driver, 10).until(EC.presence_of_element_located(
         (By.XPATH, "//input[@type='text' and @id='portal.actionForm_username']")))
     user_name_field.clear()

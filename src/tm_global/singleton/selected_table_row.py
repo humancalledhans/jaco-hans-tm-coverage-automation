@@ -427,8 +427,7 @@ class SelectedTableRow(ISelectedTableRow):
             and self.get_street_name(self=self) is not None
         ):
             input_street = (
-                self.get_street_type(self=self) + " " +
-                self.get_street_name(self=self)
+                self.get_street_type(self=self) + " " + self.get_street_name(self=self)
             )
         elif (
             self.get_street_type(self=self) is not None

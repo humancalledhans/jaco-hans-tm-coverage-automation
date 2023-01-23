@@ -7,15 +7,11 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from src.tm_partners.coverage_check.check_coverage_and_notify_actual import check_coverage_and_notify_actual
-from src.tm_partners.coverage_check.reset_singletons import reset_singletons 
 from src.tm_partners.operations.enter_into_keyword_field import enter_into_keyword_field
 from src.tm_partners.operations.waiting_for_results_table import waiting_for_results_table
 from src.tm_partners.operations.try_diff_xpath_for_results_table import try_diff_xpath_for_results_table
 from src.tm_partners.operations.replace_keywords import replace_keywords
 from src.tm_partners.operations.filter_unit_num import filter_unit_num, reset_unit_num_filter
-from src.tm_partners.operations.filter_street import filter_street
-from src.tm_partners.operations.filter_section import filter_section
-from src.tm_partners.operations.filter_city import filter_city
 from src.tm_partners.operations.wait_for_results_table import wait_for_results_table
 from src.tm_partners.operations.detect_and_solve_captcha import detect_and_solve_captcha
 from src.tm_partners.operations.set_accepted_params import set_accepted_params
@@ -26,7 +22,6 @@ from src.tm_partners.operations.search_using_street import search_using_street_t
 from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 from src.tm_partners.operations.click_search_btn import click_search_btn
 from src.tm_partners.operations.iterate_through_all_and_notify import iterate_through_all_and_notify
-from src.tm_partners.operations.set_selected_table_row import set_selected_table_row
 
 from src.tm_partners.singleton.num_of_iterations import NumOfIterations
 from src.tm_partners.singleton.cvg_task import CVGTask
@@ -40,6 +35,10 @@ from src.tm_partners.db_read_write.db_read_address import read_from_db
 from src.tm_partners.coverage_check.bridge_to_actual_op import bridge_to_actual_op
 from src.tm_partners.singleton.retry_at_end import RetryAtEndCache
 from src.tm_partners.operations.login import Login
+from src.tm_partners.coverage_check.reset_singletons import reset_singletons
+from src.tm_partners.operations.filter_city import filter_city
+from src.tm_partners.operations.filter_section import filter_section
+from src.tm_partners.operations.filter_street import filter_street
 
 from .check_coverage_and_notify import check_coverage_and_notify
 from .input_speed_requested import input_speed_requested

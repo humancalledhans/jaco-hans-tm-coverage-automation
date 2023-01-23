@@ -73,8 +73,7 @@ def enter_right_keyword(driver, a):
             [x for x in keyword_search_string_list[: i + 1] if x]
         )
 
-        (driver, a) = enter_into_keyword_field(
-            driver, a, keyword_search_string)
+        (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
         (driver, a) = click_on_search_button(driver, a)
         (driver, a) = pause_until_loaded(driver, a)
         num_of_results = get_num_of_results(driver, a)
@@ -90,8 +89,7 @@ def enter_right_keyword(driver, a):
                 [x for x in keyword_search_string_list[:i] if x]
             )
 
-            (driver, a) = enter_into_keyword_field(
-                driver, a, keyword_search_string)
+            (driver, a) = enter_into_keyword_field(driver, a, keyword_search_string)
             (driver, a) = click_on_search_button(driver, a)
             (driver, a) = pause_until_loaded(driver, a)
             num_of_results = get_num_of_results(driver, a)

@@ -1,23 +1,23 @@
 from abc import ABCMeta, abstractstaticmethod
+import threading
 
 
 class IImageName(metaclass=ABCMeta):
-
     @abstractstaticmethod
     def set_full_page_image_name():
-        """ to implement in child class """
+        """to implement in child class"""
 
     @abstractstaticmethod
     def set_captcha_image_name():
-        """ to implement in child class """
+        """to implement in child class"""
 
     @abstractstaticmethod
     def get_full_page_image_name():
-        """ to implement in child class """
+        """to implement in child class"""
 
     @abstractstaticmethod
     def get_captcha_image_name():
-        """ to implement in child class """
+        """to implement in child class"""
 
 
 class ImageName(IImageName):
@@ -26,16 +26,19 @@ class ImageName(IImageName):
 
     @staticmethod
     def get_instance():
-        if ImageName.__instance == None:
-            ImageName()
-        return ImageName.__instance
+        local = threading.current_thread().__dict__
+        try:
+            instance = local["image_name_instance"]
+        except KeyError:
+            local["image_name_instance"] = ImageName()
+            instance = local["image_name_instance"]
+        if instance is None:
+            instance = ImageName()
+        return instance
 
     def __init__(self):
-        if ImageName.__instance != None:
-            raise Exception(
-                "ImageName instance cannot be instantiated more than once!")
-        else:
-            ImageName.__instance = self
+        self.full_page_image_name = None
+        self.captcha_image_name = None
 
     @staticmethod
     def set_full_page_image_name(self, full_page_image_name):

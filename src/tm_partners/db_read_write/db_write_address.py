@@ -146,28 +146,27 @@ def send_email(text, email_to):
     address_from_db = current_db_row.get_address_with_headers(self=current_db_row).replace(
         "  ", " ").replace("   ", " ")
 
-    if address_chosen == address_from_db:
-        gmail_user = 'botourssp@gmail.com'
-        gmail_password = 'jshmktlmwgeginnx'
+    gmail_user = 'botourssp@gmail.com'
+    gmail_password = 'jshmktlmwgeginnx'
 
-        if len(email_to) > 0:
-            email_to_list = email_to.split(',')
+    if len(email_to) > 0:
+        email_to_list = email_to.split(',')
 
-            for email in email_to_list:
-                email_to = email.strip()
-                sent_from = gmail_user
-                to = email_to
-                subject = 'Coverage Automation Notification'
-                body = setup_notification_text(text)
+        for email in email_to_list:
+            email_to = email.strip()
+            sent_from = gmail_user
+            to = email_to
+            subject = 'Coverage Automation Notification'
+            body = setup_notification_text(text)
 
-                try:
-                    smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-                    smtp_server.ehlo()
-                    smtp_server.login(gmail_user, gmail_password)
-                    smtp_server.sendmail(sent_from, to, body)
-                    smtp_server.close()
-                except Exception as ex:
-                    break
+            try:
+                smtp_server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+                smtp_server.ehlo()
+                smtp_server.login(gmail_user, gmail_password)
+                smtp_server.sendmail(sent_from, to, body)
+                smtp_server.close()
+            except Exception as ex:
+                break
 
 
 def get_db_password():
@@ -328,7 +327,6 @@ def write_from_csv_to_db():
 #         self.message = message
 #         super().__init__(self.message)
 
-
 def write_or_edit_result(id, result_type, result_text):
 
     selected_table_row_instance = SelectedTableRow.get_instance()
@@ -337,6 +335,7 @@ def write_or_edit_result(id, result_type, result_text):
     address_remark = selected_table_row_instance.get_address(
         self=selected_table_row_instance)
 
+    
     # enforcing the table row address to exist if result exists
     is_address_expected = result_type != 8 and result_type != 2 and result_type != 3
     if is_address_expected and len(address_remark) == 0:
@@ -412,7 +411,6 @@ def write_or_edit_result(id, result_type, result_text):
     print("RESULT TYPE: ", result_type)
     print("RESULT TEXT: ", result_text)
     print("ADDRESS REMARK: ", address_remark)
-    print("OVERLAPPING TOKENS: ", overlapping_tokens)
     print("------------")
     cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=get_db_password(),
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
@@ -423,11 +421,11 @@ def write_or_edit_result(id, result_type, result_text):
 
     edit_stmt = f"""
     UPDATE cvg_db
-    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}', overlapping_tokens = '{overlapping_tokens}'
+    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}'
     WHERE id = {id};
     """
     current_db_row = CurrentDBRow.get_instance()
-    # print("RESULTS UPDATED!\n", "id: ", id, "\naddress: ", current_db_row.get_address_with_headers(self=current_db_row), "\nresult_type: ",
+    # print("RESULTS UPDATED!\n", "id: ", id, "\naddress: ", current_db_row.get_address(self=current_db_row), "\nresult_type: ",
     #   result_type, "\nresult_text: ", result_text)
 
     cursor.execute(edit_stmt)

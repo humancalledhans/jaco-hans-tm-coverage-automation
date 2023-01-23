@@ -222,8 +222,7 @@ class CurrentDBRow(ICurrentDBRow):
         ):
             self.current_row_unit_no = ""
         else:
-            int_as_string_lst = ["0", "1", "2",
-                                 "3", "4", "5", "6", "7", "8", "9"]
+            int_as_string_lst = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
             if (
                 "-" in current_row_unit_no
                 and current_row_unit_no[-1] in int_as_string_lst

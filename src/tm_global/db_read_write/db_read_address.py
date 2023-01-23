@@ -21,7 +21,7 @@ def read_from_db():
         query = f"SELECT * FROM cvg_db WHERE id = {data_range_start}"
 
     else:
-        query = f"SELECT * FROM cvg_db WHERE id <= {data_range_end} and id >= {data_range_start} ORDER BY created_at DESC"
+        query = f"SELECT * FROM cvg_db ORDER BY created_at DESC"
         # query = f"SELECT * FROM cvg_db ORDER BY created_at ASC"
         # query = f"SELECT * FROM cvg_db WHERE is_active = 1 ORDER BY created_at DESC"
 

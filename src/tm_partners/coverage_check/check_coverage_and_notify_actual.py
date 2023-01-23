@@ -33,17 +33,8 @@ def check_coverage_and_notify_actual(driver, a):
         # result_text = coverage_result.text
         # if "within the serviceable area" in result_text.lower():
 
-        # handling edge case where there is an existing order error
-        try:
-            (driver, a) = pause_until_loaded(driver, a)
-            WebDriverWait(driver, 0.3).until(EC.presence_of_element_located(
-                (By.XPATH, "/html/body/div/div/div[4]/center/div[2]/div[2]/div/table/tbody/tr[2]/td/div[2]/div/form/div[3]/div[2]/table[2]")))
-            addn_info = ' Has an existing order.'
-        except TimeoutException:
-            addn_info = ''
-
         # print("RESULT: is within servicable area")
-        return ((current_row_id, 1, "Is within serviceable area!" + addn_info))
+        return ((current_row_id, 1, "Is within serviceable area!"))
 
         # print("we're in the block where the green check mark is not available")
 
