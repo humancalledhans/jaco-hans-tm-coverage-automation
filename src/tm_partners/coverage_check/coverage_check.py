@@ -50,7 +50,6 @@ class FindingCoverage:
         pass
 
     def finding_coverage(self, driver, a):
-        raise Exception("break up")
 
         (driver, a) = input_speed_requested(driver, a, 50)
 
