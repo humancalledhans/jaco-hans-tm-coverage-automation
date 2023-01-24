@@ -75,10 +75,11 @@ class FindingCoverage:
 
             # initialise cvg_task
             cvg_task = CVGTask.get_instance()
-            cvg_task.set_total_number_of_addresses_to_check(
-                len(all_the_data_list))
+            cvg_task.set_total_number_of_addresses_to_check(self=cvg_task, 
+                total_number_of_addresses_to_check=len(all_the_data_list))
 
             for data in all_the_data_list:
+
                 try:
 
                     print("CURRENT ID: ", data.get_id())
@@ -178,6 +179,7 @@ class FindingCoverage:
                         (driver, a) = input_speed_requested(
                             driver, a, 50)
                         continue
+
 
     def _select_state(self, driver, a, data):
         """Picks the relevant state from the dropdown
