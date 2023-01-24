@@ -51,154 +51,134 @@ class FindingCoverage:
 
     def finding_coverage(self, driver, a):
 
-        try:
+        (driver, a) = input_speed_requested(driver, a, 50)
 
-            (driver, a) = input_speed_requested(driver, a, 50)
+        (driver, a) = pause_until_loaded(driver, a)
 
-            (driver, a) = pause_until_loaded(driver, a)
+        set_accepted_params()
 
-            set_accepted_params()
+        num_of_iterations_instance = NumOfIterations.get_instance()
+        num_of_iterations = num_of_iterations_instance.get_num_of_iterations()
 
-            num_of_iterations_instance = NumOfIterations.get_instance()
-            num_of_iterations = num_of_iterations_instance.get_num_of_iterations()
+        data_range = DataIdRange.get_instance()
+        data_range_start = data_range.get_start_id(self=data_range)
+        data_range_end = data_range.get_end_id(self=data_range)
 
-            data_range = DataIdRange.get_instance()
-            data_range_start = data_range.get_start_id(self=data_range)
-            data_range_end = data_range.get_end_id(self=data_range)
+        for _ in range(num_of_iterations):
+            # hans, the loop starts at coverage search page. (the page where you select state and enter keyword)
 
-            for i in range(num_of_iterations):
-                # hans, the loop starts at coverage search page. (the page where you select state and enter keyword)
-                    
-                all_the_data = AllTheData.get_instance()
-                all_the_data.reset_all_data(self=all_the_data)
-                read_from_db()
-                all_the_data_list = all_the_data.get_all_the_data_list(
-                    self=all_the_data)
+            all_the_data = AllTheData.get_instance()
+            all_the_data.reset_all_data(self=all_the_data)
+            read_from_db()
+            all_the_data_list = all_the_data.get_all_the_data_list(
+                self=all_the_data)
 
-                # initialise cvg_task
-                cvg_task = CVGTask.get_instance()
-                cvg_task.set_total_number_of_addresses_to_check(self=cvg_task, 
-                    total_number_of_addresses_to_check=len(all_the_data_list))
-
-                for data in all_the_data_list:
-                    try:
-
-                        print("CURRENT ID: ", data.get_id())
-
-                        # if data.get_is_active() == 0:
-                        #     continue
-
-                        # hans: reminder that rebooted_start_id and rebooted_end_id are only used when finding_coverage is started again, from where it had error.
-                        if data.get_id() < data_range_start or data.get_id() > data_range_end:
-                            continue
-
-                        print("CURRENT RUNNING ID: ", data.get_id())
-
-                        reset_singletons()
-                        set_current_db_row(data)
-
-                        current_db_row = CurrentDBRow.get_instance()
-                        current_row_id = current_db_row.get_id(
-                            self=current_db_row)
-
-                        print("\n", current_db_row.get_address_with_headers(
-                            self=current_db_row))
-
-                        # STEP ONE: select state.
-                        self._select_state(driver, a, data)
-
-                        # STEP TWO: set up the search string.
-                        # keyword_search_string = ''
-
-                        # NOTE
-                        # for search_level_flag:
-                        # 0 means don't need to match lot number.
-                        # 1 means need to match lot number. Allows for cases like 'Building/Street name found, lot number not found'
-                        # refer to code in iterate_through_all_and_notify(). block where checked==False
-                        
-                        # STEP TWO A: find if there's a building name.
-                        building_name = current_db_row.get_building(
-                            self=current_db_row)
-
-                        if building_name is not None:
-                            building_name = building_name.strip()
-
-                        is_building_name_exists = building_name is not None and len(building_name) > 3
-                        if is_building_name_exists:
-                            self._search_for_building_match(driver, a, building_name)
-                            continue
-
-                        # STEP TWO B: find if there's a street/section name.
-                        # when building name is empty. do the same but for street, or for section name.
-                        street_name = current_db_row.get_street(
-                            self=current_db_row)
-                        section_name = current_db_row.get_section(
-                                self=current_db_row)
-                        
-                        if street_name is not None:
-                            street_name = street_name.strip()
-                        if section_name is not None:
-                            section_name = section_name.strip()
-
-                        is_street_name_exists = street_name is not None and len(street_name) > 3
-                        is_section_name_exists = section_name is not None and len(section_name) > 2
-                        if is_street_name_exists:
-                            keyword_search_string = street_name
-                        elif is_section_name_exists:
-                            keyword_search_string = section_name
-                        else:
-                            self._write_no_result()
-                            continue
-                            
-                        self._search_for_street_or_section_match(driver, a, keyword_search_string)
-
-                    except Exception as e:
-                        try:
-                            WebDriverWait(driver, 1).until(EC.presence_of_element_located(
-                                (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@class='subContent']//b[contains(text(), 'Your session has expired due to inactivity.')]")))
-                            driver.find_element(
-                                By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@class='subContent']//b[contains(text(), 'Your session has expired due to inactivity.')]")
-                            dismiss_btn = driver.find_element(
-                                By.XPATH, "//div[@class='blockUI blockMsg blockPage']//input[@type='button' and @id='timeout_ok']")
-                            a.move_to_element(dismiss_btn).click().perform()
-                            (driver, a) = pause_until_loaded(driver, a)
-                            driver.quit()
-                            login = Login()
-                            (driver, a) = login.login()
-                            (driver, a) = input_speed_requested(
-                                driver, a, 50)
-                            continue
-                        except NoSuchElementException:
-                            print('Exception: ', e)
-                            retry_at_end_singleton = RetryAtEndCache.get_instance()
-                            retry_at_end_singleton.add_data_id_to_retry(
-                                self=retry_at_end_singleton, data_id=data.get_id())
-                            time.sleep(7)
-                            driver.quit()
-                            login = Login()
-                            (driver, a) = login.login()
-                            (driver, a) = input_speed_requested(
-                                driver, a, 50)
-                            continue
-        
-        except Exception as e:
-            print("Some unhandled error occured:", e)
-
-            # check if error is due to site maintenance
-
+            # initialise cvg_task
             cvg_task = CVGTask.get_instance()
-            current_db_row = CurrentDBRow.get_instance()
+            cvg_task.set_total_number_of_addresses_to_check(self=cvg_task, 
+                total_number_of_addresses_to_check=len(all_the_data_list))
 
-            # setting the id where error occured
-            current_row_id = current_db_row.get_id(
-                self=current_db_row)
-            if current_row_id is None:
-                data_id_range = DataIdRange.get_instance()
-                current_row_id = data_id_range.get_start_id(self=data_id_range)
-            cvg_task.set_failed_id(self=cvg_task, current_id=current_row_id)
-            
-            # logging the error
-            cvg_task.write_to_db(self=cvg_task)
+            for data in all_the_data_list:
+
+                try:
+
+                    print("CURRENT ID: ", data.get_id())
+
+                    # if data.get_is_active() == 0:
+                    #     continue
+
+                    # hans: reminder that rebooted_start_id and rebooted_end_id are only used when finding_coverage is started again, from where it had error.
+                    if data.get_id() < data_range_start or data.get_id() > data_range_end:
+                        continue
+
+                    print("CURRENT RUNNING ID: ", data.get_id())
+
+                    reset_singletons()
+                    set_current_db_row(data)
+
+                    current_db_row = CurrentDBRow.get_instance()
+                    current_row_id = current_db_row.get_id(
+                        self=current_db_row)
+
+                    print("\n", current_db_row.get_address_with_headers(
+                        self=current_db_row))
+
+                    # STEP ONE: select state.
+                    self._select_state(driver, a, data)
+
+                    # STEP TWO: set up the search string.
+                    # keyword_search_string = ''
+
+                    # NOTE
+                    # for search_level_flag:
+                    # 0 means don't need to match lot number.
+                    # 1 means need to match lot number. Allows for cases like 'Building/Street name found, lot number not found'
+                    # refer to code in iterate_through_all_and_notify(). block where checked==False
+                    
+                    # STEP TWO A: find if there's a building name.
+                    building_name = current_db_row.get_building(
+                        self=current_db_row)
+
+                    if building_name is not None:
+                        building_name = building_name.strip()
+
+                    is_building_name_exists = building_name is not None and len(building_name) > 3
+                    if is_building_name_exists:
+                        self._search_for_building_match(driver, a, building_name)
+                        continue
+
+                    # STEP TWO B: find if there's a street/section name.
+                    # when building name is empty. do the same but for street, or for section name.
+                    street_name = current_db_row.get_street(
+                        self=current_db_row)
+                    section_name = current_db_row.get_section(
+                            self=current_db_row)
+                    
+                    if street_name is not None:
+                        street_name = street_name.strip()
+                    if section_name is not None:
+                        section_name = section_name.strip()
+
+                    is_street_name_exists = street_name is not None and len(street_name) > 3
+                    is_section_name_exists = section_name is not None and len(section_name) > 2
+                    if is_street_name_exists:
+                        keyword_search_string = street_name
+                    elif is_section_name_exists:
+                        keyword_search_string = section_name
+                    else:
+                        self._write_no_result()
+                        continue
+                        
+                    self._search_for_street_or_section_match(driver, a, keyword_search_string)
+
+                except Exception as e:
+                    try:
+                        WebDriverWait(driver, 1).until(EC.presence_of_element_located(
+                            (By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@class='subContent']//b[contains(text(), 'Your session has expired due to inactivity.')]")))
+                        driver.find_element(
+                            By.XPATH, "//div[@class='blockUI blockMsg blockPage']//div[@class='subContent']//b[contains(text(), 'Your session has expired due to inactivity.')]")
+                        dismiss_btn = driver.find_element(
+                            By.XPATH, "//div[@class='blockUI blockMsg blockPage']//input[@type='button' and @id='timeout_ok']")
+                        a.move_to_element(dismiss_btn).click().perform()
+                        (driver, a) = pause_until_loaded(driver, a)
+                        driver.quit()
+                        login = Login()
+                        (driver, a) = login.login()
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
+                        continue
+                    except NoSuchElementException:
+                        print('Exception: ', e)
+                        retry_at_end_singleton = RetryAtEndCache.get_instance()
+                        retry_at_end_singleton.add_data_id_to_retry(
+                            self=retry_at_end_singleton, data_id=data.get_id())
+                        time.sleep(7)
+                        driver.quit()
+                        login = Login()
+                        (driver, a) = login.login()
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
+                        continue
 
 
     def _select_state(self, driver, a, data):

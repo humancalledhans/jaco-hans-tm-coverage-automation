@@ -485,7 +485,7 @@ def write_or_edit_result(id, result_type, result_text):
 
     # increment the number of addresses checked for cvg_task.
     cvg_task = CVGTask.get_instance()
-    cvg_task.increment_total_number_of_addresses_checked()
+    cvg_task.increment_total_number_of_addresses_checked(self=cvg_task)
 
 
 if __name__ == '__main__':
