@@ -5,6 +5,8 @@ from src.tm_partners.singleton.current_db_row import CurrentDBRow
 from src.tm_partners.coverage_check.coverage_check import FindingCoverage
 from src.tm_partners.singleton.image_names import ImageName
 from src.tm_partners.operations.set_accepted_params import set_accepted_params
+from selenium.common.exceptions import TimeoutException
+from src.tm_partners.operations.website_under_maintenance_wait import website_under_maintenance_wait
 
 # TODO: make main an object. so that the singletons are all separate instances for each main object instance.
 
@@ -33,6 +35,12 @@ class Main:
             print("Some unhandled error occured:", e)
 
             # check if error is due to site maintenance
+            cvg_task_remark = None
+            try:
+                (driver, a) = website_under_maintenance_wait(driver, a)
+                cvg_task_remark = "Website under maintenance"
+            except TimeoutException:
+                pass
 
             cvg_task = CVGTask.get_instance()
             current_db_row = CurrentDBRow.get_instance()
@@ -46,7 +54,7 @@ class Main:
             cvg_task.set_failed_id(self=cvg_task, current_id=current_row_id)
             
             # logging the error
-            cvg_task.write_to_db(self=cvg_task)
+            cvg_task.write_to_db(self=cvg_task, remark=cvg_task_remark)
 
         # print("Hi! This is a Coverage Automation System. It will:\n1. Read in a Database of Addresses\n2. Check the coverage of the addresses\n3. Send an email with a screenshot depending on the 4 coverage end results.")
         # ids_to_start_from = input(
