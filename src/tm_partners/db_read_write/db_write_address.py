@@ -407,6 +407,10 @@ def write_or_edit_result(id, result_type, result_text):
 
         overlapping_tokens = overlapping_tokens.strip().strip()
 
+    # for visual purposes, storing "-" instead of blank
+    if len(address_remark.strip())==0:
+        address_remark = "-" 
+        
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)
     print("RESULT TEXT: ", result_text)
@@ -418,6 +422,7 @@ def write_or_edit_result(id, result_type, result_text):
 
     tz = pytz.timezone("Asia/Singapore")
     current_datetime = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
+
 
     edit_stmt = f"""
     UPDATE cvg_db
