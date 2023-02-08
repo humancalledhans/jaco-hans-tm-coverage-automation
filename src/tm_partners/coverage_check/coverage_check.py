@@ -179,7 +179,17 @@ class FindingCoverage:
                         (driver, a) = input_speed_requested(
                             driver, a, 50)
                         continue
-
+                    except:
+                        print('Exception: ', e)
+                        retry_at_end_singleton = RetryAtEndCache.get_instance()
+                        retry_at_end_singleton.add_data_id_to_retry(
+                            self=retry_at_end_singleton, data_id=data.get_id())
+                        time.sleep(7)
+                        driver.quit()
+                        login = Login()
+                        (driver, a) = login.login()
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
 
     def _select_state(self, driver, a, data):
         """Picks the relevant state from the dropdown
@@ -219,6 +229,18 @@ class FindingCoverage:
                         (driver, a) = detect_and_solve_captcha(
                             driver, a)
 
+                        retry_at_end_singleton = RetryAtEndCache.get_instance()
+                        retry_at_end_singleton.add_data_id_to_retry(
+                            self=retry_at_end_singleton, data_id=data.get_id())
+                        time.sleep(7)
+                        driver.quit()
+                        login = Login()
+                        (driver, a) = login.login()
+                        (driver, a) = input_speed_requested(
+                            driver, a, 50)
+                        continue
+                    except:
+                        print('Exception: ', e)
                         retry_at_end_singleton = RetryAtEndCache.get_instance()
                         retry_at_end_singleton.add_data_id_to_retry(
                             self=retry_at_end_singleton, data_id=data.get_id())
@@ -294,7 +316,20 @@ class FindingCoverage:
                     (driver, a) = detect_and_solve_captcha(driver, a)
             except NoSuchElementException:
                 print('retry keywords 5')
-                time.sleep(5000)
+                time.sleep(7)
+                retry_at_end_singleton = RetryAtEndCache.get_instance()
+                retry_at_end_singleton.add_data_id_to_retry(
+                    self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                time.sleep(7)
+                driver.quit()
+                login = Login()
+                (driver, a) = login.login()
+                (driver, a) = input_speed_requested(
+                    driver, a, 50)
+                return
+            except:
+                print('retry keywords 5')
+                time.sleep(7)
                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                 retry_at_end_singleton.add_data_id_to_retry(
                     self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -377,7 +412,7 @@ class FindingCoverage:
 
                             except NoSuchElementException:
                                 print('retry keywords 1')
-                                time.sleep(5000)
+                                time.sleep(7)
                                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                                 retry_at_end_singleton.add_data_id_to_retry(
                                     self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -519,23 +554,23 @@ class FindingCoverage:
                     return
         
         except TimeoutException:
-                try:
-                    driver.find_element(
-                        By.XPATH, "//table[@border='0' and @class='errorDisplay1']//tbody//tr//td//b[contains(text(), 'Sorry, we are unable to proceed at the moment. This error could be due to loss of connection to the server. Please try again later.')]")
-                    retry_at_end_singleton = RetryAtEndCache.get_instance()
-                    retry_at_end_singleton.add_data_id_to_retry(
-                        self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
-                    time.sleep(7)
-                    driver.quit()
-                    login = Login()
-                    (driver, a) = login.login()
-                    (driver, a) = input_speed_requested(
-                        driver, a, 50)
-                    return
-                except NoSuchElementException:
-                    raise Exception(
-                        "Results table did not pop up.")
-        
+            try:
+                driver.find_element(
+                    By.XPATH, "//table[@border='0' and @class='errorDisplay1']//tbody//tr//td//b[contains(text(), 'Sorry, we are unable to proceed at the moment. This error could be due to loss of connection to the server. Please try again later.')]")
+                retry_at_end_singleton = RetryAtEndCache.get_instance()
+                retry_at_end_singleton.add_data_id_to_retry(
+                    self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
+                time.sleep(7)
+                driver.quit()
+                login = Login()
+                (driver, a) = login.login()
+                (driver, a) = input_speed_requested(
+                    driver, a, 50)
+                return
+            except NoSuchElementException:
+                raise Exception(
+                    "Results table did not pop up.")
+
     def _preprocess_building_name(self, building_name: str):
         """Preprocessing the building name by cleaning and generating possible variations
         Args:
@@ -716,7 +751,7 @@ class FindingCoverage:
                     (driver, a) = detect_and_solve_captcha(driver, a)
             except NoSuchElementException:
                 print('retry keywords 5')
-                time.sleep(5000)
+                time.sleep(7)
                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                 retry_at_end_singleton.add_data_id_to_retry(
                     self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -790,7 +825,7 @@ class FindingCoverage:
 
                         except NoSuchElementException:
                             print('retry keywords 1')
-                            time.sleep(5000)
+                            time.sleep(7)
                             retry_at_end_singleton = RetryAtEndCache.get_instance()
                             retry_at_end_singleton.add_data_id_to_retry(
                                 self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
