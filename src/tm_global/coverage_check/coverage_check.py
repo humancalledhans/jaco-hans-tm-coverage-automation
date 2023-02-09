@@ -57,7 +57,8 @@ def finding_coverage(driver, a):
         num_of_iterations * (data_range_end - data_range_start) + 1
     )
 
-    for _ in range(num_of_iterations):
+    # for _ in range(num_of_iterations):
+    while True:
         all_the_data = AllTheData.get_instance()
         all_the_data.reset_all_data(self=all_the_data)
 
