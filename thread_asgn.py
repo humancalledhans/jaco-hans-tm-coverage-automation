@@ -20,7 +20,8 @@ class ThreadAsgn:
         # get the indexes, and then assign the indexes to four different threads
 
         data_id_range = DataIdRange.get_instance()
-        data_id_range.set_start_id(self=data_id_range, start_id=ids_to_start_from)
+        data_id_range.set_start_id(
+            self=data_id_range, start_id=ids_to_start_from)
         data_id_range.set_end_id(self=data_id_range, end_id=ids_to_end_at)
         thread_name = threading.current_thread().name
 
@@ -98,7 +99,7 @@ if __name__ == "__main__":
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
     thread_asgn = ThreadAsgn()
-    thread_asgn.start_threads(1)
+    thread_asgn.start_threads(1) # jaco, change number of threads here
 
     # x = threading.Thread(target=func)
     # x.start()
