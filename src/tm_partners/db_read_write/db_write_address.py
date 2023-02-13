@@ -421,7 +421,7 @@ def write_or_edit_result(id, result_type, result_text):
 
     edit_stmt = f"""
     UPDATE cvg_db
-    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}'
+    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}'
     WHERE id = {id};
     """
     current_db_row = CurrentDBRow.get_instance()
