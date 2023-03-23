@@ -64,7 +64,17 @@ class FindingCoverage:
         data_range_start = data_range.get_start_id(self=data_range)
         data_range_end = data_range.get_end_id(self=data_range)
 
-        for _ in range(num_of_iterations):
+        """
+        tm global has cvg task.
+        # initialise cvg_task
+        cvg_task = CVGTask.get_instance()
+        cvg_task.set_total_number_of_addresses_to_check(
+            num_of_iterations * (data_range_end - data_range_start) + 1
+        )
+        """
+
+        # for _ in range(num_of_iterations):
+        while True:
             # hans, the loop starts at coverage search page. (the page where you select state and enter keyword)
 
             all_the_data = AllTheData.get_instance()
@@ -75,33 +85,22 @@ class FindingCoverage:
 
             # initialise cvg_task
             cvg_task = CVGTask.get_instance()
-            cvg_task.set_total_number_of_addresses_to_check(self=cvg_task, 
-                total_number_of_addresses_to_check=len(all_the_data_list))
+            cvg_task.set_total_number_of_addresses_to_check(self=cvg_task,
+                                                            total_number_of_addresses_to_check=len(all_the_data_list))
 
             for data in all_the_data_list:
+                print("CURRENT RUNNING ID: ", data.get_id())
+                if data.get_id() < data_range_start or data.get_id() > data_range_end:
+                    continue
+
+                reset_singletons()
+                set_current_db_row(data)
 
                 try:
 
-                    print("CURRENT ID: ", data.get_id())
-
-                    # if data.get_is_active() == 0:
-                    #     continue
-
                     # hans: reminder that rebooted_start_id and rebooted_end_id are only used when finding_coverage is started again, from where it had error.
-                    if data.get_id() < data_range_start or data.get_id() > data_range_end:
-                        continue
-
-                    print("CURRENT RUNNING ID: ", data.get_id())
-
-                    reset_singletons()
-                    set_current_db_row(data)
 
                     current_db_row = CurrentDBRow.get_instance()
-                    current_row_id = current_db_row.get_id(
-                        self=current_db_row)
-
-                    print("\n", current_db_row.get_address_with_headers(
-                        self=current_db_row))
 
                     # STEP ONE: select state.
                     self._select_state(driver, a, data)
@@ -114,7 +113,7 @@ class FindingCoverage:
                     # 0 means don't need to match lot number.
                     # 1 means need to match lot number. Allows for cases like 'Building/Street name found, lot number not found'
                     # refer to code in iterate_through_all_and_notify(). block where checked==False
-                    
+
                     # STEP TWO A: find if there's a building name.
                     building_name = current_db_row.get_building(
                         self=current_db_row)
@@ -122,9 +121,11 @@ class FindingCoverage:
                     if building_name is not None:
                         building_name = building_name.strip()
 
-                    is_building_name_exists = building_name is not None and len(building_name) > 3
+                    is_building_name_exists = building_name is not None and len(
+                        building_name) > 3
                     if is_building_name_exists:
-                        self._search_for_building_match(driver, a, building_name)
+                        self._search_for_building_match(
+                            driver, a, building_name)
                         continue
 
                     # STEP TWO B: find if there's a street/section name.
@@ -132,15 +133,17 @@ class FindingCoverage:
                     street_name = current_db_row.get_street(
                         self=current_db_row)
                     section_name = current_db_row.get_section(
-                            self=current_db_row)
-                    
+                        self=current_db_row)
+
                     if street_name is not None:
                         street_name = street_name.strip()
                     if section_name is not None:
                         section_name = section_name.strip()
 
-                    is_street_name_exists = street_name is not None and len(street_name) > 3
-                    is_section_name_exists = section_name is not None and len(section_name) > 2
+                    is_street_name_exists = street_name is not None and len(
+                        street_name) > 3
+                    is_section_name_exists = section_name is not None and len(
+                        section_name) > 2
                     if is_street_name_exists:
                         keyword_search_string = street_name
                     elif is_section_name_exists:
@@ -148,8 +151,9 @@ class FindingCoverage:
                     else:
                         self._write_no_result()
                         continue
-                        
-                    self._search_for_street_or_section_match(driver, a, keyword_search_string)
+
+                    self._search_for_street_or_section_match(
+                        driver, a, keyword_search_string)
 
                 except Exception as e:
                     try:
@@ -239,7 +243,7 @@ class FindingCoverage:
                         (driver, a) = input_speed_requested(
                             driver, a, 50)
                         continue
-                    except:
+                    except Exception as e:
                         print('Exception: ', e)
                         retry_at_end_singleton = RetryAtEndCache.get_instance()
                         retry_at_end_singleton.add_data_id_to_retry(
@@ -288,13 +292,13 @@ class FindingCoverage:
         Raises:
             Exception: when result table doesn't show
         """
-        
+
         current_db_row = CurrentDBRow.get_instance()
         lot_no_detail_flag = current_db_row.get_search_level_flag(
-                        self=current_db_row)
-        
+            self=current_db_row)
 
-        _, building_name_variations = self._preprocess_building_name(building_name)
+        _, building_name_variations = self._preprocess_building_name(
+            building_name)
         keyword_search_string = None
 
         # finding good keyword to use (that returns decent num of results)
@@ -339,8 +343,8 @@ class FindingCoverage:
                 (driver, a) = login.login()
                 (driver, a) = input_speed_requested(
                     driver, a, 50)
-                return        
-            
+                return
+
             # checking if the number of results is acceptable
             number_of_results = len(driver.find_elements(
                 By.XPATH, "//tr[@class='odd' or @class='even' or @class='datagrid-odd' or @class='datagrid-even'][not(@style)]"))
@@ -349,7 +353,7 @@ class FindingCoverage:
             elif 0 < number_of_results < 1024:
                 keyword_search_string = building_name_variation
                 break
-        
+
         # handle when building turns no results
         if keyword_search_string is None:
             self._write_no_result()
@@ -372,7 +376,7 @@ class FindingCoverage:
             (driver, a) = detect_and_solve_captcha(driver, a)
         # captcha should be solved now. getting the results...
         (driver, a) = pause_until_loaded(driver, a)
-        
+
         try:
             (driver, a) = wait_for_results_table(driver, a)
 
@@ -390,14 +394,14 @@ class FindingCoverage:
                 # If no results, remove the unit filter and evaluate.
                 if lot_no_detail_flag == 0:
                     (driver, a) = filter_unit_num(driver, a)
-                    
+
                     # making sure the filtered resutls pop out, before we proceed.
                     # NOTE: in this try/except block, we are setting the correct x_code_path, because it can be diff due to filtering applied
                     try:
                         (driver, a) = waiting_for_results_table(
                             driver, a)
                         x_code_path = "//tr[@class='odd' or @class='even'][not(@style)]"
-                    
+
                     except TimeoutException:
                         x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
                         if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
@@ -423,7 +427,7 @@ class FindingCoverage:
                                 (driver, a) = input_speed_requested(
                                     driver, a, 50)
                                 return
-                        
+
                     number_of_results = len(driver.find_elements(
                         By.XPATH, x_code_path))
 
@@ -445,17 +449,17 @@ class FindingCoverage:
                         (driver, a) = waiting_for_results_table(
                             driver, a)
                     except TimeoutException:
-                    
-                        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]" 
+
+                        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
                         if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
                             self._write_no_result()
-                            return  
+                            return
 
                     # assuming that the number of results have been significantly reduced
                     iterate_through_all_and_notify(
                         driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
                     return
-                
+
             # no results
             # elif number_of_results == 0:
             #     # no results found. so we'll try with the "condominium" instead of the "kondominium" variation things.
@@ -540,7 +544,7 @@ class FindingCoverage:
                     (driver, a) = input_speed_requested(
                         driver, a, 50)
                     return
-            
+
             # 1 <= num_of_results < 50
             else:
                 if lot_no_detail_flag == 0:
@@ -552,7 +556,7 @@ class FindingCoverage:
                     iterate_through_all_and_notify(
                         driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=True, street_name_found=False)
                     return
-        
+
         except TimeoutException:
             try:
                 driver.find_element(
@@ -577,7 +581,7 @@ class FindingCoverage:
             building_name (str): the building name from the DB
         Returns:
             str, [str]: a tuple with the clean name and name variations 
-        """ 
+        """
 
         cleaned_building_name = building_name
         building_name_variations = []
@@ -592,17 +596,18 @@ class FindingCoverage:
         building_name_variations = []
         if cleaned_building_name != building_name:
             building_name_variations.append(building_name)
-        building_name_variations.extend(self._get_variations(cleaned_building_name))
+        building_name_variations.extend(
+            self._get_variations(cleaned_building_name))
 
         return cleaned_building_name, building_name_variations
-    
+
     def _preprocess_street_section_name(self, street_sec_name: str):
         """Preprocessing the street or section name by cleaning and generating possible variations
         Args:
             street_sec_name (str): the building name from the DB
         Returns:
             str, [str]: a tuple with the clean name and name variations 
-        """ 
+        """
 
         cleaned_name = street_sec_name.strip()
         name_variations = []
@@ -612,7 +617,7 @@ class FindingCoverage:
 
         return cleaned_name, name_variations
 
-    def _get_variations(self, token:str):
+    def _get_variations(self, token: str):
         """Generates possible variations of an address token
         Args:
             token (string): address token
@@ -693,13 +698,15 @@ class FindingCoverage:
             # if a variation exists
             if word in variation_map:
                 # freeze the state before modification to avoid duplicates
-                possible_variations_state_before_mod = [s for s in possible_variations]
+                possible_variations_state_before_mod = [
+                    s for s in possible_variations]
                 for variation in variation_map[word]:
                     # modify each existing search keyword to include the newly identified variation
                     for possibilities in possible_variations_state_before_mod:
                         new_keyword = possibilities.split(' ')
                         new_keyword[i] = variation
-                        possible_variations.append(' '.join(new_keyword)) # list -> string
+                        possible_variations.append(
+                            ' '.join(new_keyword))  # list -> string
 
         return possible_variations
 
@@ -719,17 +726,18 @@ class FindingCoverage:
             a: ActionChains object
             building_name (str): a valid street or section name
         """
-        
+
         # get street_type_and_search() gets the lot no, street type, and street name - puts it tgt and searches.
         # the results table would then be there.
         # then, it calls iterate_through_all_and_notify().
-        
+
         keyword_search_string = street_or_section_name
         current_db_row = CurrentDBRow.get_instance()
         lot_no_detail_flag = current_db_row.get_search_level_flag(
             self=current_db_row)
 
-        _, keyword_variations = self._preprocess_street_section_name(keyword_search_string)
+        _, keyword_variations = self._preprocess_street_section_name(
+            keyword_search_string)
         keyword_search_string = None
 
         # finding good keyword to use (that returns decent num of results)
@@ -761,8 +769,8 @@ class FindingCoverage:
                 (driver, a) = login.login()
                 (driver, a) = input_speed_requested(
                     driver, a, 50)
-                return        
-            
+                return
+
             # checking if the number of results is acceptable
             number_of_results = len(driver.find_elements(
                 By.XPATH, "//tr[@class='odd' or @class='even' or @class='datagrid-odd' or @class='datagrid-even'][not(@style)]"))
@@ -771,7 +779,7 @@ class FindingCoverage:
             elif 0 < number_of_results < 1024:
                 keyword_search_string = keyword_variation
                 break
-        
+
         # handle when street or section turns no results
         if keyword_search_string is None:
             self._write_no_result()
@@ -803,14 +811,14 @@ class FindingCoverage:
             # If no results, remove the unit filter and evaluate.
             if lot_no_detail_flag == 0:
                 (driver, a) = filter_unit_num(driver, a)
-                
+
                 # making sure the filtered resutls pop out, before we proceed.
                 # NOTE: in this try/except block, we are setting the correct x_code_path, because it can be diff due to filtering applied
                 try:
                     (driver, a) = waiting_for_results_table(
                         driver, a)
                     x_code_path = "//tr[@class='odd' or @class='even'][not(@style)]"
-                
+
                 except TimeoutException:
                     x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
                     if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
@@ -836,7 +844,7 @@ class FindingCoverage:
                             (driver, a) = input_speed_requested(
                                 driver, a, 50)
                             return
-                    
+
                 number_of_results = len(driver.find_elements(
                     By.XPATH, x_code_path))
 
@@ -858,18 +866,17 @@ class FindingCoverage:
                     (driver, a) = waiting_for_results_table(
                         driver, a)
                 except TimeoutException:
-                
-                    x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]" 
+
+                    x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
                     if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
                         self._write_no_result()
-                        return  
+                        return
 
                 # assuming that the number of results have been significantly reduced
                 iterate_through_all_and_notify(
                     driver, a, filtered=True, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
                 return
-            
-            
+
         # 1 <= num_of_results < 50
         else:
             if lot_no_detail_flag == 0:

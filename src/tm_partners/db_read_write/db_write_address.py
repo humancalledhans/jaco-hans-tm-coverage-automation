@@ -327,6 +327,7 @@ def write_from_csv_to_db():
 #         self.message = message
 #         super().__init__(self.message)
 
+
 def write_or_edit_result(id, result_type, result_text):
 
     selected_table_row_instance = SelectedTableRow.get_instance()
@@ -335,7 +336,6 @@ def write_or_edit_result(id, result_type, result_text):
     address_remark = selected_table_row_instance.get_address(
         self=selected_table_row_instance)
 
-    
     # enforcing the table row address to exist if result exists
     is_address_expected = result_type != 8 and result_type != 2 and result_type != 3
     if is_address_expected and len(address_remark) == 0:
@@ -349,21 +349,23 @@ def write_or_edit_result(id, result_type, result_text):
             self=selected_table_row_instance)
         current_db_row_unit = current_db_row_instance.get_house_unit_lotno(
             self=current_db_row_instance)
-        if selected_table_row_unit == current_db_row_unit:
+        if selected_table_row_unit.strip().lower() == current_db_row_unit.strip().lower():
             overlapping_tokens += current_db_row_unit
 
         selected_table_row_floor = selected_table_row_instance.get_floor(
             self=selected_table_row_instance)
         current_db_row_floor = current_db_row_instance.get_floor(
             self=current_db_row_instance)
-        if selected_table_row_floor == current_db_row_floor:
+        if selected_table_row_floor.strip().lower() == current_db_row_floor.strip().lower():
             overlapping_tokens += ' ' + current_db_row_floor
 
         selected_table_row_building = selected_table_row_instance.get_building(
             self=selected_table_row_instance)
         current_db_row_building = current_db_row_instance.get_building(
             self=current_db_row_instance)
-        if selected_table_row_building == current_db_row_building:
+        print("selected_table_row_building: " + selected_table_row_building)
+        print("current_db_row_building: " + current_db_row_building)
+        if selected_table_row_building.strip().lower() == current_db_row_building.strip().lower():
             overlapping_tokens += ' ' + current_db_row_building
 
         try:
@@ -374,35 +376,39 @@ def write_or_edit_result(id, result_type, result_text):
                 self=selected_table_row_instance)
         current_db_row_street = current_db_row_instance.get_street(
             self=current_db_row_instance)
-        if selected_table_row_street == current_db_row_street:
+        print("selected_table_row_street: " + selected_table_row_street)
+        print("current_db_row_street: " + current_db_row_street)
+        if selected_table_row_street.strip().lower() == current_db_row_street.strip().lower():
             overlapping_tokens += ' ' + current_db_row_street
 
         selected_table_row_section = selected_table_row_instance.get_section(
             self=selected_table_row_instance)
         current_db_row_section = current_db_row_instance.get_section(
             self=current_db_row_instance)
-        if selected_table_row_section == current_db_row_section:
+        print("selected_table_row_section: " + selected_table_row_section)
+        print("current_db_row_section: " + current_db_row_section)
+        if selected_table_row_section.strip().lower() == current_db_row_section.strip().lower():
             overlapping_tokens += ' ' + current_db_row_section
 
         selected_table_row_city = selected_table_row_instance.get_city(
             self=selected_table_row_instance)
         current_db_row_city = current_db_row_instance.get_city(
             self=current_db_row_instance)
-        if selected_table_row_city == current_db_row_city:
+        if selected_table_row_city.strip().lower() == current_db_row_city.strip().lower():
             overlapping_tokens += ' ' + current_db_row_city
 
         selected_table_row_state = selected_table_row_instance.get_state(
             self=selected_table_row_instance)
         current_db_row_state = current_db_row_instance.get_state(
             self=current_db_row_instance)
-        if selected_table_row_state == current_db_row_state:
+        if selected_table_row_state.strip().lower() == current_db_row_state.strip().lower():
             overlapping_tokens += ' ' + current_db_row_state
 
         selected_table_row_postcode = selected_table_row_instance.get_postcode(
             self=selected_table_row_instance)
         current_db_row_postcode = current_db_row_instance.get_postcode(
             self=current_db_row_instance)
-        if selected_table_row_postcode == current_db_row_postcode:
+        if selected_table_row_postcode.strip().lower() == current_db_row_postcode.strip().lower():
             overlapping_tokens += ' ' + current_db_row_postcode
 
         overlapping_tokens = overlapping_tokens.strip().strip()

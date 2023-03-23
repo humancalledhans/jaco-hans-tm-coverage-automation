@@ -15,7 +15,7 @@ def captcha_decoder(image):
 
     solver = imagecaptcha()
     solver.set_verbose(1)
-    solver.set_key("7b5edfaf9c96fcb48fcc9fd55cee4f41")
+    solver.set_key("f2b4bd71647468041dfc88de2dbef10b")
 
     # captcha_text = solver.solve_and_return_solution("captcha.jpeg")
     captcha_text = solver.solve_and_return_solution(image)

@@ -46,17 +46,6 @@ def finding_coverage(driver, a):
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations = num_of_iterations_instance.get_num_of_iterations()
 
-    # get range of data to search.
-    data_range = DataIdRange.get_instance()
-    data_range_start = data_range.get_start_id(self=data_range)
-    data_range_end = data_range.get_end_id(self=data_range)
-
-    # initialise cvg_task
-    cvg_task = CVGTask.get_instance()
-    cvg_task.set_total_number_of_addresses_to_check(
-        num_of_iterations * (data_range_end - data_range_start) + 1
-    )
-
     # for _ in range(num_of_iterations):
     while True:
         all_the_data = AllTheData.get_instance()
@@ -64,12 +53,23 @@ def finding_coverage(driver, a):
 
         read_from_db()
 
+        # get range of data to search.
+        data_range = DataIdRange.get_instance()
+        data_range_start = data_range.get_start_id(self=data_range)
+        data_range_end = data_range.get_end_id(self=data_range)
+
+        # initialise cvg_task
+        cvg_task = CVGTask.get_instance()
+        cvg_task.set_total_number_of_addresses_to_check(
+            num_of_iterations * (data_range_end - data_range_start) + 1
+        )
+
         for data in all_the_data.get_all_the_data_list(self=all_the_data):
             print("CURRENT ROW ID: ", data.get_id())
             # driver should be at https://wholesalepremium.tm.com.my/coverage-search/address
             if data.get_id() < data_range_start or data.get_id() > data_range_end:
                 continue
-
+            reset_singleton_values_for_next_address()
             set_current_db_row_singleton(data)
 
             try:
@@ -77,7 +77,7 @@ def finding_coverage(driver, a):
                 (driver, a) = select_state(driver, a)
 
             except Exception as e:
-                current_db_row = CurrentDBRow.get_instance()
+                # current_db_row = CurrentDBRow.get_instance()
                 # print("ERROR ID:", current_db_row.get_id(
                 # self=current_db_row))
                 # print("error at select state page (enter address page)")
@@ -86,24 +86,8 @@ def finding_coverage(driver, a):
                     self=retry_at_end_singleton, data_id=data.get_id()
                 )
                 (driver, a) = return_to_coverage_search_page(driver, a)
-                reset_singleton_values_for_next_address()
                 continue
 
-            # print('sleeping.')
-            # time.sleep(5000)
-            # try:
-            # try:
-            #     (
-            #         driver,
-            #         a,
-            #         searched_using_full_address,
-            #     ) = try_to_search_the_full_address(driver, a)
-
-            # except Exception as e:
-            #     print("hans, exception at the new try to search full address code.")
-            #     print(e)
-
-            # if not searched_using_full_address:
             try:
                 enter_right_keyword_res = enter_right_keyword(driver, a)
                 if enter_right_keyword_res != "No results found.":
@@ -145,7 +129,6 @@ def finding_coverage(driver, a):
                 )
                 time.sleep(7)
                 (driver, a) = return_to_coverage_search_page(driver, a)
-                reset_singleton_values_for_next_address()
                 continue
 
             # except Exception as e:
@@ -180,5 +163,4 @@ def finding_coverage(driver, a):
             choose_best_match_from_all_results(driver, a)
 
             write_results_to_db()
-            reset_singleton_values_for_next_address()
             (driver, a) = return_to_coverage_search_page(driver, a)
