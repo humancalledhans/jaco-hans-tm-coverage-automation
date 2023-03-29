@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractstaticmethod
 import time
+import threading
 
 
 class ISelectedTableRow(metaclass=ABCMeta):
@@ -149,42 +150,39 @@ class ISelectedTableRow(metaclass=ABCMeta):
 
 
 class SelectedTableRow(ISelectedTableRow):
-
-    __instance = None
-
     @staticmethod
     def get_instance():
-        if SelectedTableRow.__instance is None:
-            SelectedTableRow()
-        return SelectedTableRow.__instance
+        local = threading.current_thread().__dict__
+        try:
+            instance = local["selected_table_row_instance"]
+        except KeyError:
+            local["selected_table_row_instance"] = SelectedTableRow()
+            instance = local["selected_table_row_instance"]
+        if instance is None:
+            instance = SelectedTableRow()
+        return instance
 
     def __init__(self):
-        if SelectedTableRow.__instance is not None:
-            raise Exception(
-                "SelectedTableRow instance cannot be instantiated more than once!"
-            )
-        else:
-            self.lotnumfound = None
-            self.isbestmatch = False
-            self.unit_no = None
-            self.street_type = None
-            self.street_name = None
-            self.section = None
-            self.floor = None
-            self.building = None
-            self.city = None
-            self.state = None
-            self.postcode = None
-            self.result_type = None
-            self.result_remark = None
-            self.part_of_address_used = None
-            self.used_building_name_as_filter = None
-            self.used_street_name_as_filter = None
-            self.used_section_name_as_filter = None
-            self.used_lot_num_as_filter = None
-            self.used_city_name_as_filter = None
-            self.used_postcode_as_filter = None
-            SelectedTableRow.__instance = self
+        self.lotnumfound = None
+        self.isbestmatch = False
+        self.unit_no = None
+        self.street_type = None
+        self.street_name = None
+        self.section = None
+        self.floor = None
+        self.building = None
+        self.city = None
+        self.state = None
+        self.postcode = None
+        self.result_type = None
+        self.result_remark = None
+        self.part_of_address_used = None
+        self.used_building_name_as_filter = None
+        self.used_street_name_as_filter = None
+        self.used_section_name_as_filter = None
+        self.used_lot_num_as_filter = None
+        self.used_city_name_as_filter = None
+        self.used_postcode_as_filter = None
 
     @staticmethod
     def set_lotnumfound(self, lotnumfound):

@@ -5,7 +5,7 @@ import pytz
 from src.tm_partners.db_read_write.db_secrets import get_db_password
 
 
-def write_to_cvg_task(remark, total, complete):
+def write_to_cvg_task(remark, total, complete, error=None):
     cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=get_db_password(),
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
     cursor = cnx.cursor()
@@ -19,6 +19,7 @@ def write_to_cvg_task(remark, total, complete):
         remark VARCHAR(255),
         total INT,
         complete INT,
+        error INT,
         created_at TIMESTAMP,
         updated_at TIMESTAMP
         )
@@ -28,12 +29,21 @@ def write_to_cvg_task(remark, total, complete):
     # total = total number of addresses to check
     # complete = current number of addresses checked
 
-    enter_log = """
-    INSERT INTO cvg_task (remark, total, complete, created_at, updated_at)
-    VALUES (%s, %s, %s, %s, %s)
-    """
+    if error is None:
+        # error will be logged as null
+        enter_log = """
+        INSERT INTO cvg_task (remark, total, complete, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s)
+        """
 
-    values = (remark, total, complete, current_datetime, current_datetime)
+        values = (remark, total, complete, current_datetime, current_datetime)
+    else:
+        enter_log = """
+        INSERT INTO cvg_task (remark, total, complete, error, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        """
+
+        values = (remark, total, complete, error, current_datetime, current_datetime)
 
     cursor.execute(enter_log, values)
 

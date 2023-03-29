@@ -35,8 +35,13 @@ def check_coverage_and_notify(table_row_num, driver, a, filtered):
     else:
         x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]"
 
-    link_to_check = driver.find_element(
-        By.XPATH, f"({x_code_path})[{1+table_row_num}]//td//a").get_attribute('href')
+    try:
+        link_to_check = driver.find_element(
+            By.XPATH, f"({x_code_path})[{1+table_row_num}]//td//a").get_attribute('href')
+    except NoSuchElementException:
+        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]" 
+        link_to_check = driver.find_element(
+            By.XPATH, f"({x_code_path})[{1+table_row_num}]//td//a").get_attribute('href')
 
     driver.execute_script("window.open('');")
 

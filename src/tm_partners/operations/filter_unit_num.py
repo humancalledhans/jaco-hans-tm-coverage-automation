@@ -1,6 +1,7 @@
 import time
 import re
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 from src.tm_partners.singleton.current_db_row import CurrentDBRow
 from src.tm_partners.singleton.selected_table_row import SelectedTableRow
@@ -45,5 +46,13 @@ def filter_unit_num(driver, a):
         selected_table_row_instance = SelectedTableRow.get_instance()
         selected_table_row_instance.set_lotnumfound(
             self=selected_table_row_instance, lotnumfound=True)
+
+    return (driver, a)
+
+def reset_unit_num_filter(driver, a):
+    unit_no_filter_tab = driver.find_element(
+        By.XPATH, "//input[@id='flt0_resultAddressGrid' and @type='text' and @class='flt']")
+    unit_no_filter_tab.clear()
+    unit_no_filter_tab.send_keys(Keys.BACKSPACE)
 
     return (driver, a)
