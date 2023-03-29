@@ -52,7 +52,7 @@ class Main:
                 data_id_range = DataIdRange.get_instance()
                 current_row_id = data_id_range.get_start_id(self=data_id_range)
             cvg_task.set_failed_id(self=cvg_task, current_id=current_row_id)
-            
+
             # logging the error
             cvg_task.write_to_db(self=cvg_task, remark=cvg_task_remark)
 
