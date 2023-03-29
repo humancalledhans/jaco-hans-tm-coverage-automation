@@ -37,7 +37,7 @@ def try_to_search_the_full_address(driver, a):
 
         else:
             driver.get(
-                "https://wholesalepremium.tm.com.my/coverage-search/address")
+                "https://wholesalepremium.tm.com.my/install/search/address")
             (driver, a) = pause_until_loaded(driver, a)
             (driver, a) = select_state(driver, a)
             return (driver, a, False)

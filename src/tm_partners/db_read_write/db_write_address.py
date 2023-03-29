@@ -343,7 +343,12 @@ def write_or_edit_result(id, result_type, result_text):
 
     # adding the common parts of the address to address_remark
     overlapping_tokens = ''
-    if len(address_remark) != 0:
+
+    print("nope, not going in")
+    print("len(address_remark)", len(address_remark))
+    if len(address_remark) == 0:
+
+        print("ADDRESS REMARK IS ZERO, COMING INTO BLOCK")
 
         selected_table_row_unit = selected_table_row_instance.get_unit_no(
             self=selected_table_row_instance)
