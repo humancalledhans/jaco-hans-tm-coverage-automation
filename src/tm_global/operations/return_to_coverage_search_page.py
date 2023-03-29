@@ -6,7 +6,7 @@ def return_to_coverage_search_page(driver, a):
         driver.current_url
         == "https://wholesalepremium.tm.com.my/coverage-search/result"
     ):
-        driver.get("https://wholesalepremium.tm.com.my/coverage-search/address")
+        driver.get("https://wholesalepremium.tm.com.my/install/search/address")
     elif (
         driver.current_url == "https://wholesalepremium.tm.com.my/install/search/result"
     ):

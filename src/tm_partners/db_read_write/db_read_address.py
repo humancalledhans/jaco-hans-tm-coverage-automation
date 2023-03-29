@@ -11,7 +11,7 @@ from src.tm_partners.singleton.data_id_range import DataIdRange
 # from data_object import DataObject
 
 
-def read_from_db():
+def read_from_db(not_null=''):
     password = get_db_password()
     cnx = mysql.connector.connect(user="oursspc1_db_extuser", password=password,
                                   host="103.6.198.226", port='3306', database="oursspc1_db_cvg")
@@ -22,11 +22,29 @@ def read_from_db():
         self=data_id_range)
     end_id = data_id_range.get_end_id(self=data_id_range)
 
+    print('start id', start_id)
+    print('end id', end_id)
+
     if start_id == end_id:
         query = f"SELECT * FROM cvg_db WHERE id = {start_id}"
+    elif not_null != '':
+        # query filter exists
+        if not_null in ['BUILDING', 'building']:
+            query = f"\
+                SELECT * \
+                FROM cvg_db \
+                WHERE \
+                    id <= {end_id} and \
+                    id >= {start_id} and \
+                    {not_null} IS NOT NULL and \
+                    CHAR_LENGTH({not_null}) > 3 \
+                ORDER BY created_at DESC"
+        else:
+            not_null = ''
+            print('Invalid filter requested.')
     else:
         # query = f"SELECT * FROM cvg_db WHERE is_active = 1 ORDER BY created_at DESC"
-        query = f"SELECT * FROM cvg_db ORDER BY created_at DESC"
+        query = f"SELECT * FROM cvg_db WHERE id <= {end_id} and id >= {start_id} ORDER BY created_at DESC"
         # query = f"SELECT * FROM cvg_db ORDER BY created_at ASC"
     cursor.execute(query)
     result = cursor.fetchall()

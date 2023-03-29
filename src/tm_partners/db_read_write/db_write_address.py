@@ -136,6 +136,16 @@ Postcode: %s
 
 
 def send_email(text, email_to):
+    selected_table_row_instance = SelectedTableRow.get_instance()
+
+    address_chosen = selected_table_row_instance.get_address(
+        self=selected_table_row_instance).replace(
+        "  ", " ").replace("   ", " ")
+
+    current_db_row = CurrentDBRow.get_instance()
+    address_from_db = current_db_row.get_address_with_headers(self=current_db_row).replace(
+        "  ", " ").replace("   ", " ")
+
     gmail_user = 'botourssp@gmail.com'
     gmail_password = 'jshmktlmwgeginnx'
 
@@ -307,13 +317,107 @@ def write_from_csv_to_db():
             cnx.close()
             cursor.close()
 
+# class InvalidSingletonError(Exception):
+#     """Custom exception raised for errors with singleton declarations
+
+#     Args:
+#         message (str): the message to be displayed
+#     """
+#     def __init__(self, message="A singleton instance seems to be problematic."):
+#         self.message = message
+#         super().__init__(self.message)
+
 
 def write_or_edit_result(id, result_type, result_text):
 
     selected_table_row_instance = SelectedTableRow.get_instance()
+    current_db_row_instance = CurrentDBRow.get_instance()
+
     address_remark = selected_table_row_instance.get_address(
         self=selected_table_row_instance)
-    address_remark = ''
+
+    # enforcing the table row address to exist if result exists
+    is_address_expected = result_type != 8 and result_type != 2 and result_type != 3
+    if is_address_expected and len(address_remark) == 0:
+        raise ValueError("SelectedTableRow instance is expected to be set!")
+
+    # adding the common parts of the address to address_remark
+    overlapping_tokens = ''
+
+    print("nope, not going in")
+    print("len(address_remark)", len(address_remark))
+    if len(address_remark) == 0:
+
+        print("ADDRESS REMARK IS ZERO, COMING INTO BLOCK")
+
+        selected_table_row_unit = selected_table_row_instance.get_unit_no(
+            self=selected_table_row_instance)
+        current_db_row_unit = current_db_row_instance.get_house_unit_lotno(
+            self=current_db_row_instance)
+        if selected_table_row_unit.strip().lower() == current_db_row_unit.strip().lower():
+            overlapping_tokens += current_db_row_unit
+
+        selected_table_row_floor = selected_table_row_instance.get_floor(
+            self=selected_table_row_instance)
+        current_db_row_floor = current_db_row_instance.get_floor(
+            self=current_db_row_instance)
+        if selected_table_row_floor.strip().lower() == current_db_row_floor.strip().lower():
+            overlapping_tokens += ' ' + current_db_row_floor
+
+        selected_table_row_building = selected_table_row_instance.get_building(
+            self=selected_table_row_instance)
+        current_db_row_building = current_db_row_instance.get_building(
+            self=current_db_row_instance)
+        print("selected_table_row_building: " + selected_table_row_building)
+        print("current_db_row_building: " + current_db_row_building)
+        if selected_table_row_building.strip().lower() == current_db_row_building.strip().lower():
+            overlapping_tokens += ' ' + current_db_row_building
+
+        try:
+            selected_table_row_street = selected_table_row_instance.get_street_type(
+                self=selected_table_row_instance) + ' ' + selected_table_row_instance.get_street_name(self=selected_table_row_instance)
+        except:
+            selected_table_row_street = selected_table_row_instance.get_street_type(
+                self=selected_table_row_instance)
+        current_db_row_street = current_db_row_instance.get_street(
+            self=current_db_row_instance)
+        print("selected_table_row_street: " + selected_table_row_street)
+        print("current_db_row_street: " + current_db_row_street)
+        if selected_table_row_street.strip().lower() == current_db_row_street.strip().lower():
+            overlapping_tokens += ' ' + current_db_row_street
+
+        selected_table_row_section = selected_table_row_instance.get_section(
+            self=selected_table_row_instance)
+        current_db_row_section = current_db_row_instance.get_section(
+            self=current_db_row_instance)
+        print("selected_table_row_section: " + selected_table_row_section)
+        print("current_db_row_section: " + current_db_row_section)
+        if selected_table_row_section.strip().lower() == current_db_row_section.strip().lower():
+            overlapping_tokens += ' ' + current_db_row_section
+
+        selected_table_row_city = selected_table_row_instance.get_city(
+            self=selected_table_row_instance)
+        current_db_row_city = current_db_row_instance.get_city(
+            self=current_db_row_instance)
+        if selected_table_row_city.strip().lower() == current_db_row_city.strip().lower():
+            overlapping_tokens += ' ' + current_db_row_city
+
+        selected_table_row_state = selected_table_row_instance.get_state(
+            self=selected_table_row_instance)
+        current_db_row_state = current_db_row_instance.get_state(
+            self=current_db_row_instance)
+        if selected_table_row_state.strip().lower() == current_db_row_state.strip().lower():
+            overlapping_tokens += ' ' + current_db_row_state
+
+        selected_table_row_postcode = selected_table_row_instance.get_postcode(
+            self=selected_table_row_instance)
+        current_db_row_postcode = current_db_row_instance.get_postcode(
+            self=current_db_row_instance)
+        if selected_table_row_postcode.strip().lower() == current_db_row_postcode.strip().lower():
+            overlapping_tokens += ' ' + current_db_row_postcode
+
+        overlapping_tokens = overlapping_tokens.strip().strip()
+
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)
     print("RESULT TEXT: ", result_text)
@@ -328,7 +432,7 @@ def write_or_edit_result(id, result_type, result_text):
 
     edit_stmt = f"""
     UPDATE cvg_db
-    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}'
+    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}'
     WHERE id = {id};
     """
     current_db_row = CurrentDBRow.get_instance()
@@ -392,7 +496,7 @@ def write_or_edit_result(id, result_type, result_text):
 
     # increment the number of addresses checked for cvg_task.
     cvg_task = CVGTask.get_instance()
-    cvg_task.increment_total_number_of_addresses_checked()
+    cvg_task.increment_total_number_of_addresses_checked(self=cvg_task)
 
 
 if __name__ == '__main__':
