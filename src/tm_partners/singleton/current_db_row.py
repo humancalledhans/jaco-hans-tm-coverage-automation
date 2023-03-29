@@ -565,10 +565,32 @@ class CurrentDBRow(ICurrentDBRow):
         if input_state is None:
             input_state = ""
         if input_postcode is None:
-            input_postcode = ''
+            input_postcode = ""
 
-        address_string = input_house_unit_lotno + " " + input_street + " " + input_section + " " + \
-            input_floor_no + " " + input_building_name + " " + \
-            input_city + " " + input_state + " " + input_postcode
+        address_string = (
+            "House/Unit/Lot No. "
+            + input_house_unit_lotno
+            + "\n"
+            + "Street: "
+            + input_street
+            + "\n"
+            + "Section: "
+            + input_section
+            + "\n"
+            + "Floor No: "
+            + input_floor_no
+            + "\n"
+            + "Building Name: "
+            + input_building_name
+            + "\n"
+            + "City: "
+            + input_city
+            + "\n"
+            + "State: "
+            + input_state
+            + "\n"
+            + "Postcode: "
+            + input_postcode
+        )
 
         return address_string.replace("  ", " ").replace("  ", " ")
