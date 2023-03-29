@@ -7,7 +7,7 @@ def reset_for_next_search(driver, a):
         driver.current_url
         == "https://wholesalepremium.tm.com.my/coverage-search/result"
     ):
-        driver.get("https://wholesalepremium.tm.com.my/coverage-search/address")
+        driver.get("https://wholesalepremium.tm.com.my/install/search/address")
         (driver, a) = pause_until_loaded(driver, a)
         try:
             (driver, a) = select_state(driver, a)

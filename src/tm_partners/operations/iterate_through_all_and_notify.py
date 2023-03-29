@@ -71,10 +71,7 @@ def iterate_through_all_and_notify(driver, a, filtered, lot_no_detail_flag, buil
             checked = True
             return
 
-        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even']"
-
-    else:
-        x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style)]"
+    x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
 
     if len(driver.find_elements(By.XPATH, x_code_path)) == 0 and street_name_found == False and building_name_found == False:
         write_or_edit_result(
