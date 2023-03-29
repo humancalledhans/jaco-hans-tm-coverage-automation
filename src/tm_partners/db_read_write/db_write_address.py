@@ -418,6 +418,10 @@ def write_or_edit_result(id, result_type, result_text):
 
         overlapping_tokens = overlapping_tokens.strip().strip()
 
+    # for visual purposes, storing "-" instead of blank
+    if len(address_remark.strip())==0:
+        address_remark = "-" 
+        
     print("ID: ", id)
     print("RESULT TYPE: ", result_type)
     print("RESULT TEXT: ", result_text)
@@ -430,9 +434,12 @@ def write_or_edit_result(id, result_type, result_text):
     tz = pytz.timezone("Asia/Singapore")
     current_datetime = datetime.now(tz).strftime('%Y-%m-%d %H:%M:%S')
 
+
     edit_stmt = f"""
     UPDATE cvg_db
-    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}'
+
+    SET result_type = '{result_type}', updated_at = '{current_datetime}', result_remark = '{result_text}', address_used_tm_partners = '{address_remark}', overlapping_tokens = '{overlapping_tokens}'
+
     WHERE id = {id};
     """
     current_db_row = CurrentDBRow.get_instance()
@@ -461,34 +468,38 @@ def write_or_edit_result(id, result_type, result_text):
             self=current_db_row)
         current_row_notify_mobile = current_db_row.get_notify_mobile(
             self=current_db_row)
+        current_row_is_active = current_db_row.get_is_active(self=current_db_row)
+
+        should_notify_message = len(current_row_notify_mobile) > 0 and current_row_is_active == 1
+        should_notify_email = len(current_row_notify_email) > 0 and current_row_is_active == 1
 
         # print("CURRENT ROW EMAIL", current_row_notify_email)
         # print("CURRENT ROW MOBILE", current_row_notify_mobile)
 
         if result_type == 1:
             if current_row_notify_mobile is not None and current_row_notify_mobile.lower() != "null":
-                if len(current_row_notify_mobile) > 0:
+                if should_notify_message:
                     send_message(msg="\nIs within serviceable area!")
             if current_row_notify_email is not None and current_row_notify_email.lower() != "null":
-                if len(current_row_notify_email) > 0:
+                if should_notify_email:
                     send_email(
                         "\nIs within serviceable area!", current_row_notify_email)
         elif result_type == 2:
             if current_row_notify_mobile is not None and current_row_notify_mobile.lower() != "null":
-                if len(current_row_notify_mobile) > 0:
+                if should_notify_message:
                     send_message(
                         msg="\nBuilding Name Found, but Lot Number not Found.")
             if current_row_notify_email is not None and current_row_notify_email.lower() != "null":
-                if len(current_row_notify_email) > 0:
+                if should_notify_email:
                     send_email(
                         "\nBuilding Name Found, but Lot Number not Found.", current_row_notify_email)
         elif result_type == 3:
             if current_row_notify_mobile is not None and current_row_notify_mobile.lower() != "null":
-                if len(current_row_notify_mobile) > 0:
+                if should_notify_message:
                     send_message(
                         msg="\nStreet Name Found, but Lot Number not Found.")
             if current_row_notify_email is not None and current_row_notify_email.lower() != "null":
-                if len(current_row_notify_email) > 0:
+                if should_notify_email:
                     send_email(
                         "\nStreet Name Found, but Lot Number not Found.", current_row_notify_email)
 
