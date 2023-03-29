@@ -99,11 +99,11 @@ class ThreadAsgn:
 
 
 if __name__ == "__main__":
-    # num_of_iterations = 1  # jaco, change this line. 0 means infinity
-    # num_of_iterations_instance = NumOfIterations.get_instance()
-    # num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
-    thread_asgn = ThreadAsgn()
-    thread_asgn.start_threads(1)  # jaco, change number of threads here
+    num_of_iterations = 1  # jaco, change this line.
+    num_of_iterations_instance = NumOfIterations.get_instance()
+    num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
+    thread_asgn = ThreadAsgn(1356,1356)
+    thread_asgn.start_threads()
 
 
     # x = threading.Thread(target=func)
