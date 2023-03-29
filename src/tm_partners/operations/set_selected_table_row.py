@@ -1,6 +1,8 @@
 import time
 from src.tm_partners.singleton.selected_table_row import SelectedTableRow
 from selenium.webdriver.common.by import By
+from src.tm_partners.singleton.current_db_row import CurrentDBRow
+from thefuzz import fuzz
 
 
 def set_selected_table_row(driver, a, x_code_path, selected_table_row):

@@ -61,9 +61,8 @@ def finding_coverage(driver, a):
 
         # initialise cvg_task
         cvg_task = CVGTask.get_instance()
-        cvg_task.set_total_number_of_addresses_to_check(
-            num_of_iterations * (data_range_end - data_range_start) + 1
-        )
+        cvg_task.set_total_number_of_addresses_to_check(self=cvg_task, total_number_of_addresses_to_check=num_of_iterations * (data_range_end - data_range_start) + 1
+                                                        )
 
         for data in all_the_data.get_all_the_data_list(self=all_the_data):
             print("CURRENT ROW ID: ", data.get_id())

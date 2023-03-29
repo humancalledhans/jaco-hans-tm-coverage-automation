@@ -78,7 +78,7 @@ class FindingCoverage:
             # initialise cvg_task
             cvg_task = CVGTask.get_instance()
             cvg_task.set_total_number_of_addresses_to_check(
-                len(all_the_data_list))
+                self=cvg_task, total_number_of_addresses_to_check=len(all_the_data_list))
 
             for data in all_the_data_list:
                 try:
@@ -104,7 +104,7 @@ class FindingCoverage:
                     current_row_id = current_db_row.get_id(
                         self=current_db_row)
 
-                    print("\n", current_db_row.get_address(
+                    print("\n", current_db_row.get_address_without_headers(
                         self=current_db_row))
 
                     # STEP ONE: select state.
