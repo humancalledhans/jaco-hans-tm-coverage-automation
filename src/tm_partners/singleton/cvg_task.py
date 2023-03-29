@@ -42,19 +42,23 @@ class CVGTask(ICVGTask):
             self.total_number_of_addresses_checked = 0
             CVGTask.__instance = self
 
+    @staticmethod
     def set_failed_id(self, current_id):
         self.failed_id = current_id
 
+    @staticmethod
     def set_total_number_of_addresses_to_check(self, total_number_of_addresses_to_check):
         self.total_number_of_addresses_to_check = total_number_of_addresses_to_check
 
+    @staticmethod
     def increment_total_number_of_addresses_checked(self):
         self.total_number_of_addresses_checked += 1
 
-    def write_to_db(self):
+    @staticmethod
+    def write_to_db(self, remark=None):
         if self.failed_id is not None:
-            write_to_cvg_task(remark=f"Failed at {self.failed_id}",
-                              total=self.total_number_of_addresses_to_check, complete=self.total_number_of_addresses_checked)
+            write_to_cvg_task(remark=remark or f"Failed at {self.failed_id}",
+                              total=self.total_number_of_addresses_to_check, complete=self.total_number_of_addresses_checked, error=self.failed_id)
         else:
             write_to_cvg_task(
-                remark='SUCCESS!!', total=self.total_number_of_addresses_to_check, complete=self.total_number_of_addresses_checked)
+                remark=remark or 'SUCCESS!!', total=self.total_number_of_addresses_to_check, complete=self.total_number_of_addresses_checked)

@@ -51,5 +51,6 @@ RUN pip3 install Pillow
 RUN pip3 install anticaptchaofficial
 RUN pip3 install mysql-connector
 RUN pip3 install pytz
+RUN pip3 install thefuzz
 
 CMD ["python3", "thread_asgn.py"]

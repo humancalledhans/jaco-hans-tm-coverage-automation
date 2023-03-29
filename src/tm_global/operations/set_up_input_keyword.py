@@ -11,24 +11,22 @@ from src.tm_global.operations.return_to_coverage_search_page import (
 )
 from src.tm_global.operations.reset_for_next_search import reset_for_next_search
 from src.tm_global.singleton.selected_table_row import SelectedTableRow
+import threading
 
 # [City, Postcode, Section, Street, Building, Lot Number]
-keyword_search_string_list = ["", "", "", "", "", ""]
-keyword_search_string_name = [
-    "City Name",
-    "Postcode",
-    "Section Name",
-    "Street Name",
-    "Building Name",
-    "Lot Number",
-]
 
 
 def enter_right_keyword(driver, a):
 
-    global keyword_search_string_name
-    global keyword_search_string_list
     keyword_search_string_list = ["", "", "", "", "", ""]
+    keyword_search_string_name = [
+        "City Name",
+        "Postcode",
+        "Section Name",
+        "Street Name",
+        "Building Name",
+        "Lot Number",
+    ]
 
     current_db_row = CurrentDBRow.get_instance()
     city = current_db_row.get_city(self=current_db_row)

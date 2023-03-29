@@ -19,11 +19,11 @@ from src.tm_partners.operations.set_accepted_params import set_accepted_params
 class Login:
 
     def __init__(self):
-        self.username = 'DPPJ1901'
-        self.password = 'Dsync110!!'
+        # self.username = 'DPPJ1901'
+        # self.password = 'Dsync110!!'
 
-        # self.username = 'DPSL3601'
-        # self.password = 'Dptama201!'
+        self.username = 'DPSL3601'
+        self.password = 'Dptama201!'
 
     def login(self):
 
@@ -69,6 +69,15 @@ class Login:
                             wait_iterations = 0
 
                     except TimeoutException:
+
+                        try:
+                            WebDriverWait(driver, 3).until(EC.presence_of_element_located(
+                                (By.XPATH, "//font[@color='red' and contains(text(), 'Invalid username')]")))
+                            print('invalid username!')
+                            self.username = 'DPSL3601'
+                            self.password = 'Dptama201!'
+                        except TimeoutException:
+                            pass
                         try:
                             WebDriverWait(driver, 2).until(EC.presence_of_element_located(
                                 (By.XPATH, "//input[@type='image' and @alt='Login']")))
