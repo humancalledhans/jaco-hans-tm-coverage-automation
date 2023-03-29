@@ -12,6 +12,9 @@ from src.tm_partners.operations.waiting_for_results_table import waiting_for_res
 from src.tm_partners.operations.try_diff_xpath_for_results_table import try_diff_xpath_for_results_table
 from src.tm_partners.operations.replace_keywords import replace_keywords
 from src.tm_partners.operations.filter_unit_num import filter_unit_num, reset_unit_num_filter
+from src.tm_partners.operations.filter_street import filter_street
+from src.tm_partners.operations.filter_section import filter_section
+from src.tm_partners.operations.filter_city import filter_city
 from src.tm_partners.operations.wait_for_results_table import wait_for_results_table
 from src.tm_partners.operations.detect_and_solve_captcha import detect_and_solve_captcha
 from src.tm_partners.operations.set_accepted_params import set_accepted_params
@@ -91,7 +94,6 @@ class FindingCoverage:
 
             # initialise cvg_task
             cvg_task = CVGTask.get_instance()
-
             cvg_task.set_total_number_of_addresses_to_check(len(all_the_data_list))
 
             for address_to_search in all_the_data_list:
@@ -307,23 +309,23 @@ class FindingCoverage:
     def _search_for_street_or_section_match(self, driver, a, street_or_section_name):
         """Searching for the best result using street pr section name. No result 
         will be recorded if a match is not found.
+
         Args:
             driver: selenium driver
             a: ActionChains object
             building_name (str): a valid street or section name
         """
-
+        
         # get street_type_and_search() gets the lot no, street type, and street name - puts it tgt and searches.
         # the results table would then be there.
         # then, it calls iterate_through_all_and_notify().
-
+        
         keyword_search_string = street_or_section_name
         current_db_row = CurrentDBRow.get_instance()
         lot_no_detail_flag = current_db_row.get_search_level_flag(
             self=current_db_row)
 
-        _, keyword_variations = self._preprocess_street_section_name(
-            keyword_search_string)
+        _, keyword_variations = self._preprocess_street_section_name(keyword_search_string)
         keyword_search_string = None
 
         # finding good keyword to use (that returns decent num of results)
@@ -345,7 +347,7 @@ class FindingCoverage:
                     (driver, a) = detect_and_solve_captcha(driver, a)
             except NoSuchElementException:
                 print('retry keywords 5')
-                time.sleep(7)
+                time.sleep(5000)
                 retry_at_end_singleton = RetryAtEndCache.get_instance()
                 retry_at_end_singleton.add_data_id_to_retry(
                     self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -355,8 +357,8 @@ class FindingCoverage:
                 (driver, a) = login.login()
                 (driver, a) = input_speed_requested(
                     driver, a, 50)
-                return
-
+                return        
+            
             # checking if the number of results is acceptable
             number_of_results = len(driver.find_elements(
                 By.XPATH, "//tr[@class='odd' or @class='even' or @class='datagrid-odd' or @class='datagrid-even'][not(@style)]"))
@@ -365,7 +367,7 @@ class FindingCoverage:
             elif 0 < number_of_results < 1024:
                 keyword_search_string = keyword_variation
                 break
-
+        
         # handle when street or section turns no results
         if keyword_search_string is None:
             self._write_no_result()
@@ -397,14 +399,14 @@ class FindingCoverage:
             # If no results, remove the unit filter and evaluate.
             if lot_no_detail_flag == 0:
                 (driver, a) = filter_unit_num(driver, a)
-
+                
                 # making sure the filtered resutls pop out, before we proceed.
                 # NOTE: in this try/except block, we are setting the correct x_code_path, because it can be diff due to filtering applied
                 try:
                     (driver, a) = waiting_for_results_table(
                         driver, a)
                     x_code_path = "//tr[@class='odd' or @class='even'][not(@style)]"
-
+                
                 except TimeoutException:
                     x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
                     if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
@@ -419,7 +421,7 @@ class FindingCoverage:
 
                         except NoSuchElementException:
                             print('retry keywords 1')
-                            time.sleep(7)
+                            time.sleep(5000)
                             retry_at_end_singleton = RetryAtEndCache.get_instance()
                             retry_at_end_singleton.add_data_id_to_retry(
                                 self=retry_at_end_singleton, data_id=current_db_row.get_id(self=current_db_row))
@@ -430,7 +432,7 @@ class FindingCoverage:
                             (driver, a) = input_speed_requested(
                                 driver, a, 50)
                             return
-
+                    
                 number_of_results = len(driver.find_elements(
                     By.XPATH, x_code_path))
 
@@ -452,11 +454,11 @@ class FindingCoverage:
                     (driver, a) = waiting_for_results_table(
                         driver, a)
                 except TimeoutException:
-
-                    x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]"
+                
+                    x_code_path = "//table[@id='resultAddressGrid']//tr[@class='odd' or @class='even'][not(@style='display: none;')]" 
                     if len(driver.find_elements(By.XPATH, x_code_path)) == 0:
                         self._write_no_result()
-                        return
+                        return  
 
                 # assuming that the number of results have been significantly reduced
                 iterate_through_all_and_notify(
