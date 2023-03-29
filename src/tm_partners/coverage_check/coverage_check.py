@@ -7,7 +7,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from src.tm_partners.coverage_check.check_coverage_and_notify_actual import check_coverage_and_notify_actual
-from src.tm_partners.coverage_check.reset_singletons import reset_singletons 
 from src.tm_partners.operations.enter_into_keyword_field import enter_into_keyword_field
 from src.tm_partners.operations.waiting_for_results_table import waiting_for_results_table
 from src.tm_partners.operations.try_diff_xpath_for_results_table import try_diff_xpath_for_results_table
@@ -26,7 +25,6 @@ from src.tm_partners.operations.search_using_street import search_using_street_t
 from src.tm_partners.operations.pause_until_loaded import pause_until_loaded
 from src.tm_partners.operations.click_search_btn import click_search_btn
 from src.tm_partners.operations.iterate_through_all_and_notify import iterate_through_all_and_notify
-from src.tm_partners.operations.set_selected_table_row import set_selected_table_row
 
 from src.tm_partners.singleton.num_of_iterations import NumOfIterations
 from src.tm_partners.singleton.cvg_task import CVGTask
@@ -40,6 +38,10 @@ from src.tm_partners.db_read_write.db_read_address import read_from_db
 from src.tm_partners.coverage_check.bridge_to_actual_op import bridge_to_actual_op
 from src.tm_partners.singleton.retry_at_end import RetryAtEndCache
 from src.tm_partners.operations.login import Login
+from src.tm_partners.coverage_check.reset_singletons import reset_singletons
+from src.tm_partners.operations.filter_city import filter_city
+from src.tm_partners.operations.filter_section import filter_section
+from src.tm_partners.operations.filter_street import filter_street
 
 from .check_coverage_and_notify import check_coverage_and_notify
 from .input_speed_requested import input_speed_requested
@@ -65,7 +67,17 @@ class FindingCoverage:
         data_range_start = data_range.get_start_id(self=data_range)
         data_range_end = data_range.get_end_id(self=data_range)
 
-        for _ in range(num_of_iterations):
+        """
+        tm global has cvg task.
+        # initialise cvg_task
+        cvg_task = CVGTask.get_instance()
+        cvg_task.set_total_number_of_addresses_to_check(
+            num_of_iterations * (data_range_end - data_range_start) + 1
+        )
+        """
+
+        # for _ in range(num_of_iterations):
+        while True:
             # hans, the loop starts at coverage search page. (the page where you select state and enter keyword)
 
             all_the_data = AllTheData.get_instance()
@@ -76,32 +88,22 @@ class FindingCoverage:
 
             # initialise cvg_task
             cvg_task = CVGTask.get_instance()
-            cvg_task.set_total_number_of_addresses_to_check(
-                len(all_the_data_list))
+            cvg_task.set_total_number_of_addresses_to_check(self=cvg_task,
+                                                            total_number_of_addresses_to_check=len(all_the_data_list))
 
             for data in all_the_data_list:
+                print("CURRENT RUNNING ID: ", data.get_id())
+                if data.get_id() < data_range_start or data.get_id() > data_range_end:
+                    continue
+
+                reset_singletons()
+                set_current_db_row(data)
+
                 try:
 
-                    print("CURRENT ID: ", data.get_id())
-
-                    # if data.get_is_active() == 0:
-                    #     continue
-
                     # hans: reminder that rebooted_start_id and rebooted_end_id are only used when finding_coverage is started again, from where it had error.
-                    if data.get_id() < data_range_start or data.get_id() > data_range_end:
-                        continue
-
-                    print("CURRENT RUNNING ID: ", data.get_id())
-
-                    reset_singletons()
-                    set_current_db_row(data)
 
                     current_db_row = CurrentDBRow.get_instance()
-                    current_row_id = current_db_row.get_id(
-                        self=current_db_row)
-
-                    print("\n", current_db_row.get_address_with_headers(
-                        self=current_db_row))
 
                     # STEP ONE: select state.
                     self._select_state(driver, a, data)
@@ -114,14 +116,12 @@ class FindingCoverage:
                     # 0 means don't need to match lot number.
                     # 1 means need to match lot number. Allows for cases like 'Building/Street name found, lot number not found'
                     # refer to code in iterate_through_all_and_notify(). block where checked==False
-                    
                     # STEP TWO A: find if there's a building name.
                     building_name = current_db_row.get_building(
                         self=current_db_row)
 
                     if building_name is not None:
                         building_name = building_name.strip()
-
                     is_building_name_exists = building_name is not None and len(building_name) > 3
                     if is_building_name_exists:
                         self._search_for_building_match(driver, a, building_name)
@@ -852,4 +852,3 @@ class FindingCoverage:
                 iterate_through_all_and_notify(
                     driver, a, filtered=False, lot_no_detail_flag=1, building_name_found=False, street_name_found=True)
                 return
-

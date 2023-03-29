@@ -1,6 +1,5 @@
 # login('DPSL9701', 'Djns513!!', driver)
 
-import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -23,6 +22,9 @@ class Login:
         self.username = 'DPPJ1901'
         self.password = 'Dsync110!!'
 
+        # self.username = 'DPSL3601'
+        # self.password = 'Dptama201!'
+
     def login(self):
 
         username = self.username
@@ -34,7 +36,6 @@ class Login:
             try:
                 driver = driver_setup()
                 driver.get('https://partners.unifi.my/HSBBPartnerPortal/HSBBPartnerPortal.portal?_nfpb=true&_pageLabel=login_portal&_nfls=false#wlp_HSBBPartnerPortal_portal_HelpCustomer/')
-                driver.maximize_window()
                 a = ActionChains(driver)
                 (driver, a) = pause_until_loaded(driver, a)
                 (driver, a) = enter_username_and_password(

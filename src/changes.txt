@@ -1,0 +1,7 @@
+current db row singleton.
+coverage check.
+added on filter_using_unit_num, etc.
+added on change username and password code in login.py
+requirements.txt
+db_write_address
+check_coverage_and_notify, try block for link_to_check.

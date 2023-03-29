@@ -115,8 +115,7 @@ def write_results_to_db():
             and current_row_notify_email.lower() != "null"
         ):
             if len(current_row_notify_email) > 0:
-                send_email("\nIs within serviceable area!",
-                           current_row_notify_email)
+                send_email("\nIs within serviceable area!", current_row_notify_email)
 
     elif result_remark == "Within Servicable Area, Require New Infra Development":
         current_row_notify_email = current_db_row_instance.get_notify_email(

@@ -26,6 +26,7 @@ Connect the DB GUI such as MySQL Workbench with the following settings:
 Connection Method: TCP/IP
 Hostname: 103.6.198.226
 Port: 3306
+Username: oursspc1_db_extuser
 Password: Ask for this
 ```
 

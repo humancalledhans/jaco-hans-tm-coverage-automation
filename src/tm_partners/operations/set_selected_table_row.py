@@ -1,11 +1,9 @@
 import time
-from thefuzz import fuzz
 from src.tm_partners.singleton.selected_table_row import SelectedTableRow
 from selenium.webdriver.common.by import By
-from src.tm_partners.singleton.current_db_row import CurrentDBRow
 
 
-def set_selected_table_row(driver, a, x_code_path, selected_table_row, fuzzy_score=-1):
+def set_selected_table_row(driver, a, x_code_path, selected_table_row):
 
     table_row_data_list = driver.find_elements(
         By.XPATH, f"({x_code_path})[{selected_table_row+1}]//td[@class='datagrid']")
@@ -66,4 +64,3 @@ def set_selected_table_row(driver, a, x_code_path, selected_table_row, fuzzy_sco
     selected_table_row.set_city(selected_table_row, table_city)
     selected_table_row.set_state(selected_table_row, table_state)
     selected_table_row.set_postcode(selected_table_row, table_postcode)
-    selected_table_row.set_fuzzy_score(selected_table_row, fuzzy_score)

@@ -1,6 +1,4 @@
-from thefuzz import fuzz
 from src.tm_partners.singleton.current_db_row import CurrentDBRow
-from src.tm_global.singleton.selected_table_row import SelectedTableRow
 
 
 def return_points_for_row(table_row_data, table_header_data) -> bool:
@@ -26,7 +24,10 @@ def return_points_for_row(table_row_data, table_header_data) -> bool:
         return (0, None)
 
     else:
-        db_address = current_db_row.get_address_without_headers(
+        input_street = current_db_row.get_street(self=current_db_row)
+        input_section = current_db_row.get_section(self=current_db_row)
+        input_floor_no = current_db_row.get_floor(self=current_db_row)
+        input_building_name = current_db_row.get_building(
             self=current_db_row)
 
         table_address = ""
