@@ -43,6 +43,7 @@ from src.tm_global.operations.search_the_exact_db_address import (
 
 
 def finding_coverage(driver, a):
+
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations = num_of_iterations_instance.get_num_of_iterations()
 
@@ -66,7 +67,7 @@ def finding_coverage(driver, a):
 
         for data in all_the_data.get_all_the_data_list(self=all_the_data):
             print("CURRENT ROW ID: ", data.get_id())
-            # driver should be at https://wholesalepremium.tm.com.my/coverage-search/address
+            # driver should be at https://wholesalepremium.tm.com.my/install/search/address
             if data.get_id() < data_range_start or data.get_id() > data_range_end:
                 continue
             reset_singleton_values_for_next_address()
@@ -120,7 +121,7 @@ def finding_coverage(driver, a):
                 # # setup driver again.
                 # driver = tm_global_driver_setup()
                 # driver.get(
-                #     'https://wholesalepremium.tm.com.my/coverage-search/address')
+                #     'https://wholesalepremium.tm.com.my/install/search/address')
                 # a = ActionChains(driver)
                 # (driver, a) = pause_until_loaded(driver, a)
                 retry_at_end_singleton = RetryAtEndCache.get_instance()
@@ -140,7 +141,7 @@ def finding_coverage(driver, a):
             #         self=current_db_row))
             #     # driver = tm_global_driver_setup()
             #     # driver.get(
-            #     #     'https://wholesalepremium.tm.com.my/coverage-search/address')
+            #     #     'https://wholesalepremium.tm.com.my/install/search/address')
             #     # a = ActionChains(driver)
             #     # (driver, a) = pause_until_loaded(driver, a)
             #     # finding_coverage(
