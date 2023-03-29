@@ -98,7 +98,7 @@ class ThreadAsgn:
         #         full_ids_to_start + int(full_ids_to_end / 2), full_ids_to_end, "thread-2")).start()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     num_of_iterations = 1  # jaco, change this line.
     num_of_iterations_instance = NumOfIterations.get_instance()
     num_of_iterations_instance.set_num_of_iterations(int(num_of_iterations))
